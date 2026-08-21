@@ -12,7 +12,14 @@ if (fs.existsSync(validationFile)) {
 const sourceServiceFile = 'node_modules/@omss/framework/dist/services/source.service.js';
 if (fs.existsSync(sourceServiceFile)) {
     let code = fs.readFileSync(sourceServiceFile, 'utf8');
+    // Disable timeout validation
     code = code.replace(/async validateSourceUrl\(proxyData, timeoutMs = 3000\) \{/, 'async validateSourceUrl(proxyData, timeoutMs = 3000) {\n        return true;');
+    
+    // Patch dedup logic to preserve duplicate URLs from different providers (like vidfast and vidcore)
+    code = code.replace(/const dedupKey = proxyData\.url;/g, "const dedupKey = proxyData.url + '_' + source.provider.id;");
+    
+    // Fix error logging to prevent crashes if error is null
+    code = code.replace(/catch \{(?:\s*)return null;(?:\s*)\}/g, "catch(err){ return null; }");
     fs.writeFileSync(sourceServiceFile, code);
     console.log("Patched source.service.js successfully.");
 }
