@@ -1,42 +1,39 @@
 import { BaseProvider } from '@omss/framework';
-import type {
-    ProviderCapabilities,
-    ProviderMediaObject,
-    ProviderResult,
-    Source
-} from '@omss/framework';
+import type { ProviderCapabilities, ProviderMediaObject, ProviderResult, Source } from '@omss/framework';
 import { fetchSources } from 'kaizoku-core/providers/movies/vidcore';
 
 export class VidcoreProvider extends BaseProvider {
     readonly id = 'vidcore';
-    readonly name = 'vidcore';
+    readonly name = 'VidCore';
     readonly enabled = true;
-    readonly BASE_URL = 'https://vidcore.net'; // Placeholder, Kaizoku handles it
-    readonly HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-    };
-    
+    readonly BASE_URL = 'https://vidcore.io';
+    readonly HEADERS = {};
+
     readonly capabilities: ProviderCapabilities = {
         supportedContentTypes: ['movies', 'tv']
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return this.extractSources(media);
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return this.extractSources(media);
     }
-    
-    private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
+
+    private async extractSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
             const data = await fetchSources(media.tmdbId, media.type, media.s, media.e);
-            const headers = data.headers || this.HEADERS;
+            const headers = data.headers || {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                'Referer': `${this.BASE_URL}/`,
+                'Origin': this.BASE_URL
+            };
             const sources: Source[] = [];
-            
+
             for (const src of data.sources) {
                 sources.push({
-                    url: this.createProxyUrl(src.url.includes('?') ? src.url + '&provider=vidcore' : src.url + '?provider=vidcore', headers),
+                    url: this.createProxyUrl(src.url, headers),
                     quality: src.quality || 'auto',
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
@@ -48,6 +45,7 @@ export class VidcoreProvider extends BaseProvider {
             }
             return { sources, subtitles: [], diagnostics: [] };
         } catch (e) {
+            console.error('[Vidcore] Error:', e);
             return { sources: [], subtitles: [], diagnostics: [] };
         }
     }

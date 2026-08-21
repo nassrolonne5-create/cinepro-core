@@ -28,7 +28,23 @@ if (fs.existsSync(sourceServiceFile)) {
 const vidcoreFile = 'node_modules/kaizoku-core/dist/providers/movies/vidcore.js';
 if (fs.existsSync(vidcoreFile)) {
     let code = fs.readFileSync(vidcoreFile, 'utf8');
-    code = code.replace(/https:\/\/vidcore\.net/g, 'https://vidcore.net');
+    code = code.replace(/https:\/\/vidcore\.net/g, 'https://vidcore.io');
     fs.writeFileSync(vidcoreFile, code);
     console.log("Patched kaizoku-core vidcore domain.");
+}
+
+// Allow native embed URLs in SourceService validation and dedup
+if (fs.existsSync(sourceServiceFile)) {
+    let code = fs.readFileSync(sourceServiceFile, 'utf8');
+    code = code.replace(/const data = urlObj\.searchParams\.get\('data'\);\s+if \(!data\)\s+return null;/g, `const data = urlObj.searchParams.get('data');
+                            if (!data) return source;`);
+    code = code.replace(/const data = urlObj\.searchParams\.get\('data'\);\s+if \(!data\)\s+throw new Error\('Missing data parameter in source URL'\);\s+const proxyData = ProxyService\.decodeProxyData\(data\);/g, `const data = urlObj.searchParams.get('data');
+                    let proxyData;
+                    if (!data) {
+                        proxyData = { url: source.url };
+                    } else {
+                        proxyData = ProxyService.decodeProxyData(data);
+                    }`);
+    fs.writeFileSync(sourceServiceFile, code);
+    console.log("Patched source.service.js to allow native embed URLs.");
 }
