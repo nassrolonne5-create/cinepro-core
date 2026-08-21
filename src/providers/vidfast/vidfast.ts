@@ -5,13 +5,13 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/vidlink';
+import { fetchSources } from 'kaizoku-core/providers/movies/vidfast';
 
-export class VidLinkProvider extends BaseProvider {
-    readonly id = 'vidlink';
-    readonly name = 'vidlink.pro';
+export class VidFastProvider extends BaseProvider {
+    readonly id = 'vidfast';
+    readonly name = 'VidFast';
     readonly enabled = true;
-    readonly BASE_URL = 'https://vidlink.pro';
+    readonly BASE_URL = 'https://vidfast.vc';
     readonly HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
     };

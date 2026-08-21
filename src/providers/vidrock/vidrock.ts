@@ -9,7 +9,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/vidrock';
 
 export class VidRockProvider extends BaseProvider {
     readonly id = 'vidrock';
-    readonly name = 'VidRock';
+    readonly name = 'vidrock.ru';
     readonly enabled = true;
     readonly BASE_URL = 'https://vidrock.ru';
     readonly HEADERS = {
