@@ -23,3 +23,12 @@ if (fs.existsSync(sourceServiceFile)) {
     fs.writeFileSync(sourceServiceFile, code);
     console.log("Patched source.service.js successfully.");
 }
+
+// Patch kaizoku-core vidcore domain
+const vidcoreFile = 'node_modules/kaizoku-core/dist/providers/movies/vidcore.js';
+if (fs.existsSync(vidcoreFile)) {
+    let code = fs.readFileSync(vidcoreFile, 'utf8');
+    code = code.replace(/https:\/\/vidcore\.net/g, 'https://vidcore.net');
+    fs.writeFileSync(vidcoreFile, code);
+    console.log("Patched kaizoku-core vidcore domain.");
+}

@@ -11,7 +11,7 @@ export class VidcoreProvider extends BaseProvider {
     readonly id = 'vidcore';
     readonly name = 'vidcore';
     readonly enabled = true;
-    readonly BASE_URL = 'https://example.com'; // Placeholder, Kaizoku handles it
+    readonly BASE_URL = 'https://vidcore.net'; // Placeholder, Kaizoku handles it
     readonly HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
     };
