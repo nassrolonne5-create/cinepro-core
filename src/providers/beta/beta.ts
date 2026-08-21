@@ -28,7 +28,7 @@ export class BetaProvider extends BaseProvider {
     private async getSources(): Promise<ProviderResult> {
         const sources: Source[] = [
             {
-                url: 'https://test-streams.mux.dev/pts_shift/master.m3u8',
+                url: this.createProxyUrl('https://test-streams.mux.dev/pts_shift/master.m3u8', this.HEADERS),
                 type: 'hls',
                 quality: '720p',
                 audioTracks: [

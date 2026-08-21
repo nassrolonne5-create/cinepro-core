@@ -29,7 +29,7 @@ export class DemoProvider extends BaseProvider {
         // We will return a public test HLS stream for demonstration purposes.
         const sources: Source[] = [
             {
-                url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+                url: this.createProxyUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', this.HEADERS),
                 type: 'hls',
                 quality: '1080p',
                 audioTracks: [

@@ -28,7 +28,7 @@ export class AlphaProvider extends BaseProvider {
     private async getSources(): Promise<ProviderResult> {
         const sources: Source[] = [
             {
-                url: 'https://d2zihajmogu5jn.cloudfront.net/bipbop-advanced/bipbop_16x9_variant.m3u8',
+                url: this.createProxyUrl('https://d2zihajmogu5jn.cloudfront.net/bipbop-advanced/bipbop_16x9_variant.m3u8', this.HEADERS),
                 type: 'hls',
                 quality: '1080p',
                 audioTracks: [
