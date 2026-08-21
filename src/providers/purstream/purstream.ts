@@ -9,7 +9,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/purstream';
 
 export class PurStreamProvider extends BaseProvider {
     readonly id = 'purstream';
-    readonly name = 'PurStream';
+    readonly name = 'purstream';
     readonly enabled = true;
     readonly BASE_URL = 'https://free.finepulfe.xyz';
     readonly HEADERS = {
@@ -36,7 +36,7 @@ export class PurStreamProvider extends BaseProvider {
             
             for (const src of data.sources) {
                 sources.push({
-                    url: this.createProxyUrl(src.url, headers),
+                    url: this.createProxyUrl(src.url.includes('?') ? src.url + '&provider=purstream' : src.url + '?provider=purstream', headers),
                     quality: src.quality || 'auto',
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],

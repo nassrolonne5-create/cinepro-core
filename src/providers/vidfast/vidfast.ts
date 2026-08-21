@@ -9,7 +9,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/vidfast';
 
 export class VidFastProvider extends BaseProvider {
     readonly id = 'vidfast';
-    readonly name = 'VidFast';
+    readonly name = 'vidfast';
     readonly enabled = true;
     readonly BASE_URL = 'https://vidfast.vc';
     readonly HEADERS = {
@@ -36,7 +36,7 @@ export class VidFastProvider extends BaseProvider {
             
             for (const src of data.sources) {
                 sources.push({
-                    url: this.createProxyUrl(src.url, headers),
+                    url: this.createProxyUrl(src.url.includes('?') ? src.url + '&provider=vidfast' : src.url + '?provider=vidfast', headers),
                     quality: src.quality || 'auto',
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
