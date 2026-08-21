@@ -1,32 +1,33 @@
+import { BaseProvider } from '@omss/framework';
 import type {
+    AudioTrack,
+    Diagnostic,
     ProviderCapabilities,
     ProviderMediaObject,
     ProviderResult,
-    Subtitle,
-    AudioTrack,
-    Diagnostic,
     Source,
-    SourceType
+    SourceType,
+    Subtitle
 } from '@omss/framework';
-import { BaseProvider } from '@omss/framework';
 import { ApiResponse, EncryptedPayload, Switch } from './streammafia.types.js';
 import { decryptStreamMafia } from './decrypt.js';
-import { generateRandomUserAgent } from '../../utils/ua.js';
 
 export class StreamMafiaProvider extends BaseProvider {
     readonly id = 'streammafia';
     readonly name = 'MafiaEmbed';
     readonly enabled = true;
+
     readonly BASE_URL = 'https://player.nhdapi.com';
+
     readonly HEADERS = {
-        'User-Agent': '',
-        Accept: 'application/json, text/javascript, */*; q=0.01',
+        'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150 Safari/537.36',
+        Accept: '*/*',
         'Accept-Language': 'en-US,en;q=0.9',
         Referer: this.BASE_URL + '/',
         Origin: this.BASE_URL,
-        Cookie: '',
-        'x-api-token': '',
-        'x-content-id': ''
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache'
     };
 
     readonly capabilities: ProviderCapabilities = {
@@ -57,40 +58,26 @@ export class StreamMafiaProvider extends BaseProvider {
         media: ProviderMediaObject
     ): Promise<ProviderResult> {
         try {
-            this.HEADERS['User-Agent'] = generateRandomUserAgent();
-            this.HEADERS['x-content-id'] = media.tmdbId.toString();
+            const token = await this.getToken();
+            const session = await this.getSessionCookie();
 
-            const cookie: string = await this.getSessionCookie();
-            if (!cookie) {
+            if (!session) {
                 return this.emptyResult('Failed to retrieve session cookie');
             }
 
-            this.HEADERS.Cookie =
-                cookie.split(';')[0] ||
-                'vid_session=' +
-                    Buffer.from(
-                        JSON.stringify({
-                            id: media.tmdbId,
-                            iat: Math.floor(Date.now() / 1000)
-                        })
-                    ).toString('base64');
-
-            await new Promise((resolve) => setTimeout(resolve, 100));
-
-            const token: string = await this.getToken();
-            if (!token) {
-                return this.emptyResult('Failed to retrieve access token');
-            }
-
-            this.HEADERS['x-api-token'] = token;
-
             const url = this.buildPageUrl(media);
-            const encrypted = await this.fetchPage(url);
+            const headers = {
+                ...this.HEADERS,
+                'x-token': token,
+                Cookie: session
+            };
 
-            if (!encrypted) {
-                return this.emptyResult('Invalid API response');
+            const res = await fetch(url, { headers });
+            if (!res.ok) {
+                return this.emptyResult(`Failed to fetch page: ${res.status}`);
             }
 
+            const encrypted = (await res.json()) as EncryptedPayload;
             const api = decryptStreamMafia(encrypted);
             return await this.mapApiResponse(api);
         } catch (err) {
@@ -131,7 +118,6 @@ export class StreamMafiaProvider extends BaseProvider {
         if (media.type === 'movie') {
             return `${this.BASE_URL}/api/movie/?id=${media.tmdbId}`;
         }
-
         return `${this.BASE_URL}/api/?tv=${media.tmdbId}&season=${media.s}&episode=${media.e}`;
     }
 
@@ -164,7 +150,6 @@ export class StreamMafiaProvider extends BaseProvider {
             const switchResults = await Promise.all(
                 api.switches.map((sw) => this.resolveSwitch(sw))
             );
-
             for (const result of switchResults) {
                 sources.push(...result);
             }
@@ -182,7 +167,6 @@ export class StreamMafiaProvider extends BaseProvider {
         // dedupe
         const seen = new Set<string>();
         const deduped: Source[] = [];
-
         for (const s of sources) {
             if (seen.has(s.url)) continue;
             seen.add(s.url);
@@ -196,9 +180,7 @@ export class StreamMafiaProvider extends BaseProvider {
         try {
             const url = `${this.BASE_URL}/api/source/${sw.file_code}`;
             const encrypted = await this.fetchPage(url);
-
             if (!encrypted) return [];
-
             const api = decryptStreamMafia(encrypted);
 
             const fallbackAudio: AudioTrack = {
@@ -220,7 +202,6 @@ export class StreamMafiaProvider extends BaseProvider {
 
         if (api.stream?.hls_streaming) {
             const parsed = await this.parseHLS(api.stream.hls_streaming);
-
             sources.push({
                 url: this.createProxyUrl(api.stream.hls_streaming, {
                     'User-Agent': ''
@@ -261,12 +242,10 @@ export class StreamMafiaProvider extends BaseProvider {
             selected?.lang_code?.trim().toLowerCase() ||
             selected?.lang?.trim().toLowerCase() ||
             'Auto';
-
         const label =
             selected?.lang?.trim() ||
             selected?.lang_code?.toUpperCase() ||
             'Auto';
-
         return { language, label };
     }
 
@@ -281,7 +260,6 @@ export class StreamMafiaProvider extends BaseProvider {
                     Referer: this.BASE_URL + '/'
                 }
             });
-
             const content: string = await res.text();
             const variants = this.parseVariants(content);
             const audioTracks = this.parseAudioTracks(content);
@@ -293,7 +271,6 @@ export class StreamMafiaProvider extends BaseProvider {
             const best = variants.reduce((a, b) =>
                 b.resolution > a.resolution ? b : a
             );
-
             return {
                 quality: best.resolution.toString(),
                 audioTracks
@@ -306,14 +283,12 @@ export class StreamMafiaProvider extends BaseProvider {
     private parseVariants(content: string): Array<{ resolution: number }> {
         const variants: Array<{ resolution: number }> = [];
         const regex = /RESOLUTION=\d+x(\d+)[^\n]*\n([^\n]+)/g;
-
         let match: RegExpExecArray | null;
         while ((match = regex.exec(content)) !== null) {
             variants.push({
                 resolution: parseInt(match[1], 10)
             });
         }
-
         return variants;
     }
 
@@ -323,11 +298,9 @@ export class StreamMafiaProvider extends BaseProvider {
 
         for (const line of lines) {
             if (!line.includes('TYPE=AUDIO')) continue;
-
             const language =
                 line.match(/LANGUAGE="([^"]+)"/)?.[1]?.toLowerCase() ?? 'Auto';
             const label = line.match(/NAME="([^"]+)"/)?.[1] ?? language;
-
             tracks.push({ language, label });
         }
 
@@ -336,28 +309,23 @@ export class StreamMafiaProvider extends BaseProvider {
 
     private inferSourceType(url: string): SourceType {
         const clean = url.toLowerCase().split('?')[0];
-
         if (clean.endsWith('.m3u8')) return 'hls';
         if (clean.endsWith('.mpd')) return 'dash';
         if (clean.endsWith('.mp4')) return 'mp4';
         if (clean.endsWith('.mkv')) return 'mkv';
         if (clean.endsWith('.webm')) return 'webm';
-
         return 'hls';
     }
 
     private normalizeQuality(value?: string, fallback = 'Auto'): string {
         if (!value) return fallback;
-
         const v = value.toLowerCase();
-
         if (v.includes('2160')) return '2160';
         if (v.includes('1080')) return '1080';
         if (v.includes('720')) return '720';
         if (v.includes('480')) return '480';
         if (v.includes('360')) return '360';
         if (v.includes('240')) return '240';
-
         return value;
     }
 

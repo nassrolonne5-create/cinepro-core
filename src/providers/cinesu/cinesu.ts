@@ -9,7 +9,9 @@ export class CineSuProvider extends BaseProvider {
     readonly id = 'CineSu';
     readonly name = 'CineSu';
     readonly enabled = true;
+
     readonly BASE_URL = 'https://cine.su';
+
     readonly HEADERS = {
         'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150 Safari/537.36',
@@ -98,11 +100,9 @@ export class CineSuProvider extends BaseProvider {
         if (media.type === 'movie') {
             return `${this.BASE_URL}/v1/stream/master/movie/${media.tmdbId}.m3u8`;
         }
-
         if (media.type === 'tv') {
             return `${this.BASE_URL}/v1/stream/master/tv/${media.tmdbId}/${media.s}/${media.e}.m3u8`;
         }
-
         throw new Error('Unsupported media type');
     }
 

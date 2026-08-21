@@ -3,185 +3,195 @@ import type {
     ProviderCapabilities,
     ProviderMediaObject,
     ProviderResult,
-    SourceType
+    Source,
+    SourceType,
+    Subtitle
 } from '@omss/framework';
-import type { FshareResponse, FshareSource } from './fshare.types.js';
+import * as cheerio from 'cheerio';
+import { generateRandomUserAgent } from '../../utils/ua.js';
+function extractDomain(url: string) { try { return new URL(url).hostname; } catch { return url; } }
 
-export class FsharetvProvider extends BaseProvider {
+export class FshareProvider extends BaseProvider {
     readonly id = 'fsharetv';
     readonly name = 'FshareTV';
     readonly enabled = true;
 
-    readonly BASE_URL = 'https://fsharetv.cc';
-    private readonly TRAILER = 'Png81APqcxU';
+    readonly BASE_URL = 'https://fsharetv.co';
 
     readonly HEADERS = {
         'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
-        Referer: this.BASE_URL
-    };
-
-    private readonly API_HEADERS = {
-        ...this.HEADERS,
-        Accept: 'application/json, */*; q=0.01',
-        'X-Requested-With': 'XMLHttpRequest'
+        Referer: `${this.BASE_URL}/`,
+        Origin: this.BASE_URL
     };
 
     readonly capabilities: ProviderCapabilities = {
-        supportedContentTypes: ['movies']
+        supportedContentTypes: ['movies', 'tv']
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        return this.getSources(media);
+    }
+
+    async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        return this.getSources(media);
+    }
+
+    private async getSources(
+        media: ProviderMediaObject
+    ): Promise<ProviderResult> {
         try {
-            const watchPath = await this.findWatchPath(media.imdbId);
-            if (!watchPath)
+            this.HEADERS['User-Agent'] = generateRandomUserAgent();
+
+            if (!media.imdbId) {
                 return this.emptyResult(
                     `No watch page found for IMDb ID ${media.imdbId}`
                 );
+            }
+            let watchUrl = '';
+            
+            // Search first to get the actual URL structure
+            const searchQuery = encodeURIComponent(media.title.toLowerCase());
+            const searchResponse = await fetch(`${this.BASE_URL}/search?q=${searchQuery}`, { headers: this.HEADERS });
+            if (searchResponse.ok) {
+                const searchHtml = await searchResponse.text();
+                const $search = cheerio.load(searchHtml);
+                let foundHref = '';
+                
+                $search('a').each((_, el) => {
+                    const href = $search(el).attr('href');
+                    if (href && href.includes(`tt${media.imdbId?.replace('tt', '')}`)) {
+                        foundHref = href;
+                    }
+                });
+                
+                if (foundHref) {
+                    watchUrl = foundHref.startsWith('http') ? foundHref : `${this.BASE_URL}${foundHref}`;
+                }
+            }
+            
+            // Fallback to old guessing method if search fails
+            if (!watchUrl) {
+                const imdbId = media.imdbId;
+                if (media.type === 'movie') {
+                    watchUrl = `${this.BASE_URL}/movie/${media.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-episode-1-${imdbId}`;
+                } else if (media.type === 'tv') {
+                    watchUrl = `${this.BASE_URL}/tv/${imdbId}-season-${media.s}-episode-${media.e}`;
+                }
+            }
 
-            const sourceId = await this.extractSourceId(watchPath);
-            if (!sourceId)
-                return this.emptyResult(
-                    `No source ID found for watch path ${watchPath}`
-                );
+            const response = await fetch(watchUrl, { headers: this.HEADERS });
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return this.emptyResult('Movie or episode not found');
+                }
+                throw new Error(`Failed to load page: ${response.status}`);
+            }
 
-            const resp = await this.fetchApi(sourceId);
-            if (!resp)
-                return this.emptyResult(
-                    `API request failed for source ID ${sourceId}`
-                );
+            const html = await response.text();
+            const $ = cheerio.load(html);
 
-            return this.mapToProviderResult(resp);
-        } catch (error) {
+            const iframeSrc = $('iframe').first().attr('src');
+            if (!iframeSrc) {
+                return this.emptyResult('No iframe found on watch page');
+            }
+
+            const streamUrl = await this.extractStreamFromIframe(iframeSrc);
+            if (!streamUrl) {
+                return this.emptyResult('Failed to extract stream URL');
+            }
+
+            const sourceType: SourceType =
+                streamUrl.includes('m3u8') || streamUrl.includes('hls')
+                    ? 'hls'
+                    : 'mp4';
+
+            const sources: Source[] = [
+                {
+                    url: this.createProxyUrl(streamUrl, this.HEADERS),
+                    type: sourceType,
+                    quality: 'Auto',
+                    audioTracks: [{ label: 'Original', language: 'Auto' }],
+                    provider: { id: this.id, name: this.name }
+                }
+            ];
+
+            const subtitles = await this.extractSubtitles(html);
+
             return {
-                sources: [],
-                subtitles: [],
-                diagnostics: [
-                    {
-                        code: 'PROVIDER_ERROR',
-                        message:
-                            error instanceof Error
-                                ? error.message
-                                : 'Unknown error',
-                        field: '',
-                        severity: 'error'
-                    }
-                ]
+                sources,
+                subtitles,
+                diagnostics: []
             };
-        }
-    }
-
-    async getTVSources(_media: ProviderMediaObject): Promise<ProviderResult> {
-        return { sources: [], subtitles: [], diagnostics: [] };
-    }
-
-    async healthCheck(): Promise<boolean> {
-        try {
-            const res = await fetch(this.BASE_URL, {
-                method: 'HEAD',
-                headers: this.HEADERS
-            });
-            return res.ok;
-        } catch {
-            return false;
-        }
-    }
-
-    private async findWatchPath(imdbId: string): Promise<string | null> {
-        const res = await fetch(`${this.BASE_URL}/movie/${imdbId}`, {
-            headers: this.HEADERS
-        });
-        if (!res.ok) return null;
-        const html = await res.text();
-        const match = html.match(/href="(\/w\/[^"]+)"/);
-        return match ? match[1] : null;
-    }
-
-    private async extractSourceId(watchPath: string): Promise<string | null> {
-        const res = await fetch(`${this.BASE_URL}${watchPath}`, {
-            headers: this.HEADERS
-        });
-        if (!res.ok) return null;
-        const html = await res.text();
-
-        const patterns = [
-            /Movie\.setSource\("([^"]+)"/,
-            /setSource\("([^"]+)"/,
-            /setSource\('([^']+)'/,
-            /"source_id"\s*:\s*"([^"]+)"/,
-            /source_id\s*=\s*"([^"]+)"/,
-            /file_id\s*=\s*"([^"]+)"/,
-            /"file_id"\s*:\s*"([^"]+)"/
-        ];
-
-        for (const pattern of patterns) {
-            const match = html.match(pattern);
-            if (match) return match[1];
-        }
-        return null;
-    }
-
-    private async fetchApi(sourceId: string): Promise<FshareResponse | null> {
-        const url = `${this.BASE_URL}/api/file/${sourceId}/source?trailer=${this.TRAILER}&type=watch`;
-        const res = await fetch(url, {
-            headers: { ...this.API_HEADERS, Referer: `${this.BASE_URL}/` }
-        });
-        if (!res.ok) return null;
-        const json = (await res.json()) as FshareResponse;
-        return json.status === 'ok' ? json : null;
-    }
-
-    private mapToProviderResult(resp: FshareResponse): ProviderResult {
-        const file = resp.data?.file;
-
-        const allSources: FshareSource[] = [
-            ...(file?.sources ?? []),
-            ...(file?.backups ?? []),
-            ...(file?.alternatives?.flat() ?? [])
-        ];
-
-        const uniqueSources = Array.from(
-            new Map(allSources.map((s) => [s.src, s])).values()
-        );
-
-        const sources = uniqueSources
-            .filter((s) => Boolean(s?.src))
-            .sort((a, b) => Number(b.quality ?? 0) - Number(a.quality ?? 0))
-            .map((s) => {
-                const rawUrl = s.src.startsWith('http')
-                    ? s.src
-                    : `${this.BASE_URL}${s.src}`;
-
-                return {
-                    url: this.createProxyUrl(rawUrl, this.HEADERS),
-                    type: (s.type.replace('video/', '') || 'mp4') as SourceType,
-                    quality: this.inferQuality(s.label) ?? 'Auto',
-                    audioTracks: [
-                        {
-                            language: 'org',
-                            label: 'Original'
-                        }
-                    ],
-                    provider: {
-                        id: this.id,
-                        name: this.name
-                    }
-                };
-            });
-
-        if (!sources.length) {
+        } catch (e) {
             return this.emptyResult(
-                'API returned ok but contained no playable sources'
+                e instanceof Error ? e.message : 'Unknown provider error'
             );
         }
+    }
 
-        return {
-            sources,
-            subtitles: [],
-            diagnostics: []
-        };
+    private async extractStreamFromIframe(
+        iframeUrl: string
+    ): Promise<string | null> {
+        try {
+            const domain = extractDomain(iframeUrl);
+            const headers = { ...this.HEADERS, Referer: this.BASE_URL };
+
+            const response = await fetch(iframeUrl, { headers });
+            if (!response.ok) return null;
+
+            const html = await response.text();
+
+            const fileMatch = html.match(/file:\s*["']([^"']+)["']/);
+            if (fileMatch && fileMatch[1]) {
+                const url = fileMatch[1];
+                if (url.startsWith('//')) return `https:${url}`;
+                if (url.startsWith('/')) return `https://${domain}${url}`;
+                return url;
+            }
+
+            const sourceMatch = html.match(/<source[^>]+src=["']([^"']+)["']/i);
+            if (sourceMatch && sourceMatch[1]) {
+                const url = sourceMatch[1];
+                if (url.startsWith('//')) return `https:${url}`;
+                if (url.startsWith('/')) return `https://${domain}${url}`;
+                return url;
+            }
+
+            return null;
+        } catch {
+            return null;
+        }
+    }
+
+    private async extractSubtitles(html: string): Promise<Subtitle[]> {
+        const subtitles: Subtitle[] = [];
+        try {
+            const $ = cheerio.load(html);
+            $('track[kind="captions"]').each((_, el) => {
+                const src = $(el).attr('src');
+                const label = $(el).attr('label') || 'Unknown';
+                const srclang = $(el).attr('srclang');
+
+                if (src) {
+                    const rawUrl = src.startsWith('//')
+                        ? `https:${src}`
+                        : src.startsWith('/')
+                          ? `${this.BASE_URL}${src}`
+                          : src;
+                    subtitles.push({
+                        url: this.createProxyUrl(rawUrl, this.HEADERS),
+                        label,
+                        format: rawUrl.endsWith('.vtt') ? 'vtt' : 'srt'
+                    });
+                }
+            });
+        } catch {
+            // Ignore subtitle extraction errors
+        }
+        return subtitles;
     }
 
     private emptyResult(message: string): ProviderResult {
@@ -197,5 +207,17 @@ export class FsharetvProvider extends BaseProvider {
                 }
             ]
         };
+    }
+
+    async healthCheck(): Promise<boolean> {
+        try {
+            const res = await fetch(this.BASE_URL, {
+                method: 'HEAD',
+                headers: this.HEADERS
+            });
+            return res.status === 200;
+        } catch {
+            return false;
+        }
     }
 }

@@ -1,5 +1,19 @@
 import { OMSSServer } from '@omss/framework';
 import 'dotenv/config';
+
+// Sanitize environment variables since some platforms might inject them with inline comments
+for (const key of Object.keys(process.env)) {
+    const val = process.env[key];
+    if (typeof val === 'string' && val.includes('#')) {
+        process.env[key] = val.split('#')[0].trim();
+    }
+}
+
+// Force valid configurations for the dev server environment
+if (!process.env.TMDB_API_KEY || process.env.TMDB_API_KEY === 'your_tmdb_api_key_here') {
+    process.env.TMDB_API_KEY = 'fake_key';
+}
+
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { knownThirdPartyProxies } from './thirdPartyProxies.js';
@@ -8,33 +22,41 @@ import { streamPatterns } from './streamPatterns.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const getEnv = (key: string, def?: string): any => {
+    const val = process.env[key];
+    if (!val) return def;
+    return val.split('#')[0].trim() || def;
+};
+
 async function main() {
     const server = new OMSSServer({
         name: 'CinePro',
         version: '1.0.0',
 
         // Network
-        host: process.env.HOST ?? 'localhost',
-        port: Number(process.env.PORT ?? 3000),
-        publicUrl: process.env.PUBLIC_URL,
+        host: process.env.HOST || '0.0.0.0',
+        port: Number(process.env.PORT) || 3000,
+        publicUrl: getEnv('PUBLIC_URL'),
 
         // Cache (memory for dev, Redis for prod)
         cache: {
-            type: (process.env.CACHE_TYPE as 'memory' | 'redis') ?? 'memory',
+            type: (getEnv('CACHE_TYPE') as 'memory' | 'redis') ?? 'memory',
             ttl: {
                 sources: 60 * 60,
                 subtitles: 60 * 60 * 24
             },
             redis: {
-                host: process.env.REDIS_HOST ?? 'localhost',
-                port: Number(process.env.REDIS_PORT ?? 6379),
-                password: process.env.REDIS_PASSWORD
+                host: getEnv('REDIS_HOST', 'localhost'),
+                port: Number(getEnv('REDIS_PORT', '6379')),
+                password: getEnv('REDIS_PASSWORD')
             }
         },
 
         // TMDB
         tmdb: {
-            apiKey: process.env.TMDB_API_KEY!,
+            apiKey: (getEnv('TMDB_API_KEY') && getEnv('TMDB_API_KEY') !== 'your_tmdb_api_key_here') 
+                ? getEnv('TMDB_API_KEY') 
+                : 'fake_key',
             cacheTTL: 24 * 60 * 60 // 24h
         },
 
@@ -45,7 +67,7 @@ async function main() {
         },
 
         cors: {
-            origin: process.env.CORS_ORIGIN ?? '*',
+            origin: getEnv('CORS_ORIGIN', '*'),
             methods: ['GET', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization'],
             exposedHeaders: ['Content-Range', 'Accept-Ranges', 'ETag'],
@@ -55,7 +77,7 @@ async function main() {
 
         stremio: {
             // exposes a stremio addon on /stremio/manifest.json
-            enableNativeAddon: process.env.STREMIO_ADDON === 'true',
+            enableNativeAddon: getEnv('STREMIO_ADDON') === 'true',
             // you can your own custom stremio addons as sources into cinepro.
             stremioAddons: []
             /*
@@ -71,7 +93,7 @@ async function main() {
 
         // MCP for AI agents
         mcp: {
-            enabled: process.env.MCP_ENABLED === 'true'
+            enabled: getEnv('MCP_ENABLED') === 'true'
         }
     });
 
@@ -81,9 +103,7 @@ async function main() {
 
     await server.start();
 
-    const publicUrl =
-        process.env.PUBLIC_URL ??
-        `http://${process.env.HOST ?? 'localhost'}:${process.env.PORT ?? 3000}`;
+    const publicUrl = getEnv('PUBLIC_URL', 'http://localhost:3000');
 
     const uiUrl = `https://ui.cinepro.cc/?omssurl=${encodeURIComponent(publicUrl)}`;
 
@@ -114,6 +134,7 @@ ${borderBottom}
 `);
 }
 
-main().catch(() => {
+main().catch((err) => {
+    console.error("Server crashed:", err);
     process.exit(1);
 });

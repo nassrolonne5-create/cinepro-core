@@ -14,9 +14,11 @@ export class VidApiProvider extends BaseProvider {
     readonly id = 'vidapi';
     readonly name = 'VidApi';
     readonly enabled = true;
+
     readonly BASE_URL = 'https://vaplayer.ru';
     readonly IFRAME_URL = 'https://brightpathsignals.com';
     readonly API_URL = 'https://streamdata.vaplayer.ru/api.php';
+
     readonly HEADERS = {
         'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -42,13 +44,13 @@ export class VidApiProvider extends BaseProvider {
     ): Promise<ProviderResult> {
         try {
             this.HEADERS['User-Agent'] = generateRandomUserAgent();
+
             const type = media.type === 'movie' ? 'movie' : 'tv';
 
             // Build the API URL with appropriate params
             const url = new URL(this.API_URL);
             url.searchParams.set('tmdb', media.tmdbId);
             url.searchParams.set('type', type);
-
             if (media.type === 'tv' && media.s != null && media.e != null) {
                 url.searchParams.set('season', String(media.s));
                 url.searchParams.set('episode', String(media.e));
@@ -79,7 +81,6 @@ export class VidApiProvider extends BaseProvider {
                         streamUrl.includes('mp4') || streamUrl.includes('mkv')
                             ? 'mp4'
                             : 'hls';
-
                     return {
                         url: this.createProxyUrl(streamUrl, this.HEADERS),
                         type: sourceType,
@@ -97,6 +98,7 @@ export class VidApiProvider extends BaseProvider {
                     };
                 }
             );
+
             const subtitles: Subtitle[] = (json.default_subs ?? []).map(
                 (sub: {
                     lang: string;

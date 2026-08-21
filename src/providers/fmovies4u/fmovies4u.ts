@@ -16,7 +16,7 @@ export class Fmovies4U extends BaseProvider {
     readonly id = 'fmovies4u';
     readonly name = 'Fmovies4U';
     // disabled since fmovies4u is currently broken... the logic is probably the same later on
-    readonly enabled = false;
+    readonly enabled = true;
     readonly BASE_URL = 'https://fmovies4u.com';
     readonly HEADERS = {
         'User-Agent':

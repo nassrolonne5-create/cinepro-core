@@ -20,7 +20,7 @@ import { AnyEmbedApiResponse, TokenResponse } from './anyembed.types.js';
 export class AnyEmbed extends BaseProvider {
     readonly id = 'anyembed';
     readonly name = 'AnyEmbed';
-    readonly enabled = false;
+    readonly enabled = true;
     readonly BASE_URL = 'https://api.anyembed.xyz';
     readonly FRONTEND_URL = 'https://anyembed.xyz';
     readonly HEADERS = {

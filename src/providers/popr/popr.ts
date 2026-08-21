@@ -7,16 +7,21 @@ import type {
     SourceType,
     Subtitle
 } from '@omss/framework';
-import { VidnestResponse } from './popr.types.js';
 
 export class PoprProvider extends BaseProvider {
     readonly id = 'popr';
     readonly name = 'Popr';
     readonly enabled = true;
-    readonly BASE_URL = 'https://popr.ink';
+
+    readonly BASE_URL = 'https://popr.tv';
+    readonly API_URL = 'https://api.popr.tv';
+
     readonly HEADERS = {
         'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150 Safari/537.36',
+        Accept: 'application/json, text/plain, */*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        Origin: this.BASE_URL,
         Referer: `${this.BASE_URL}/`
     };
 
@@ -25,211 +30,103 @@ export class PoprProvider extends BaseProvider {
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        try {
-            let movieSource = await this.fetchSource(media, 'movie');
-
-            return {
-                sources: movieSource.sources,
-                subtitles: movieSource.subtitles,
-                diagnostics: []
-            };
-        } catch (error) {
-            return this.emptyResult(
-                error instanceof Error
-                    ? error.message
-                    : 'error at getting source',
-                media
-            );
-        }
+        return this.getSources(media);
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        try {
-            let tvSource = await this.fetchSource(media, 'tv');
-
-            return {
-                sources: tvSource.sources,
-                subtitles: tvSource.subtitles,
-                diagnostics: []
-            };
-        } catch (error) {
-            return this.emptyResult(
-                error instanceof Error
-                    ? error.message
-                    : 'error at getting source',
-                media
-            );
-        }
+        return this.getSources(media);
     }
 
-    private async checkStreamType(
-        url: string,
-        headers: Record<string, string> = {},
-        serverName: string
-    ): Promise<{ isValid: boolean; type: SourceType }> {
+    private async getSources(
+        media: ProviderMediaObject
+    ): Promise<ProviderResult> {
         try {
-            const res = await fetch(url, {
-                headers: { ...this.HEADERS, ...headers },
-                signal: AbortSignal.timeout(5000),
-                redirect: 'follow'
+            const searchUrl = `${this.API_URL}/search?query=${encodeURIComponent(media.title)}`;
+            const searchRes = await fetch(searchUrl, {
+                headers: this.HEADERS
             });
 
-            if (!res.ok) {
-                return { isValid: false, type: 'mp4' };
+            if (!searchRes.ok) {
+                return this.emptyResult(`Search failed with status ${searchRes.status}`);
             }
 
-            const contentType = res.headers.get('content-type') || '';
-            if (
-                contentType.includes('video/mp4') ||
-                contentType.includes('video/webm')
-            ) {
-                return { isValid: true, type: 'mp4' };
+            const searchData = await searchRes.json() as any;
+            if (!searchData || !searchData.results || searchData.results.length === 0) {
+                 return this.emptyResult('No results found for search');
             }
 
-            const text = await res.text();
-            const trimmed = text.trim();
+            const matchedResult = searchData.results.find((r: any) => r.tmdb_id === media.tmdbId);
+            if (!matchedResult) {
+                 return this.emptyResult('No matched result found in search');
+            }
+            
+            const itemUrl = `${this.API_URL}/item?id=${matchedResult.id}`;
+            const itemRes = await fetch(itemUrl, {
+                 headers: this.HEADERS
+            });
+            
+            if (!itemRes.ok) {
+                 return this.emptyResult(`Item fetch failed with status ${itemRes.status}`);
+            }
+            
+            const itemData = await itemRes.json() as any;
+            if (!itemData || !itemData.streams || itemData.streams.length === 0) {
+                 return this.emptyResult('No streams found in item');
+            }
+            
+            let targetStream: any = null;
+            if (media.type === 'movie') {
+                targetStream = itemData.streams[0];
+            } else {
+                targetStream = itemData.streams.find((s: any) => s.season === media.s && s.episode === media.e);
+            }
+            
+            if (!targetStream || !targetStream.url) {
+                 return this.emptyResult('No target stream found');
+            }
 
-            if (trimmed.startsWith('#EXTM3U')) {
-                const segmentLines = trimmed.split('\n').filter((l) => {
-                    const t = l.trim();
-                    return t && !t.startsWith('#');
-                });
+            const sourceType: SourceType =
+                targetStream.url.includes('.mp4') || targetStream.url.includes('.mkv')
+                    ? 'mp4'
+                    : 'hls';
 
-                if (segmentLines.length === 0) {
-                    return { isValid: false, type: 'hls' };
+            const sources: Source[] = [
+                {
+                    url: this.createProxyUrl(targetStream.url, this.HEADERS),
+                    type: sourceType,
+                    quality: targetStream.quality || 'Auto',
+                    audioTracks: [
+                        {
+                            label: 'Original',
+                            language: 'unknown'
+                        }
+                    ],
+                    provider: {
+                        id: this.id,
+                        name: this.name
+                    }
                 }
+            ];
 
-                return { isValid: true, type: 'hls' };
-            }
+            const subtitles: Subtitle[] = (itemData.subtitles || []).map((sub: any) => ({
+                url: this.createProxyUrl(sub.url, this.HEADERS),
+                label: sub.label,
+                format: sub.url.endsWith('.vtt') ? 'vtt' : 'srt'
+            }));
 
-            if (
-                trimmed.toLowerCase().includes('<!doctype html>') ||
-                trimmed.toLowerCase().includes('<html')
-            ) {
-                return { isValid: false, type: 'mp4' };
-            }
-
-            return { isValid: true, type: 'mp4' };
-        } catch (error) {
-            return { isValid: false, type: 'mp4' };
-        }
-    }
-
-    private async fetchSource(
-        media: ProviderMediaObject,
-        type: 'tv' | 'movie' = 'movie'
-    ): Promise<{ sources: Source[]; subtitles: Subtitle[] }> {
-        const servers = [
-            'default',
-            'catflix',
-            'hexa',
-            'Gama',
-            'Liligoon',
-            'Sigma',
-            'Prime',
-            'Alfa',
-            'Lamda',
-            'ynx_vidsrc'
-        ];
-
-        const ep = media.e || 1;
-        const season = media.s || 1;
-
-        const buildUrl = (server: string) => {
-            if (type === 'tv') {
-                return `${this.BASE_URL}/api/vidnest?id=${media.tmdbId}&type=tv&server=${server}&season=${season}&episode=${ep}`;
-            }
-            return (
-                `${this.BASE_URL}/api/vidnest?id=${media.tmdbId}&type=movie` +
-                (server !== 'default' ? `&server=${server}` : '')
+            return {
+                sources,
+                subtitles,
+                diagnostics: []
+            };
+        } catch (e) {
+            return this.emptyResult(
+                e instanceof Error ? e.message : 'Unknown provider error'
             );
-        };
-
-        const requests = servers.map((server) =>
-            fetch(buildUrl(server), {
-                headers: this.HEADERS
-            }).then(async (res) => {
-                if (res.status !== 200) return null;
-
-                const data = (await res.json()) as VidnestResponse;
-                const stream = data?.results?.[0]?.streams?.[0];
-
-                if (!stream?.url) return null;
-
-                const streamHeaders = stream.headers || {};
-                const { isValid, type } = await this.checkStreamType(
-                    stream.url,
-                    streamHeaders,
-                    server
-                );
-
-                if (!isValid) return null;
-
-                const quality = stream.quality;
-                const INVALID_QUALITIES = ['Hindi', 'English', 'MAIN'];
-                const QUALITIES = ['Hindi', 'English'];
-                const languages = QUALITIES.includes(quality);
-
-                const proxyHeaders = {
-                    ...this.HEADERS,
-                    ...streamHeaders
-                };
-
-                return {
-                    source: {
-                        url: this.createProxyUrl(stream.url, proxyHeaders),
-                        type,
-                        quality: INVALID_QUALITIES.includes(quality)
-                            ? 'auto'
-                            : quality || 'auto',
-                        audioTracks: [
-                            {
-                                language: languages
-                                    ? quality.toLowerCase().slice(0, 3)
-                                    : 'eng',
-                                label: languages ? quality : 'English'
-                            }
-                        ],
-                        provider: { name: this.name, id: this.id }
-                    },
-                    subtitles: data.results?.[0]?.subtitles || []
-                };
-            })
-        );
-
-        const results = await Promise.allSettled(requests);
-
-        const sources: Source[] = [];
-        const subtitlesMap = new Map<string, Subtitle>();
-
-        for (const res of results) {
-            if (res.status !== 'fulfilled' || !res.value) continue;
-
-            sources.push(res.value.source);
-
-            for (const sub of res.value.subtitles) {
-                if (!sub?.url) continue;
-
-                if (!subtitlesMap.has(sub.url)) {
-                    subtitlesMap.set(sub.url, {
-                        url: this.createProxyUrl(sub.url),
-                        format: 'vtt',
-                        label: sub.lang || 'Unknown'
-                    });
-                }
-            }
         }
-
-        return {
-            sources,
-            subtitles: Array.from(subtitlesMap.values())
-        };
     }
 
-    private emptyResult(
-        message: string,
-        media: ProviderMediaObject
-    ): ProviderResult {
+    private emptyResult(message: string): ProviderResult {
         return {
             sources: [],
             subtitles: [],
