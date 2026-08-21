@@ -35,8 +35,8 @@ async function main() {
 
         // Network
         host: process.env.HOST || '0.0.0.0',
-        port: 3000,
-        publicUrl: getEnv('PUBLIC_URL'),
+        port: process.env.PORT ? Number(process.env.PORT) : 3000,
+        publicUrl: process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL,
 
         // Cache (memory for dev, Redis for prod)
         cache: {
@@ -103,7 +103,7 @@ async function main() {
 
     await server.start();
 
-    const publicUrl = getEnv('PUBLIC_URL', 'http://localhost:3000');
+    const publicUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
 
     const uiUrl = `https://ui.cinepro.cc/?omssurl=${encodeURIComponent(publicUrl)}`;
 
