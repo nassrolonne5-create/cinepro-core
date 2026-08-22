@@ -1,12 +1,12 @@
 import { BaseProvider } from '@omss/framework';
 import type { ProviderCapabilities, ProviderMediaObject, ProviderResult, Source } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/vidfast';
+import { fetchSources } from 'kaizoku-core/providers/movies/vidnest';
 
-export class VidFastProvider extends BaseProvider {
-    readonly id = 'vidfast';
-    readonly name = 'VidFast';
+export class VidNestProvider extends BaseProvider {
+    readonly id = 'vidnest';
+    readonly name = 'VidNest';
     readonly enabled = true;
-    readonly BASE_URL = 'https://vidfast.vc';
+    readonly BASE_URL = 'https://vidnest.net';
     readonly HEADERS = {};
 
     readonly capabilities: ProviderCapabilities = {
@@ -45,7 +45,7 @@ export class VidFastProvider extends BaseProvider {
             }
             return { sources, subtitles: [], diagnostics: [] };
         } catch (e) {
-            console.error('[VidFast] Error:', e);
+            console.error(`[${this.name}] Error:`, e);
             return { sources: [], subtitles: [], diagnostics: [] };
         }
     }

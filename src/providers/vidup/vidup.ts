@@ -1,12 +1,12 @@
 import { BaseProvider } from '@omss/framework';
 import type { ProviderCapabilities, ProviderMediaObject, ProviderResult, Source } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/vidcore';
+import { fetchSources } from 'kaizoku-core/providers/movies/vidup';
 
-export class VidcoreProvider extends BaseProvider {
-    readonly id = 'vidcore';
-    readonly name = 'VidCore';
+export class VidUpProvider extends BaseProvider {
+    readonly id = 'vidup';
+    readonly name = 'VidUp';
     readonly enabled = true;
-    readonly BASE_URL = 'https://vidcore.io';
+    readonly BASE_URL = 'https://vidup.net';
     readonly HEADERS = {};
 
     readonly capabilities: ProviderCapabilities = {
@@ -45,7 +45,7 @@ export class VidcoreProvider extends BaseProvider {
             }
             return { sources, subtitles: [], diagnostics: [] };
         } catch (e) {
-            console.error('[Vidcore] Error:', e);
+            console.error(`[${this.name}] Error:`, e);
             return { sources: [], subtitles: [], diagnostics: [] };
         }
     }
