@@ -36,7 +36,7 @@ export class VidSrcProProvider extends BaseProvider {
             
             for (const src of data.sources) {
                 sources.push({
-                    url: this.createProxyUrl(src.url, headers),
+                    url: src.url.includes('hakunaymatata.com') ? src.url : this.createProxyUrl(src.url, headers),
                     quality: src.quality || 'auto',
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],

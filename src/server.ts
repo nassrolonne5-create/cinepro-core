@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { knownThirdPartyProxies } from './thirdPartyProxies.js';
 import { streamPatterns } from './streamPatterns.js';
+import { configure as configureKaizoku } from 'kaizoku-core';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +30,8 @@ const getEnv = (key: string, def?: string): any => {
 };
 
 async function main() {
+    configureKaizoku({ tmdbApiKey: (getEnv('TMDB_API_KEY') && getEnv('TMDB_API_KEY') !== 'your_tmdb_api_key_here') ? getEnv('TMDB_API_KEY') : 'fake_key' });
+    configureKaizoku({ tmdbApiKey: (getEnv('TMDB_API_KEY') && getEnv('TMDB_API_KEY') !== 'your_tmdb_api_key_here') ? getEnv('TMDB_API_KEY') : 'fake_key' });
     const server = new OMSSServer({
         name: 'CinePro',
         version: '1.0.0',
@@ -100,6 +103,7 @@ async function main() {
     // Register providers
     const registry = server.getRegistry();
     await registry.discoverProviders(path.join(__dirname, './providers/'));
+    console.log("REGISTERED PROVIDERS:", registry.getProviders().map(p => p.id));
 
     await server.start();
 
