@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Player</title>
+<script data-cfasync="false" async type="text/javascript" src="//ao.organicpimping.com/r91qETodgwgdIk9G8/150169"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://remoteconsultinggroup.site">
+<link rel="dns-prefetch" href="https://remoteconsultinggroup.site">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="/hls.min.js"></script>
+<style>
+:root{--bg:#0a0a0a;--surface:#141414;--red:#E50914;--red-dark:#B20710;--text:#ffffff;--text-dim:#b3b3b3;--text-faint:#7a7a7a;--track:rgba(255,255,255,0.24);}
+*{box-sizing:border-box;}
+body{margin:0;background:#000;font-family:'Inter',sans-serif;overflow:hidden}
+.player{position:relative;width:100vw;height:100vh;background:#000;overflow:hidden;cursor:none;}
+.player.controls-visible{cursor:default;}
+video{width:100%;height:100%;display:block;object-fit:cover;background:#000;}
+.top-bar{position:absolute;top:0;left:0;right:0;padding:28px 32px 60px;background:linear-gradient(to bottom,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.35) 55%,transparent 100%);opacity:0;transform:translateY(-8px);transition:opacity .35s,transform .35s;pointer-events:none;}
+.player.controls-visible .top-bar,.player.paused .top-bar{opacity:1;transform:translateY(0);}
+.title-eyebrow{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:6px;}
+.title-main{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--text);line-height:1;}
+.title-sub{font-size:13px;color:var(--text-dim);font-weight:500;margin-top:6px;}
+.center-toggle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:transparent;border:none;cursor:none;z-index:2;}
+.player.controls-visible .center-toggle,.player.paused .center-toggle{cursor:pointer;}
+.big-play{width:84px;height:84px;border-radius:50%;background:rgba(14,14,14,0.6);border:1.5px solid rgba(255,255,255,0.22);display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(0.8);transition:opacity .3s cubic-bezier(.16,1,.3,1),transform .3s cubic-bezier(.16,1,.3,1),background .2s,border-color .2s,box-shadow .2s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 16px 44px rgba(0,0,0,.45);}
+.player.loading .big-play,.player.loading .play-btn{opacity:0!important;pointer-events:none;}
+.player.paused .big-play{opacity:1;transform:scale(1);}
+/* Scoped under .paused so it outranks the .player.paused .big-play reset above. */
+.player.paused .big-play:hover{background:rgba(var(--brand-rgb),0.9);border-color:rgba(255,255,255,0.5);box-shadow:0 16px 50px rgba(var(--brand-rgb),.45);transform:scale(1.06);}
+.big-play svg{width:32px;height:32px;fill:#fff;margin-left:3px;}
+.player:not(.paused) .big-play svg{margin-left:0;}
+.player:not(.paused) .big-play svg.icon-play{display:none;}
+.player.paused .big-play svg.icon-pause{display:none;}
+.flash{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90px;height:90px;border-radius:50%;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;z-index:3;}
+.player.loading .flash{display:none!important;}
+.flash svg{width:34px;height:34px;fill:#fff;}
+.flash.show{animation:flashPop .5s forwards;}
+@keyframes flashPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}25%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.05)}}
+.bottom-bar{position:absolute;left:0;right:0;bottom:0;padding:0 24px 16px;background:linear-gradient(to top,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.55) 55%,transparent 100%);opacity:0;transform:translateY(10px);transition:opacity .35s,transform .35s;z-index:4;}
+.player.controls-visible .bottom-bar,.player.paused .bottom-bar{opacity:1;transform:translateY(0);}
+/* The scrubber spans the full width — the clock moved down into the button
+   row, where it costs no seek distance. */
+.progress-row{padding:10px 0 6px;}
+.progress-track{position:relative;height:4px;border-radius:999px;background:var(--track);cursor:pointer;touch-action:none;transition:height .14s cubic-bezier(.16,1,.3,1);}
+/* Invisible padding so the pointer target is ~24px tall without moving anything. */
+.progress-track:before{content:'';position:absolute;left:0;right:0;top:-10px;bottom:-10px;}
+.progress-track:hover,.progress-track.scrubbing{height:7px;}
+.progress-buffered{position:absolute;top:0;left:0;height:100%;background:rgba(255,255,255,0.26);border-radius:inherit;width:0%;}
+.progress-hover{position:absolute;top:0;left:0;height:100%;background:rgba(255,255,255,0.4);border-radius:inherit;width:0;pointer-events:none;}
+.progress-fill{position:absolute;top:0;left:0;height:100%;background:var(--brand);border-radius:inherit;width:0%;box-shadow:0 0 12px rgba(var(--brand-rgb),0.55);}
+.progress-handle{position:absolute;top:50%;left:0%;width:14px;height:14px;background:var(--brand);border-radius:50%;transform:translate(-50%,-50%) scale(0);transition:transform .16s cubic-bezier(.16,1,.3,1);box-shadow:0 0 0 5px rgba(var(--brand-rgb),0.22),0 2px 8px rgba(0,0,0,.5);}
+.progress-track:hover .progress-handle,.progress-track.scrubbing .progress-handle{transform:translate(-50%,-50%) scale(1);}
+.progress-tip{position:absolute;bottom:20px;left:0;transform:translateX(-50%);padding:4px 8px;border-radius:6px;background:rgba(10,10,10,.94);border:1px solid rgba(255,255,255,.12);color:#fff;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;opacity:0;pointer-events:none;transition:opacity .14s;white-space:nowrap;}
+.progress-track:hover .progress-tip,.progress-track.scrubbing .progress-tip{opacity:1;}
+.controls-row{display:flex;align-items:center;gap:8px;}
+.controls-left,.controls-right{display:flex;align-items:center;gap:2px;}
+.controls-right{margin-left:auto;}
+/* Real 38px hit targets with a visible hover pill — the old naked icons were
+   ~30px of guesswork with 18px of dead gap between them. */
+.ctrl-btn{width:38px;height:38px;flex-shrink:0;padding:0;background:none;border:none;border-radius:10px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center;transition:background .16s,transform .12s;}
+.ctrl-btn:hover{background:rgba(255,255,255,0.14);}
+.ctrl-btn:active{transform:scale(.93);}
+.ctrl-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px;}
+.ctrl-btn svg{width:21px;height:21px;fill:#fff;pointer-events:none;}
+.ctrl-btn:has(+ .panel.show){background:rgba(var(--brand-rgb),0.2);}
+.play-btn{width:42px;height:42px;}
+.play-btn svg{width:25px;height:25px;}
+.play-btn:hover{background:rgba(var(--brand-rgb),0.25);}
+.player:not(.paused) .play-btn .icon-play{display:none;}
+.player.paused .play-btn .icon-pause{display:none;}
+.skip-btn svg{width:23px;height:23px;}
+.time-label{margin:0 6px 0 4px;font-size:12.5px;font-weight:600;color:var(--text-dim);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.time-label b{color:#fff;font-weight:600;}
+.volume-group{display:flex;align-items:center;}
+.volume-track{width:0;height:4px;margin-right:0;border-radius:999px;background:var(--track);position:relative;cursor:pointer;transition:width .22s cubic-bezier(.16,1,.3,1),margin-right .22s;}
+.volume-group:hover .volume-track,.volume-group:focus-within .volume-track{width:74px;margin-right:8px;}
+.volume-fill{position:absolute;top:0;left:0;height:100%;width:80%;background:#fff;border-radius:inherit;}
+/* The handle must fade with the track — a 0-width slider still has a right
+   edge, so an always-on dot floats next to the mute icon. */
+.volume-fill:after{content:'';position:absolute;right:0;top:50%;width:11px;height:11px;border-radius:50%;background:#fff;transform:translate(50%,-50%);box-shadow:0 2px 6px rgba(0,0,0,.5);opacity:0;transition:opacity .18s;}
+.volume-group:hover .volume-fill:after,.volume-group:focus-within .volume-fill:after{opacity:1;}
+.ep-label{flex:1;min-width:0;padding:0 14px;font-size:13px;color:var(--text-dim);font-weight:500;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.panel{position:absolute;bottom:52px;right:0;min-width:210px;max-height:min(70vh,540px);overflow-y:auto;background:rgba(18,18,18,0.94);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:7px;box-shadow:0 18px 50px rgba(0,0,0,0.6);z-index:8;opacity:0;transform:translateY(10px) scale(.97);pointer-events:none;transition:opacity .2s cubic-bezier(.16,1,.3,1),transform .2s cubic-bezier(.16,1,.3,1);}
+.panel.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+.panel-header{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-faint);font-weight:700;padding:8px 10px 6px;}
+.panel-divider{height:1px;background:rgba(255,255,255,0.1);margin:6px 4px;}
+.subtitle-sync{display:flex;align-items:center;gap:8px;padding:5px 10px 8px;}
+.sync-step{width:30px;height:30px;border:1px solid rgba(255,255,255,.16);border-radius:9px;background:linear-gradient(180deg,#292929,#171717);color:#fff;font-size:20px;line-height:1;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.28);}
+.sync-step:hover{border-color:var(--brand);color:#fff;transform:translateY(-1px);}
+.sync-value{min-width:62px;text-align:center;color:#f2f2f2;font:600 11px 'Inter',sans-serif;letter-spacing:.02em;}
+.sync-reset{margin-left:auto;background:none;border:0;color:var(--text-faint);font-size:11px;cursor:pointer;}
+.sync-reset:hover{color:#fff;}
+.panel-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:none;border:none;color:#e8e8e8;font-size:13.5px;font-weight:500;text-align:left;padding:10px 11px;border-radius:8px;cursor:pointer;transition:background .12s,color .12s;}
+.panel-item:hover{background:rgba(255,255,255,0.08);color:#fff;}
+.panel-item.active{color:var(--brand);background:rgba(var(--brand-rgb),0.12);}
+.panel-item .check{width:15px;height:15px;fill:var(--brand);opacity:0;flex-shrink:0;}
+.panel-item.active .check{opacity:1;}
+.panel-item .tag{font-size:10px;font-weight:700;color:#7ed957;background:rgba(126,217,87,.14);padding:2px 6px;border-radius:3px;}
+.loader{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.18);z-index:1;}
+.loader.show{display:flex;}
+.loader-ring{width:52px;height:52px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--brand);animation:spin .9s linear infinite;}
+.loader-card{display:grid;justify-items:center;gap:14px;padding:18px 22px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(8,8,8,.82);box-shadow:0 12px 32px rgba(0,0,0,.32);}
+.loader-status{color:var(--text-dim);font-size:11px;letter-spacing:.08em;text-transform:uppercase;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.caption-overlay{position:absolute;left:50%;bottom:88px;transform:translateX(-50%);max-width:80%;padding:5px 12px;background:rgba(0,0,0,.65);color:#fff;font-size:17px;font-weight:500;text-align:center;border-radius:3px;line-height:1.4;opacity:0;transition:opacity .15s;z-index:2;pointer-events:none;}
+.caption-overlay.show{opacity:1;}
+.intro-skip{position:absolute;right:28px;bottom:88px;z-index:11;display:none;border:1px solid rgba(255,255,255,.55);border-radius:4px;padding:10px 13px;background:rgba(0,0,0,.76);color:#fff;font-size:12px;font-weight:700;cursor:pointer;}
+.intro-skip.show{display:block;}
+.next-up-card{position:absolute;right:28px;bottom:86px;z-index:12;display:none;align-items:center;gap:16px;max-width:min(430px,calc(100% - 56px));padding:14px 14px 14px 16px;border:1px solid rgba(229,9,20,.55);border-radius:8px;background:rgba(12,12,12,.95);box-shadow:0 16px 40px rgba(0,0,0,.5);color:#fff;}
+.next-up-card.show{display:flex;}
+.next-up-copy{display:grid;gap:4px;min-width:0;}
+.next-up-copy span,.next-up-copy small{color:var(--text-dim);font-size:10px;text-transform:uppercase;letter-spacing:1px;}
+.next-up-copy strong{overflow:hidden;font-size:14px;white-space:nowrap;text-overflow:ellipsis;}
+.next-up-card button{border:0;border-radius:4px;padding:9px 11px;background:var(--red);color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.next-up-card .next-up-cancel{padding:5px;background:transparent;color:var(--text-dim);font-weight:400;}
+@media (max-width:560px){.next-up-card{right:10px;bottom:70px;max-width:calc(100% - 20px);gap:8px;padding:10px;}.next-up-copy strong{font-size:12px;}.next-up-copy small{display:none;}.next-up-card button{padding:8px;font-size:10px;}}
+.preroll{position:absolute;inset:0;z-index:20;background:#050505;color:#fff;display:flex;align-items:center;justify-content:center;opacity:1;transition:opacity .55s ease,transform .55s cubic-bezier(.16,1,.3,1);}
+.preroll.hide{opacity:0;transform:scale(1.05);pointer-events:none;}
+.preroll-bg{position:absolute;inset:0;overflow:hidden;background:radial-gradient(110% 75% at 50% 42%,rgba(var(--brand-rgb),.10),transparent 62%),#050505;}
+.preroll-bg:before{content:'';position:absolute;inset:-45%;background:conic-gradient(from 0deg,transparent 0deg,rgba(var(--brand-rgb),.18) 45deg,transparent 120deg,transparent 240deg,rgba(255,255,255,.05) 300deg,transparent 355deg);animation:prerollAura 18s linear infinite;opacity:.7;}
+.preroll-bg:after{content:'';position:absolute;inset:0;background:radial-gradient(125% 95% at 50% 50%,transparent 42%,rgba(0,0,0,.88) 100%);}
+@keyframes prerollAura{to{transform:rotate(360deg);}}
+.preroll-card{position:relative;z-index:2;width:min(440px,calc(100vw - 40px));animation:prerollRise .8s cubic-bezier(.16,1,.3,1) both;}
+@keyframes prerollRise{from{opacity:0;transform:translateY(16px) scale(.97);filter:blur(6px);}to{opacity:1;transform:none;filter:none;}}
+.preroll-mark{display:flex;align-items:center;min-height:46px;margin-bottom:16px;}
+.preroll-logo{max-height:46px;max-width:200px;object-fit:contain;filter:drop-shadow(0 0 18px rgba(var(--brand-rgb),.45));animation:prerollMark 1s cubic-bezier(.16,1,.3,1) both;}
+.preroll-monogram{display:grid;place-items:center;width:46px;height:46px;border-radius:13px;background:linear-gradient(145deg,var(--brand),rgba(0,0,0,.4));box-shadow:0 0 26px rgba(var(--brand-rgb),.4),inset 0 1px 0 rgba(255,255,255,.28);font-family:'Bebas Neue',sans-serif;font-size:27px;line-height:1;color:#fff;animation:prerollMark 1s cubic-bezier(.16,1,.3,1) both;}
+@keyframes prerollMark{from{opacity:0;transform:scale(.82);}to{opacity:1;transform:none;}}
+.preroll-brand{margin-bottom:9px;color:var(--brand);font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;animation:prerollTrack .9s .08s cubic-bezier(.16,1,.3,1) both;}
+@keyframes prerollTrack{from{opacity:0;letter-spacing:.5em;}to{opacity:1;letter-spacing:.22em;}}
+.preroll-title{font-family:'Bebas Neue',sans-serif;font-size:34px;line-height:1.06;letter-spacing:.04em;color:#fff;animation:prerollRise .9s .16s cubic-bezier(.16,1,.3,1) both;}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .preroll-title{background:linear-gradient(100deg,#fff 34%,rgba(255,255,255,.5) 46%,#fff 58%);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:prerollRise .9s .16s cubic-bezier(.16,1,.3,1) both,prerollSheen 5s 1.1s ease-in-out infinite;}
+}
+@keyframes prerollSheen{0%{background-position:130% 0;}45%,100%{background-position:-30% 0;}}
+.preroll-status-wrap{height:26px;position:relative;margin-top:10px;overflow:hidden;}
+.preroll-status{position:absolute;inset:0;display:flex;align-items:center;color:rgba(255,255,255,.62);font-size:12px;letter-spacing:.03em;}
+.preroll-status.enter{animation:prerollStatusIn .34s cubic-bezier(.16,1,.3,1) forwards;}
+.preroll-status.leave{animation:prerollStatusOut .24s ease-in forwards;}
+@keyframes prerollStatusIn{from{opacity:0;transform:translateY(8px);filter:blur(3px);}to{opacity:1;transform:none;filter:none;}}
+@keyframes prerollStatusOut{to{opacity:0;transform:translateY(-8px);filter:blur(3px);}}
+.preroll-server{position:absolute;right:0;top:0;color:var(--brand);font-size:11px;font-weight:700;line-height:26px;letter-spacing:.06em;}
+.preroll-server .ok-tag{margin-left:6px;padding:3px 7px;border-radius:999px;background:rgba(var(--brand-rgb),.16);font-size:9px;letter-spacing:.12em;text-transform:uppercase;}
+.preroll-progress{position:relative;height:2px;margin-top:20px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.1);}
+.preroll-fill{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,rgba(var(--brand-rgb),.5),var(--brand));box-shadow:0 0 14px rgba(var(--brand-rgb),.75);transition:width .35s cubic-bezier(.16,1,.3,1);}
+.preroll-progress:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);transform:translateX(-100%);animation:prerollShimmer 1.9s ease-in-out infinite;}
+@keyframes prerollShimmer{to{transform:translateX(100%);}}
+.preroll-footline{display:flex;justify-content:space-between;margin-top:12px;color:rgba(255,255,255,.38);font-size:10px;letter-spacing:.12em;text-transform:uppercase;}
+.preroll-pct{color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums;}
+.preroll-switcher{display:flex;gap:5px;margin-top:18px;}
+.preroll-rail-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+.preroll-node{flex:1;height:3px;border-radius:999px;background:rgba(255,255,255,.12);transition:background .25s ease,box-shadow .25s ease,opacity .25s ease;}
+.preroll-node.probing{background:var(--brand);animation:prerollNode 1.15s ease-in-out infinite;}
+@keyframes prerollNode{0%,100%{opacity:.35;}50%{opacity:1;box-shadow:0 0 12px rgba(var(--brand-rgb),.6);}}
+.preroll-node.failed{background:rgba(255,255,255,.14);opacity:.45;}
+.preroll-node.ready{background:var(--brand);box-shadow:0 0 12px rgba(var(--brand-rgb),.55);}
+.preroll-node .region,.preroll-node .sub,.preroll-node .tag{display:none;}
+.preroll-card.connected .preroll-mark{animation:prerollLock .6s cubic-bezier(.16,1,.3,1);}
+@keyframes prerollLock{40%{transform:scale(1.07);}to{transform:none;}}
+.preroll.connected .preroll-bg:before{animation-duration:6s;}
+@media (max-width:560px){
+  .title-main{font-size:24px;}
+  .bottom-bar{padding:0 8px max(10px,env(safe-area-inset-bottom));}
+  .progress-row{padding:8px 4px 2px;}
+  .controls-row{gap:0;}
+  .controls-left,.controls-right{gap:0;min-width:0;}
+  .controls-left{flex:1;}
+  .controls-right{flex-shrink:0;margin-left:0;}
+  /* 36px is the smallest comfortable thumb target; nine of them plus a clock
+     is already 392px, so anything narrower has to drop controls, not shrink
+     them further — see the 430px block below. */
+  .ctrl-btn{width:36px;height:36px;border-radius:10px;}
+  .ctrl-btn svg{width:21px;height:21px;}
+  .play-btn{width:40px;height:40px;}
+  .play-btn svg{width:23px;height:23px;}
+  .time-label{margin:0 4px;font-size:11.5px;}
+  .progress-tip{display:none;}
+  .volume-track,.ep-label{display:none;}
+  .big-play{width:72px;height:72px;}
+  .big-play svg{width:28px;height:28px;}
+  .panel{position:fixed;left:0;right:0;bottom:0;width:100%;min-width:0;max-height:72dvh;overflow:auto;padding:18px 14px max(18px,env(safe-area-inset-bottom));border:1px solid rgba(255,255,255,.14);border-bottom:0;border-radius:22px 22px 0 0;background:rgba(20,20,20,.98);box-shadow:0 -18px 50px rgba(0,0,0,.58);transform:translateY(110%);}
+  .panel.show{transform:translateY(0);}
+  .panel:before{content:'';display:block;width:38px;height:4px;margin:0 auto 12px;border-radius:999px;background:rgba(255,255,255,.3);}
+  .panel-header{font-size:12px;padding:9px 10px 8px;}
+  .panel-item{min-height:44px;padding:11px 10px;font-size:14px;}
+  .preroll-mark{min-height:34px;margin-bottom:12px;}
+  .preroll-logo{max-height:34px;max-width:150px;}
+  .preroll-monogram{width:34px;height:34px;border-radius:10px;font-size:20px;}
+  .preroll-brand{margin-bottom:6px;font-size:10px;}
+  .preroll-title{font-size:23px;}
+  .preroll-server{position:static;display:block;line-height:20px;}
+  .preroll-status-wrap{height:24px;margin-top:4px;}
+  .preroll-progress{margin-top:14px;}
+  .preroll-footline{margin-top:8px;}
+  .preroll-switcher{margin-top:14px;}
+}
+/* Under ~430px the full control set overflows the bar and the right-hand
+   buttons walk off screen. Skip ±10s and the total duration are the two
+   things a phone can lose without losing a capability — dragging the
+   scrubber still seeks, and the elapsed time still reads. */
+@media (max-width:430px){
+  .skip-btn,.time-dur{display:none;}
+}
+@media (prefers-reduced-motion:reduce){
+  .preroll,.preroll *,.preroll *:before,.preroll *:after{animation:none!important;transition:none!important;}
+  /* The sheen leaves the gradient parked off-screen without its animation. */
+  .preroll-title{background:none;-webkit-text-fill-color:#fff;color:#fff;}
+}
+</style>
+<style>.top-bar{display:none!important;}
+:root{--brand:#E50914;--brand-rgb:229,9,20;}</style>
+</head>
+<body>
+<div class="player paused" id="player">
+  <video id="video" preload="metadata" autoplay muted playsinline></video>
+  <div class="loader" id="loader" role="status" aria-live="polite"><div class="loader-card"><div class="loader-ring"></div><div class="loader-status" id="loaderStatus">Connecting to stream…</div></div></div>
+
+  <div class="preroll" id="preroll" role="status" aria-live="polite" aria-label="Preparing playback">
+    <div class="preroll-bg"></div>
+    <div class="preroll-card" id="prerollRig">
+      <div class="preroll-mark"><span class="preroll-monogram">V</span></div>
+      <div class="preroll-brand">vidrift.in · Stream</div>
+      <div class="preroll-title">Preparing your stream</div>
+      <div class="preroll-status-wrap" id="prerollStatusWrap"><div class="preroll-status enter" id="prerollStage">Locating a server</div><div class="preroll-server" id="prerollServer"></div></div>
+      <div class="preroll-progress"><div class="preroll-fill" id="prerollFill"></div></div>
+      <div class="preroll-footline"><span id="prerollFoot">Initializing</span><span class="preroll-pct" id="prerollPct">0%</span></div>
+      <div class="preroll-switcher" id="prerollRail"><div class="preroll-rail-label">Testing sources</div></div>
+    </div>
+  </div>
+
+  <div class="top-bar">
+    <div class="title-eyebrow">Movie</div>
+    <div class="title-main">TMDB 550</div>
+    <div class="title-sub">Preparing the fastest available stream</div>
+  </div>
+
+  <button class="center-toggle" id="centerToggle" aria-label="Play or pause">
+    <div class="big-play">
+      <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <svg class="icon-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+    </div>
+  </button>
+
+  <div class="flash" id="flash"></div>
+  <div class="caption-overlay" id="captionOverlay"></div>
+  <button class="intro-skip" id="introSkip">Skip intro</button>
+  <div class="next-up-card" id="nextUpCard" role="status" aria-live="polite"><div class="next-up-copy"><span>Up next</span><strong id="nextUpTitle">Next episode</strong><small>Starting in <b id="nextUpCountdown">5</b>s</small></div><button id="nextUpPlay">Play now</button><button class="next-up-cancel" id="nextUpCancel">Cancel</button></div>
+
+  <div class="bottom-bar">
+    <div class="progress-row">
+      <div class="progress-track" id="progressTrack">
+        <div class="progress-buffered" id="bufferedFill"></div>
+        <div class="progress-hover" id="progressHover"></div>
+        <div class="progress-fill" id="progressFill"></div>
+        <div class="progress-handle" id="progressHandle"></div>
+        <div class="progress-tip" id="progressTip">0:00</div>
+      </div>
+    </div>
+    <div class="controls-row">
+      <div class="controls-left">
+        <button class="ctrl-btn play-btn" id="playBtn" aria-label="Play/Pause">
+          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+        </button>
+        <button class="ctrl-btn skip-btn" id="rewindBtn" aria-label="Back 10s"><svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg></button>
+        <button class="ctrl-btn skip-btn" id="forwardBtn" aria-label="Forward 10s"><svg viewBox="0 0 24 24"><path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/></svg></button>
+        <div class="volume-group">
+          <button class="ctrl-btn" id="muteBtn" aria-label="Mute"><svg viewBox="0 0 24 24" id="volIcon"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2A4.5 4.5 0 0 0 14 7.97v8.05A4.48 4.48 0 0 0 16.5 12zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button>
+          <div class="volume-track" id="volumeTrack"><div class="volume-fill" id="volumeFill"></div></div>
+        </div>
+        <div class="time-label" id="timeLabel"><b>0:00</b><span class="time-dur"> / 0:00</span></div>
+      </div>
+      <span class="ep-label">TMDB 550</span>
+      <div class="controls-right">
+        <div style="position:relative;">
+          <button class="ctrl-btn" id="serverBtn" aria-label="Server"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="5.5" rx="1.3"/><rect x="3.5" y="14.5" width="17" height="5.5" rx="1.3"/><circle cx="7" cy="6.75" r="1" fill="#0a0a0a"/><circle cx="7" cy="17.25" r="1" fill="#0a0a0a"/></svg></button>
+          <div class="panel" id="serverPanel"><div class="panel-header">Server</div></div>
+        </div>
+        <div style="position:relative;">
+          <button class="ctrl-btn" id="subtitlesBtn" aria-label="Subtitles"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM8.5 15H6v-1.5h2.5V15zm0-2.5H6V11h2.5v1.5zM12 15H9.5v-1.5H12V15zm0-2.5H9.5V11H12v1.5zm6 2.5h-4.5v-1.5H18V15zm0-2.5h-4.5V11H18v1.5z"/></svg></button>
+          <div class="panel" id="subtitlesPanel"><div class="panel-header">Subtitles</div><button class="panel-item active" data-sub="off"><span>Off</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg></button><button class="panel-item" data-sub="en"><span>English</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg></button><button class="panel-item" data-sub="es"><span>Spanish</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg></button></div>
+        </div>
+        <div style="position:relative;">
+          <button class="ctrl-btn" id="settingsBtn" aria-label="Settings"><svg viewBox="0 0 24 24"><path d="M19.14 12.94a7.14 7.14 0 000-1.88l2.03-1.58a.5.5 0 00.12-.64l-1.92-3.32a.5.5 0 00-.6-.22l-2.39.96a7.03 7.03 0 00-1.63-.94l-.36-2.54a.5.5 0 00-.5-.42h-3.84a.5.5 0 00-.5.42l-.36 2.54c-.59.24-1.14.56-1.63.94l-2.39-.96a.5.5 0 00-.6.22L2.71 8.84a.5.5 0 00.12.64l2.03 1.58c-.05.31-.08.62-.08.94s.03.63.08.94l-2.03 1.58a.5.5 0 00-.12.64l1.92 3.32c.14.24.42.32.6.22l2.39-.96c.49.38 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.14-.56 1.63-.94l2.39.96c.24.1.46 0 .6-.22l1.92-3.32a.5.5 0 00-.12-.64l-2.03-1.58zM12 15.5a3.5 3.5 0 110-7 3.5 3.5 0 010 7z"/></svg></button>
+          <div class="panel" id="settingsPanel" style="min-width:220px;"><div class="panel-header">Playback Speed</div><button class="panel-item" data-speed="0.5"><span>0.5x</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg></button><button class="panel-item active" data-speed="1"><span>Normal</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg></button><button class="panel-item" data-speed="1.25"><span>1.25x</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg></button><button class="panel-item" data-speed="1.5"><span>1.5x</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg></button><button class="panel-item" data-speed="2"><span>2x</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg></button><div class="panel-divider"></div><div class="panel-header">Quality</div><button class="panel-item active" data-quality="auto"><span>Auto</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg></button><button class="panel-item" data-quality="720"><span>720p</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg></button><button class="panel-item" data-quality="480"><span>480p</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/ /></svg></button></div>
+        </div>
+        <button class="ctrl-btn" id="fullscreenBtn" aria-label="Fullscreen"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  // Sandbox guard: an iframe with sandbox="allow-scripts" and no
+  // allow-same-origin runs us in an opaque, unique-per-load origin. Our JS
+  // still executes (so a naive check would look fine), but that's exactly
+  // the trick used to embed a player while stripping the origin identity
+  // storage/session security depends on. Storage APIs throw a SecurityError
+  // on an opaque origin — a reliable, spec-defined signal — so refuse to
+  // initialize rather than run degraded and silently insecure.
+  try {
+    localStorage.setItem('__vidrift_sbx', '1');
+    localStorage.removeItem('__vidrift_sbx');
+  } catch (e) {
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;min-height:100vh;color:#fff;background:#000;font:14px/1.4 system-ui,sans-serif;text-align:center;padding:20px;box-sizing:border-box;">This player cannot run in a sandboxed frame.</div>';
+    return;
+  }
+  var player=document.getElementById('player'),video=document.getElementById('video'),loader=document.getElementById('loader'),loaderStatus=document.getElementById('loaderStatus');
+  var flash=document.getElementById('flash'),captionO=document.getElementById('captionOverlay');
+  var introSkip=document.getElementById('introSkip'),introSegments=[],introSkipped=false;
+  var nextUpCard=document.getElementById('nextUpCard'),nextUpTitle=document.getElementById('nextUpTitle'),nextUpCountdown=document.getElementById('nextUpCountdown'),nextUpTimer=null,nextUpCancelled=false,nextEpisodeInfo=null;
+  var progressFill=document.getElementById('progressFill'),progressHandle=document.getElementById('progressHandle');
+  var bufferedFill=document.getElementById('bufferedFill'),timeLabel=document.getElementById('timeLabel');
+  var serverBtn=document.getElementById('serverBtn'),serverPanel=document.getElementById('serverPanel');
+  var subtitlesBtn=document.getElementById('subtitlesBtn'),subtitlesPanel=document.getElementById('subtitlesPanel');
+  var settingsBtn=document.getElementById('settingsBtn'),settingsPanel=document.getElementById('settingsPanel'),qualityOptions=null,qualityPreference='Auto';
+  var allPanels=[serverPanel,subtitlesPanel,settingsPanel];
+  var hideTimer=null,isScrubbing=false,hls=null,currentSub='off',streamReady=false,lastProgressSent=0,pendingResume=0,preservePaused=false,attemptedSources={},sourceSwitching=false,loadGeneration=0,startupTimer=null;
+
+  var streams = [];
+  var subtitleTracks = [{"code":"en","label":"English","url":"https://embed.vidrift.in/api/subtitles/movie/550/English"},{"code":"es","label":"Spanish","url":"https://embed.vidrift.in/api/subtitles/movie/550/Spanish"},{"code":"fr","label":"French","url":"https://embed.vidrift.in/api/subtitles/movie/550/French"},{"code":"de","label":"German","url":"https://embed.vidrift.in/api/subtitles/movie/550/German"},{"code":"it","label":"Italian","url":"https://embed.vidrift.in/api/subtitles/movie/550/Italian"},{"code":"pt","label":"Portuguese","url":"https://embed.vidrift.in/api/subtitles/movie/550/Portuguese"},{"code":"cs","label":"Czech","url":"https://embed.vidrift.in/api/subtitles/movie/550/Czech"},{"code":"sk","label":"Slovak","url":"https://embed.vidrift.in/api/subtitles/movie/550/Slovak"},{"code":"pl","label":"Polish","url":"https://embed.vidrift.in/api/subtitles/movie/550/Polish"},{"code":"tr","label":"Turkish","url":"https://embed.vidrift.in/api/subtitles/movie/550/Turkish"}];
+  var embedMeta = {"tmdbId":"550","type":"movie","season":null,"episode":null,"source":0,"provider":"selfhost","playbackToken":"eyJ0bWRiSWQiOjU1MCwidHlwZSI6Im1vdmllIiwic2Vhc29uIjpudWxsLCJlcGlzb2RlIjpudWxsLCJzZXNzaW9uIjoiVDRjRmptTEswTzhIUVo4TUJUZi1hQUtZaUtldnlJVWEiLCJleHAiOjE3ODc0Nzc4MDJ9.14r0WP16WdXDpDRsgHpF70XbXYskvXsTCL8qKz8O3sg"};
+  var currentSource = Number(embedMeta.source) || 0;
+  var currentProvider = embedMeta.provider || 'vaplayer';
+  // Cached titles are preselected to Turbo (server-side) -> Turbo first, then
+  // Earth -> Prime -> external. Uncached titles race Earth + Prime (Turbo last).
+  // Selfhost always goes first: it's a cheap Set lookup server-side (no
+  // network cost) that fast-fails to [] for non-hosted titles, same as
+  // Turbo's uncached fast-fail, so it's harmless to always try first.
+  var providers = ['selfhost'].concat(embedMeta.provider === 'turbo'
+    ? ['turbo', 'vaplayer', 'vidgod']
+    : ['vaplayer', 'vidgod', 'turbo']);
+  var subtitleOffsetKey='vidrift:subtitle-offset:'+embedMeta.tmdbId+':'+(embedMeta.season||'movie')+':'+(embedMeta.episode||'');
+  var subtitleOffset=parseFloat(localStorage.getItem(subtitleOffsetKey)||'0')||0;
+  var subtitleElements={},nativeSubtitleElements={},isNativeFullscreen=false,isIOSNativeVideo=!!video.webkitEnterFullscreen;
+  // iOS Safari only renders native <track> captions when the tracks exist before the
+  // video loads metadata — late-created tracks are ignored by the fullscreen player.
+  // Create all languages up-front (hidden); syncNativeSubtitle switches the selected
+  // one to 'showing' for iPhone's native fullscreen surface.
+  try{
+    subtitleTracks.forEach(function(item){
+      var t=document.createElement('track');
+      t.kind='subtitles';t.label=item.label;t.srclang=item.code;t.src=item.url;
+      t.track.mode='hidden';
+      video.appendChild(t);
+      nativeSubtitleElements[item.code]=t;
+    });
+  }catch(e){}
+  var srcMemKey='vidrift:src:'+embedMeta.tmdbId+':'+(embedMeta.type==='tv'?'tv':'movie')+':'+currentProvider;
+  function rememberSource(idx){try{var s=streams[idx]||{};localStorage.setItem('vidrift:src:'+embedMeta.tmdbId+':'+(embedMeta.type==='tv'?'tv':'movie')+':'+(s.provider||currentProvider),String(s.pIdx!=null?s.pIdx:idx));}catch(e){}try{var s2=streams[idx]||{};fetch('/api/source/report?tmdbId='+embedMeta.tmdbId+'&type='+embedMeta.type+'&provider='+encodeURIComponent(s2.provider||currentProvider)+'&index='+(s2.pIdx!=null?s2.pIdx:idx)+'&ok=1',{method:'GET'}).catch(function(){});}catch(e){}}
+  function preferredSource(streamsLen){try{var v=parseInt(localStorage.getItem(srcMemKey)||'',10);if(isFinite(v)&&v>=0&&v<streamsLen)return v;}catch(e){}return -1;}
+
+  // Feature-length titles were reading "134:22" — roll into h:mm:ss past an hour.
+  function fmt(t){if(!isFinite(t)||t<0)return'0:00';var h=Math.floor(t/3600);var m=Math.floor(t/60)%60;var s=Math.floor(t%60).toString().padStart(2,'0');return h?h+':'+m.toString().padStart(2,'0')+':'+s:m+':'+s;}
+  function showFlash(p){flash.innerHTML='<svg viewBox="0 0 24 24">'+p+'</svg>';flash.classList.remove('show');void flash.offsetWidth;flash.classList.add('show');}
+  function setLoaderStatus(text){loaderStatus.textContent=text;}
+  function loadIntroDb(){var q=new URLSearchParams({tmdb_id:String(embedMeta.tmdbId),duration_ms:String(Math.round(video.duration*1000))});if(embedMeta.type==='tv'){q.set('season',String(embedMeta.season||1));q.set('episode',String(embedMeta.episode||1));}fetch('https://api.theintrodb.org/v3/media?'+q.toString()).then(function(r){return r.ok?r.json():null;}).then(function(data){introSegments=[].concat(data&&data.intro||[],data&&data.recap||[]);}).catch(function(){});}
+  function updateIntroSkip(){var t=video.currentTime*1000,segment=introSegments.find(function(item){return !introSkipped&&t>=(item.start_ms||0)&&item.end_ms&&t<item.end_ms;});if(segment){introSkip.textContent=(segment===introSegments[0]?'Skip intro':'Skip recap');introSkip.classList.add('show');introSkip.onclick=function(){video.currentTime=segment.end_ms/1000;introSkipped=true;introSkip.classList.remove('show');};}else introSkip.classList.remove('show');}
+  function hideNextUp(){clearInterval(nextUpTimer);nextUpTimer=null;nextUpCard.classList.remove('show');}
+  function showNextUp(){if(embedMeta.type!=='tv'||nextUpCancelled||!nextEpisodeInfo)return;var left=5;nextUpTitle.textContent='S'+nextEpisodeInfo.season+' · E'+nextEpisodeInfo.episode;nextUpCountdown.textContent=left;nextUpCard.classList.add('show');clearInterval(nextUpTimer);nextUpTimer=setInterval(function(){left-=1;nextUpCountdown.textContent=left;if(left<=0){hideNextUp();try{window.parent.postMessage({type:'vidrift:nextup-play',tmdbId:embedMeta.tmdbId,mediaType:embedMeta.type,season:embedMeta.season,episode:embedMeta.episode},'*');}catch(e){}}},1000);}
+  document.getElementById('nextUpPlay').addEventListener('click',function(){hideNextUp();try{window.parent.postMessage({type:'vidrift:nextup-play',tmdbId:embedMeta.tmdbId,mediaType:embedMeta.type,season:embedMeta.season,episode:embedMeta.episode},'*');}catch(e){}});
+  document.getElementById('nextUpCancel').addEventListener('click',function(){nextUpCancelled=true;hideNextUp();});
+
+  var pStage=document.getElementById('prerollStage'),pStageWrap=document.getElementById('prerollStatusWrap'),pServer=document.getElementById('prerollServer'),pFill=document.getElementById('prerollFill'),pFoot=document.getElementById('prerollFoot'),pPct=document.getElementById('prerollPct'),prerollRig=document.getElementById('prerollRig');
+  var prerollTimers=[],finishPreroll=null,prerollStates={},prerollProgress=0,prerollTarget=0,prerollProgressTimer=null;
+  var prerollReadyLabel='';
+  var autoplayTimers=[];
+  function clearAutoplayRetries(){autoplayTimers.forEach(clearTimeout);autoplayTimers=[];}
+  function ensureAutoplay(){
+    clearAutoplayRetries();
+    if(video.ended||video.paused===false)return;
+    video.muted=true;video.setAttribute('muted','');video.autoplay=true;
+    video.playsInline=true;video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');
+    // iOS WebKit requires the first play() attempt to happen synchronously
+    // inside the media event; a timer-only first attempt can be rejected.
+    var first=video.play();if(first&&first.catch)first.catch(function(){});
+    // The preroll overlay/ad can still consume a later attempt, so retain
+    // bounded retries without overriding an intentional user pause.
+    [180,700,1600,3000].forEach(function(delay){autoplayTimers.push(setTimeout(function(){
+      if(video.ended||!video.paused||video.readyState<2)return;
+      video.muted=true;var p=video.play();if(p&&p.catch)p.catch(function(){});
+    },delay));});
+  }
+  function renderPrerollRail(active){
+    var rail=document.getElementById('prerollRail');if(!rail)return;
+    rail.innerHTML='<div class="preroll-rail-label">Testing sources</div>'+streams.map(function(stream,index){
+      var state=prerollStates[index]||(index===active?'probing':'queued');
+      var text=state==='probing'?'Testing':state==='failed'?'Unavailable':state==='ready'?'Ready':'Queued';
+      return '<div class="preroll-node '+state+'"><span class="region">'+stream.label+'</span><span class="sub">Source '+(index+1)+'</span><span class="tag"></span></div>';
+    }).join('');
+  }
+  function setPrerollState(index,state){prerollStates[index]=state;renderPrerollRail(currentSource);}
+  function animatePrerollTo(target){prerollTarget=target;if(prerollProgressTimer)return;prerollProgressTimer=setInterval(function(){if(prerollProgress>=prerollTarget){clearInterval(prerollProgressTimer);prerollProgressTimer=null;return;}prerollProgress=Math.min(prerollTarget,prerollProgress+Math.max(.35,(prerollTarget-prerollProgress)*.08));pFill.style.width=prerollProgress+'%';pPct.textContent=Math.floor(prerollProgress)+'%';},50);}
+  function setStage(t,p){var old=pStage;if(old){old.classList.remove('enter');old.classList.add('leave');setTimeout(function(){if(old.parentNode)old.remove();},460);}pStage=document.createElement('div');pStage.className='preroll-status enter';pStage.textContent=t;pStageWrap.appendChild(pStage);animatePrerollTo(p);}
+  function runPreroll(label){
+    if(finishPreroll)finishPreroll();
+    var shouldAutoplay=!preservePaused;
+    var pr=document.getElementById('preroll');
+    if(prerollProgressTimer){clearInterval(prerollProgressTimer);prerollProgressTimer=null;}prerollProgress=0;prerollTarget=0;loader.classList.remove('show');pr.classList.remove('hide','connected');prerollRig.classList.remove('connected');pServer.innerHTML='';pFill.style.width='0%';pFoot.textContent='Scanning candidates';pPct.textContent='0%';setPrerollState(currentSource,'probing');
+    prerollReadyLabel='';
+    setStage('Contacting servers',10);
+    prerollTimers=[setTimeout(function(){setStage('Probing servers',45);pFoot.textContent='Testing source '+(currentSource+1)+' of '+Math.max(streams.length,1);},700),setTimeout(function(){setStage('Buffering the first frame',92);pFoot.textContent='Waiting for playback';},1500)];
+    finishPreroll=function(){
+      prerollTimers.forEach(clearTimeout);prerollTimers=[];if(prerollProgressTimer){clearInterval(prerollProgressTimer);prerollProgressTimer=null;}prerollProgress=100;prerollTarget=100;
+      setStage('Server selected',100);pFill.style.width='100%';pPct.textContent='100%';pFoot.textContent='Playing '+(streams[currentSource]?streams[currentSource].label:(prerollReadyLabel||label));pServer.innerHTML=(streams[currentSource]?streams[currentSource].label:(prerollReadyLabel||label))+' <span class="ok-tag">Ready</span>';setPrerollState(currentSource,'ready');pr.classList.add('connected');prerollRig.classList.add('connected');
+      if(shouldAutoplay)ensureAutoplay();
+      setTimeout(function(){pr.classList.add('hide');},250);
+      finishPreroll=null;
+    };
+  }
+
+  function failoverSource(){
+    if(sourceSwitching)return;
+    try{fetch('/api/source/report?tmdbId='+embedMeta.tmdbId+'&type='+embedMeta.type+'&provider='+encodeURIComponent(currentProvider)+'&index='+currentSource+'&ok=0',{method:'GET'}).catch(function(){});}catch(e){}
+    setPrerollState(currentSource,'failed');
+    var next=-1;
+    streams.forEach(function(stream,i){
+      if(stream.provider===currentProvider&&!attemptedSources[i]&&(next<0||(stream.pIdx||0)<(streams[next].pIdx||0)))next=i;
+    });
+    if(next<0){loadNextProvider();return;}
+    sourceSwitching=true;
+    pendingResume=video.currentTime||0;
+    preservePaused=streamReady&&video.paused;
+    setLoaderStatus('Source unavailable — trying another Earth source…'.replace('Earth',providerLabel(currentProvider)));
+    if(document.getElementById('preroll').classList.contains('hide')){player.classList.add('loading');loader.classList.add('show');}
+    setStage('Trying '+streams[next].label,92);pFoot.textContent=(streams[currentSource]?streams[currentSource].label:'Source')+' failed — trying '+streams[next].label;
+    loadStream(next,true,true);
+    sourceSwitching=false;
+  }
+
+  function loadStream(idx, skipLoader, keepAttempts){
+    currentSource=idx;var s=streams[idx];if(!s)return;
+    if(!keepAttempts){attemptedSources={};prerollStates={};}
+    attemptedSources[idx]=true;
+    clearTimeout(startupTimer);
+    var generation=++loadGeneration;
+    if(hls){hls.destroy();hls=null;}
+    streamReady=false;if(!skipLoader){setLoaderStatus('Connecting to '+s.label+'…');player.classList.add('loading');loader.classList.add('show');runPreroll(s.label);}video.removeAttribute('src');
+    // Route by STREAM TYPE, not provider identity: moviebox falls back to
+    // Earth's HLS streams when it has none for a title — those must go through
+    // hls.js, not the direct-src path (fixed 2026-08-06; previously a fallback
+    // was labeled mp4, video.src choked on the m3u8 → CinemaOS jump).
+    var directPlay = currentProvider==='vidlove' || currentProvider==='vidgod' || (currentProvider==='selfhost' && s.type==='mp4') || ((currentProvider==='moviebox'||currentProvider==='vidlink') && s.type!=='hls');
+    if(directPlay){
+      video.src=s.url;video.autoplay=true;video.muted=true;
+      video.addEventListener('canplay',function(){if(finishPreroll)finishPreroll();player.classList.remove('loading');loader.classList.remove('show');ensureAutoplay();streamReady=true;rememberSource(currentSource);},{once:true});
+      video.addEventListener('error',function(){failoverSource();});
+      var lastBytes=Date.now();
+      startupTimer=setInterval(function(){
+        if(generation!==loadGeneration||streamReady){clearInterval(startupTimer);return;}
+        try{if(video.buffered&&video.buffered.length&&video.buffered.end(video.buffered.length-1)>0.4)lastBytes=Date.now();}catch(e){}
+        // Prime's direct MP4 CDN can take 20s to expose its first buffered range.
+        // Give direct files time to start before handing off to CinemaOS.
+        if(Date.now()-lastBytes>30000){clearInterval(startupTimer);failoverSource();}
+      },2500);
+      updateServerPanel();return;
+    }
+    hls=new Hls(Object.assign({capLevelToPlayerSize:false}, currentProvider==='turbo'?{lowLatencyMode:false,backBufferLength:0,startLevel:-1,fragLoadingMaxRetry:3,manifestLoadingMaxRetry:2,fragLoadingTimeOut:15000,manifestLoadingTimeOut:10000,startFragPrefetch:true}:{}));
+    hls.on(Hls.Events.MANIFEST_LOADING,function(){setLoaderStatus('Loading HLS manifest…');});
+    hls.on(Hls.Events.FRAG_LOADING,function(){if(!streamReady)setLoaderStatus('Loading video…');});
+    function capAutoLevel(){
+      // Bandwidth insurance: Auto stays ≤720p. Manual HD selection still
+      // works (currentLevel overrides autoLevelCapping); only AUTO is capped.
+      if(!hls||!hls.levels||!hls.levels.length)return;
+      var cap=-1;
+      for(var i=0;i<hls.levels.length;i++){if(Number(hls.levels[i].height)<=720)cap=i;}
+      hls.autoLevelCapping=cap;
+    }
+    hls.on(Hls.Events.MANIFEST_PARSED,function(){if(generation!==loadGeneration)return;setLoaderStatus('Preparing video…');renderQualityOptions();capAutoLevel();applyQualityPreference(qualityPreference);video.addEventListener('loadedmetadata',function(){if(hls&&hls.levels&&hls.levels.length&&!hls.levels[0].width)renderQualityOptions();},{once:true});video.autoplay=true;video.muted=true;var shouldAutoplay=!preservePaused;video.addEventListener('canplay',function(){clearTimeout(startupTimer);streamReady=true;rememberSource(currentSource);if(finishPreroll)finishPreroll();player.classList.remove('loading');loader.classList.remove('show');if(shouldAutoplay)ensureAutoplay();},{once:true});restorePendingPosition();if(preservePaused){preservePaused=false;video.pause();return;}});
+    hls.on(Hls.Events.ERROR,function(e,d){
+      if(generation!==loadGeneration||!d.fatal)return;
+      failoverSource();
+    });
+    hls.attachMedia(video);hls.loadSource(s.url);
+    var decoyFailoverDone=false;
+    hls.on(Hls.Events.LEVEL_LOADED,function(e,d){
+      if(generation!==loadGeneration||decoyFailoverDone)return;
+      try{
+        var frags=d&&d.details&&d.details.fragments||[];
+        if(!frags.length){
+          decoyFailoverDone=true;setLoaderStatus('Source has no playable video — trying another…');failoverSource();
+          return;
+        }
+        var htmlFrags=frags.filter(function(f){return f&&/\.html(\?|$)/i.test(f.url||f.relurl||'');}).length;
+        if(htmlFrags!==frags.length)return;
+        // page-N.html fragments are usually REAL MPEG-TS on this CDN (0x47 sync
+        // byte) — sniff the bytes hls.js already fetches for the first fragment
+        // instead of a separate probe fetch. The old code fired a redundant fetch
+        // for the same URL hls.js was simultaneously downloading, doubling load on
+        // an already-slow upstream CDN and racing the 15s stall timer below —
+        // whichever finished last decided whether we failed over, so a legitimate
+        // but slow source got treated as dead. Reusing hls.js's own download removes
+        // that race and the duplicate request.
+        decoyFailoverDone=true;
+        var sniffGeneration=generation,sniffed=false;
+        var sniffTimer=setTimeout(function(){
+          if(sniffed||generation!==sniffGeneration)return;
+          sniffed=true;setLoaderStatus('Source has no playable video — trying another…');failoverSource();
+        },12000);
+        hls.once(Hls.Events.FRAG_LOADED,function(e2,d2){
+          if(sniffed||generation!==sniffGeneration)return;
+          sniffed=true;clearTimeout(sniffTimer);
+          try{
+            var bytes=d2&&d2.payload?new Uint8Array(d2.payload):null;
+            if(bytes&&bytes.length>4&&bytes[0]===0x47){decoyFailoverDone=false;return;}
+          }catch(err){}
+          setLoaderStatus('Source has no playable video — trying another…');failoverSource();
+        });
+      }catch(err){}
+    });
+    var lastBytes=Date.now();
+    startupTimer=setInterval(function(){
+      if(generation!==loadGeneration||streamReady){clearInterval(startupTimer);return;}
+      try{if(video.buffered&&video.buffered.length&&video.buffered.end(video.buffered.length-1)>0.4)lastBytes=Date.now();}catch(e){}
+      if(Date.now()-lastBytes>15000){clearInterval(startupTimer);failoverSource();}
+    },2000);
+    updateServerPanel();
+  }
+
+  function restorePendingPosition(){
+    if(!(pendingResume>0)||!isFinite(video.duration)||video.duration<=pendingResume)return false;
+    video.currentTime=Math.min(pendingResume,video.duration-0.5);pendingResume=0;return true;
+  }
+
+  function restorePendingPositionWithRetry(){
+    var attempts=0;
+    function retry(){
+      if(restorePendingPosition()||attempts++>=20)return;
+      setTimeout(retry,250);
+    }
+    retry();
+  }
+
+  function refreshPlaybackToken(token){
+    if(typeof token!=='string'||token.length<20)return;
+    streams.forEach(function(stream){try{var next=new URL(stream.url,window.location.href);next.searchParams.set('token',token);stream.url=next.toString();}catch(e){}});
+    if(hls&&streams[currentSource]){pendingResume=video.currentTime||0;preservePaused=video.paused;hls.loadSource(streams[currentSource].url);restorePendingPositionWithRetry();}
+  }
+
+  function switchProvider(provider){
+    if(provider===currentProvider)return;
+    var nextProvider=providers.indexOf(provider);
+    if(nextProvider<0)return;
+    pendingResume=video.currentTime||0;
+    preservePaused=streamReady&&video.paused;
+    setLoaderStatus('Switching to '+providerLabel(provider)+'…');
+    player.classList.add('loading');loader.classList.add('show');
+    if(hls){hls.destroy();hls=null;}
+    loadProviderAt(nextProvider);
+  }
+
+  function updateServerPanel(){
+    serverPanel.innerHTML='<div class="panel-header">Provider</div>'+
+      providers.map(function(p){return '<button class="panel-item'+(p===currentProvider?' active':'')+'" data-provider="'+p+'"><span>'+providerLabel(p)+'</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg></button>';}).join('')+
+      '<div class="panel-divider"></div><div class="panel-header">Server</div>'+
+      streams.map(function(s,i){
+      return '<button class="panel-item'+(i===currentSource?' active':'')+'" data-idx="'+i+'"><span>'+s.label+(''+(i===0?' <span class="tag">Fast</span>':''))+'</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.4-1.4z"/></svg></button>';
+    }).join('');
+    serverPanel.querySelectorAll('[data-provider]').forEach(function(btn){
+      btn.addEventListener('click',function(){switchProvider(btn.dataset.provider);closeAllPanels();});
+    });
+    serverPanel.querySelectorAll('[data-idx]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var idx=parseInt(btn.dataset.idx);if(idx!==currentSource){loadStream(idx,false);}
+        closeAllPanels();
+      });
+    });
+  }
+
+  // Popup-capability gate: an embedder that sandboxes us without
+  // allow-popups can silently strip our monetization while playback works
+  // fine — we won't let that combination proceed. window.open() must be
+  // tested inside a real click (autoplay has no user gesture, and testing
+  // there would false-positive for every viewer regardless of sandboxing),
+  // so this runs on the first play/mute interaction, not on load.
+  var popupGateChecked=false;
+  function popupsAllowed(){
+    try{
+      var w=window.open('','_blank','width=1,height=1,left=-9999,top=-9999');
+      if(w){try{w.close();}catch(e){}return true;}
+      return false;
+    }catch(e){return false;}
+  }
+  function enforcePopupGate(){
+    if(popupGateChecked)return true;
+    popupGateChecked=true;
+    if(popupsAllowed())return true;
+    try{if(hls){hls.destroy();hls=null;}}catch(e){}
+    try{video.pause();video.removeAttribute('src');video.load();}catch(e){}
+    player.classList.remove('loading');loader.classList.remove('show');
+    document.body.innerHTML='<div style="display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;height:100%;min-height:100vh;color:#fff;background:#000;font:14px/1.4 system-ui,sans-serif;text-align:center;padding:20px;box-sizing:border-box;"><div>Remove sandboxing to enable playback.</div><div>Visit <a href="https://vidrift.in" target="_blank" rel="noopener noreferrer" style="color:#d4af6a;">vidrift.in</a> for more info.</div></div>';
+    return false;
+  }
+  function togglePlay(){if(streamReady){if(video.paused){if(!enforcePopupGate())return;video.play();}else video.pause();}}
+  function closeAllPanels(){allPanels.forEach(function(p){p.classList.remove('show');});}
+  function closeAllPanelsExcept(p){allPanels.forEach(function(x){if(x!==p)x.classList.remove('show');});}
+
+  document.getElementById('centerToggle').addEventListener('click',togglePlay);
+  document.getElementById('playBtn').addEventListener('click',togglePlay);
+
+  video.addEventListener('play',function(){player.classList.remove('paused');showFlash('<path d="M8 5v14l11-7z"/>');showC();});
+  video.addEventListener('pause',function(){player.classList.add('paused');showFlash('<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>');});
+
+  document.getElementById('rewindBtn').addEventListener('click',function(){video.currentTime=Math.max(0,video.currentTime-10);});
+  document.getElementById('forwardBtn').addEventListener('click',function(){video.currentTime=Math.min(video.duration||0,video.currentTime+10);});
+
+  // Volume
+  var volFill=document.getElementById('volumeFill');var volIcon=document.getElementById('volIcon');
+  video.volume=0.8;video.muted=true;volFill.style.width='80%';updateVolIcon();
+  document.getElementById('volumeTrack').addEventListener('click',function(e){
+    var r=this.getBoundingClientRect();var p=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));
+    video.volume=p;video.muted=false;volFill.style.width=(p*100)+'%';updateVolIcon();
+  });
+  document.getElementById('muteBtn').addEventListener('click',function(){if(!enforcePopupGate())return;video.muted=!video.muted;updateVolIcon();});
+  function updateVolIcon(){
+    if(video.muted||video.volume===0){
+      volIcon.innerHTML='<path d="M16.5 12A4.5 4.5 0 0014 7.97v2.21l2.45 2.45c.03-.2.05-.42.05-.63zM19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.965 8.965 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+    } else {
+      volIcon.innerHTML='<path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2A4.5 4.5 0 0014 7.97v8.05A4.48 4.48 0 0016.5 12zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
+    }
+  }
+
+  // Progress
+  function updateProgress(){
+    if(isScrubbing)return;
+    var pct=(video.currentTime/video.duration)*100||0;
+    progressFill.style.width=pct+'%';progressHandle.style.left=pct+'%';
+    timeLabel.innerHTML='<b>'+fmt(video.currentTime)+'</b><span class="time-dur"> / '+fmt(video.duration)+'</span>';
+    if(video.buffered.length){
+      var bufEnd=video.buffered.end(video.buffered.length-1);
+      bufferedFill.style.width=((bufEnd/video.duration)*100||0)+'%';
+    }
+    updateCaptions();
+  }
+  function notifyProgress(force){
+    if(!isFinite(video.currentTime)||!isFinite(video.duration)||video.currentTime<5||video.duration<=0||(!force&&video.currentTime-lastProgressSent<5))return;
+    lastProgressSent=video.currentTime;
+    try{window.parent.postMessage({type:'vidrift:progress',tmdbId:embedMeta.tmdbId,mediaType:embedMeta.type,season:embedMeta.season,episode:embedMeta.episode,currentTime:video.currentTime,duration:video.duration},'*');}catch(e){}
+  }
+  video.addEventListener('timeupdate',updateProgress);video.addEventListener('timeupdate',updateIntroSkip);video.addEventListener('timeupdate',function(){notifyProgress(false);});video.addEventListener('pause',function(){notifyProgress(true);});
+  video.addEventListener('ended',function(){try{window.parent.postMessage({type:'vidrift:progress-ended',tmdbId:embedMeta.tmdbId,mediaType:embedMeta.type,season:embedMeta.season,episode:embedMeta.episode},'*');}catch(e){}});
+  video.addEventListener('loadedmetadata',function(){updateProgress();loadIntroDb();restorePendingPosition();});
+  video.addEventListener('canplay',restorePendingPosition);
+  window.addEventListener('message',function(e){var d=e.data||{};if(e.source!==window.parent)return;if(d.type==='vidrift:playback-token'){refreshPlaybackToken(d.token);return;}if(d.type==='vidrift:quality-preference'){qualityPreference=String(d.label||'Auto');applyQualityPreference(qualityPreference);return;}if(d.type==='vidrift:nextup-info'){nextEpisodeInfo=d.next||null;if(nextEpisodeInfo){nextUpCancelled=false;showNextUp();}else{nextUpCancelled=true;hideNextUp();}return;}if(d.type==='vidrift:resume'&&isFinite(Number(d.currentTime))){var seek=Number(d.currentTime);if(seek>0)pendingResume=seek;if(seek>0&&seek<video.duration){video.currentTime=seek;pendingResume=0;}}});
+
+  var progressTrack=document.getElementById('progressTrack');
+  var progressHover=document.getElementById('progressHover'),progressTip=document.getElementById('progressTip');
+  function trackRatio(cx){var r=progressTrack.getBoundingClientRect();return Math.min(1,Math.max(0,(cx-r.left)/r.width));}
+  // Hover preview: the fill and the time bubble both track the pointer, so a
+  // seek is aimed rather than guessed. Touch has no hover, hence .scrubbing.
+  function previewAt(cx){
+    var p=trackRatio(cx);
+    progressHover.style.width=(p*100)+'%';
+    progressTip.style.left=(p*100)+'%';
+    progressTip.textContent=fmt(p*(video.duration||0));
+  }
+  progressTrack.addEventListener('pointerdown',function(e){isScrubbing=true;progressTrack.classList.add('scrubbing');progressTrack.setPointerCapture?.(e.pointerId);previewAt(e.clientX);seekTo(e.clientX);});
+  progressTrack.addEventListener('pointermove',function(e){previewAt(e.clientX);if(isScrubbing)seekTo(e.clientX);});
+  progressTrack.addEventListener('pointerup',function(){isScrubbing=false;progressTrack.classList.remove('scrubbing');});
+  progressTrack.addEventListener('pointercancel',function(){isScrubbing=false;progressTrack.classList.remove('scrubbing');});
+  progressTrack.addEventListener('pointerleave',function(){if(!isScrubbing)progressHover.style.width='0';});
+  function seekTo(cx){
+    var r=document.getElementById('progressTrack').getBoundingClientRect();
+    var p=Math.min(1,Math.max(0,(cx-r.left)/r.width));
+    video.currentTime=p*video.duration;progressFill.style.width=(p*100)+'%';progressHandle.style.left=(p*100)+'%';
+  }
+
+  // Server panel
+  var parentMobileSheets=window.matchMedia&&window.matchMedia('(max-width:560px)').matches&&window.parent!==window&&new URLSearchParams(window.location.search).get('mobileSheets')==='true';
+  function requestParentSheet(panel,options){if(parentMobileSheets){try{window.parent.postMessage({type:'vidrift:mobile-panel',panel:panel,options:options||[]},'*');}catch(e){}return true;}return false;}
+  serverBtn.addEventListener('click',function(e){e.stopPropagation();if(requestParentSheet('source',providers.map(function(p){return {option:'provider',value:p,label:providerLabel(p),group:'Provider'};}).concat(streams.map(function(s,i){return {option:'source',value:String(i),label:s.label,group:'Sources'};}))))return;serverPanel.classList.toggle('show');closeAllPanelsExcept(serverPanel);});
+  subtitlesBtn.addEventListener('click',function(e){e.stopPropagation();if(requestParentSheet('subtitles',[{option:'subtitles',value:'off',label:'Off'}].concat(subtitleTracks.map(function(item){return {option:'subtitles',value:item.code,label:item.label};}))))return;subtitlesPanel.classList.toggle('show');closeAllPanelsExcept(subtitlesPanel);});
+  settingsBtn.addEventListener('click',function(e){e.stopPropagation();if(requestParentSheet('settings',[{option:'speed',value:'0.5',label:'0.5x',group:'Playback speed'},{option:'speed',value:'1',label:'Normal',group:'Playback speed'},{option:'speed',value:'1.25',label:'1.25x',group:'Playback speed'},{option:'speed',value:'1.5',label:'1.5x',group:'Playback speed'},{option:'speed',value:'2',label:'2x',group:'Playback speed'}].concat(qualityOptionsForMobile())))return;settingsPanel.classList.toggle('show');closeAllPanelsExcept(settingsPanel);});
+  window.addEventListener('message',function(e){var d=e.data||{};if(d.type!=='vidrift:mobile-option')return;if(d.option==='provider'){switchProvider(d.value);}if(d.option==='source'){var idx=parseInt(d.value);if(isFinite(idx)&&streams[idx]&&idx!==currentSource){loadStream(idx,false);}}if(d.option==='speed'){video.playbackRate=parseFloat(d.value)||1;}if(d.option==='subtitles'){var sub=subtitlesPanel.querySelector('[data-sub="'+d.value+'"]');if(sub)sub.click();}if(d.option==='subtitle-offset'){setSubtitleOffset(d.value);}if(d.option==='quality'){var quality=settingsPanel.querySelector('[data-quality="'+d.value+'"]');if(quality)quality.click();}});
+  document.addEventListener('click',closeAllPanels);
+  serverPanel.addEventListener('click',function(e){e.stopPropagation();});
+  subtitlesPanel.addEventListener('click',function(e){e.stopPropagation();});
+  settingsPanel.addEventListener('click',function(e){e.stopPropagation();});
+
+  // Real VTT subtitles from Vdrk. Unavailable languages are removed quietly.
+  subtitlesPanel.querySelectorAll('[data-sub]:not([data-sub="off"])').forEach(function(btn){btn.remove();});
+  subtitlesPanel.insertAdjacentHTML('beforeend',subtitleTracks.map(function(item){return '<button class="panel-item" data-sub="'+item.code+'"><span>'+item.label+'</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5 3.5-1.4-1.4L9 19 21 7l-1.4 1.4z"/></svg></button>';}).join('')+'<div class="panel-divider"></div><div class="panel-header">Subtitle sync</div><div class="subtitle-sync"><button class="sync-step" data-offset="-0.25" aria-label="Earlier 0.25 seconds">−</button><span class="sync-value" id="subtitleOffsetLabel">0.00s</span><button class="sync-step" data-offset="0.25" aria-label="Later 0.25 seconds">+</button><button class="sync-reset" data-offset="reset">Reset</button></div>');
+  function updateCaptions(){
+    if(isNativeFullscreen&&currentSub!=='off'){captionO.classList.remove('show');return;}
+    var entry=subtitleElements[currentSub];
+    if(!entry||!entry.cues){captionO.classList.remove('show');return;}
+    var t=video.currentTime-subtitleOffset,match=entry.cues.find(function(cue){return t>=cue.start&&t<=cue.end;});
+    if(match){captionO.textContent=match.text;captionO.classList.add('show');}else{captionO.classList.remove('show');}
+  }
+  function setSubtitleOffset(delta){
+    subtitleOffset=delta==='reset'?0:Math.max(-30,Math.min(30,subtitleOffset+Number(delta)));
+    localStorage.setItem(subtitleOffsetKey,subtitleOffset.toFixed(2));
+    updateCaptions();
+    document.getElementById('subtitleOffsetLabel').textContent=(subtitleOffset>0?'+':'')+subtitleOffset.toFixed(2)+'s';
+  }
+  function cueTime(value){var p=value.split(':').map(Number);return p.length===3?p[0]*3600+p[1]*60+p[2]:p[0]*60+p[1];}
+  function loadSubtitle(item){
+    fetch(item.url).then(function(r){if(!r.ok)throw new Error('unavailable');return r.text();}).then(function(text){
+
+      var lines=text.replace(/\r/g,'').split('\n');
+      var cues=[];
+      for(var i=0;i<lines.length;i++){
+        if(lines[i].indexOf('-->')<0)continue;
+        var parts=lines[i].split('-->'),start=cueTime(parts[0].trim()),end=cueTime(parts[1].trim().split(/\s+/)[0]),cueLines=[],j=i+1;
+        while(j<lines.length&&lines[j].trim()){cueLines.push(lines[j]);j++;}
+        if(isFinite(start)&&isFinite(end)&&cueLines.length)cues.push({start:start,end:end,text:cueLines.join('\n')});
+      }
+      subtitleElements[item.code]={cues:cues};
+      // Tracks were already attached up-front for iOS fullscreen support.
+      if(currentSub===item.code){updateCaptions();syncNativeSubtitle();}
+    }).catch(function(){var btn=subtitlesPanel.querySelector('[data-sub="'+item.code+'"]');if(btn)btn.remove();if(currentSub===item.code)selectSubtitle('off');});
+  }
+  function syncNativeSubtitle(){
+    Object.keys(nativeSubtitleElements).forEach(function(code){
+      var track=nativeSubtitleElements[code];
+      if(track&&track.track)track.track.mode=(isNativeFullscreen&&currentSub===code)?'showing':'hidden';
+    });
+  }
+  subtitleTracks.forEach(loadSubtitle);
+  document.getElementById('subtitleOffsetLabel').textContent=(subtitleOffset>0?'+':'')+subtitleOffset.toFixed(2)+'s';
+  function selectSubtitle(value){
+    subtitlesPanel.querySelectorAll('[data-sub]').forEach(function(b){b.classList.toggle('active',b.dataset.sub===value);});
+    currentSub=value;
+    updateCaptions();
+    syncNativeSubtitle();
+  }
+  subtitlesPanel.querySelectorAll('[data-sub]').forEach(function(btn){btn.addEventListener('click',function(){selectSubtitle(btn.dataset.sub);closeAllPanels();});});
+  subtitlesPanel.querySelectorAll('[data-offset]').forEach(function(btn){btn.addEventListener('click',function(){setSubtitleOffset(btn.dataset.offset);});});
+
+  // Speed
+  settingsPanel.querySelectorAll('[data-speed]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      settingsPanel.querySelectorAll('[data-speed]').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      video.playbackRate=parseFloat(btn.dataset.speed);
+      closeAllPanels();
+    });
+  });
+
+  function qualityLabel(level){var width=Number(level&&level.width)||video.videoWidth||0;return width>=1920?'1080p':width>=1280?'720p':width>=854?'480p':'360p';}
+  function qualityOptionsForMobile(){return [{option:'quality',value:'auto',label:'Auto',group:'Quality'}].concat((hls&&hls.levels||[]).map(function(level,index){return {option:'quality',value:String(index),label:qualityLabel(level),group:'Quality'};}));}
+  function setQuality(value){if(!hls)return;if(value==='auto')hls.currentLevel=-1;else{var index=Number(value);if(Number.isInteger(index)&&hls.levels[index])hls.currentLevel=index;}settingsPanel.querySelectorAll('[data-quality]').forEach(function(btn){btn.classList.toggle('active',btn.dataset.quality===String(value));});closeAllPanels();}
+  function applyQualityPreference(label){if(!hls||!hls.levels||!hls.levels.length)return;if(!label||label==='Auto'){setQuality('auto');return;}var match=-1;hls.levels.forEach(function(level,index){if(qualityLabel(level)===label)match=index;});if(match>=0)setQuality(String(match));else setQuality('auto');}
+  function renderQualityOptions(){if(!hls||!hls.levels.length)return;if(!qualityOptions){var autoButton=settingsPanel.querySelector('[data-quality="auto"]');qualityOptions=document.createElement('div');autoButton.after(qualityOptions);settingsPanel.querySelectorAll('[data-quality]:not([data-quality="auto"])').forEach(function(btn){btn.style.display='none';});autoButton.onclick=function(){setQuality('auto');};}qualityOptions.innerHTML=hls.levels.map(function(level,index){return '<button class="panel-item" data-quality="'+index+'"><span>'+qualityLabel(level)+'</span><svg class="check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></button>';}).join('');qualityOptions.querySelectorAll('[data-quality]').forEach(function(btn){btn.onclick=function(){setQuality(btn.dataset.quality);};});setQuality('auto');}
+
+  // Fullscreen
+  video.addEventListener('webkitbeginfullscreen',function(){isNativeFullscreen=true;syncNativeSubtitle();});
+  video.addEventListener('webkitendfullscreen',function(){isNativeFullscreen=false;syncNativeSubtitle();updateCaptions();});
+  document.getElementById('fullscreenBtn').addEventListener('click',function(){
+    if(video.webkitEnterFullscreen){video.webkitEnterFullscreen();}
+    else if(!document.fullscreenElement){player.requestFullscreen();}
+    else{document.exitFullscreen();}
+  });
+
+  // Auto-hide
+  function showC(){player.classList.add('controls-visible');clearTimeout(hideTimer);if(!video.paused)hideTimer=setTimeout(function(){player.classList.remove('controls-visible');closeAllPanels();},2800);}
+  player.addEventListener('mousemove',showC);
+  player.addEventListener('touchstart',showC,{passive:true});
+  player.addEventListener('mouseleave',function(){if(!video.paused)player.classList.remove('controls-visible');});
+  showC();
+
+  // Loading — debounce to avoid flash on seek/start
+  var waitTimer=null;
+  video.addEventListener('waiting',function(){clearTimeout(waitTimer);waitTimer=setTimeout(function(){if(!document.getElementById('preroll').classList.contains('hide'))return;player.classList.add('loading');loader.classList.add('show');},800);});
+  video.addEventListener('canplay',function(){clearTimeout(waitTimer);player.classList.remove('loading');loader.classList.remove('show');});
+  video.addEventListener('playing',function(){clearTimeout(waitTimer);player.classList.remove('loading');loader.classList.remove('show');});
+  video.addEventListener('ended',function(){
+    try{ window.parent.postMessage({type:'vidrift:ended',tmdbId:embedMeta.tmdbId,mediaType:embedMeta.type,season:embedMeta.season,episode:embedMeta.episode},'*'); }catch(e){}
+  });
+  var nextUpSent=false;
+  video.addEventListener('timeupdate',function(){
+    if(!nextUpSent&&video.duration>0&&video.duration-video.currentTime<=30){
+      nextUpSent=true;showNextUp();
+      try{ window.parent.postMessage({type:'vidrift:nextup',tmdbId:embedMeta.tmdbId,mediaType:embedMeta.type,season:embedMeta.season,episode:embedMeta.episode},'*'); }catch(e){}
+    }
+  });
+
+  // Keyboard
+  document.addEventListener('keydown',function(e){
+    if(['Space','ArrowLeft','ArrowRight','KeyF','KeyM'].includes(e.code)||e.key===' '){e.preventDefault();}
+    if(e.code==='Space')togglePlay();
+    if(e.code==='ArrowLeft')video.currentTime=Math.max(0,video.currentTime-5);
+    if(e.code==='ArrowRight')video.currentTime=Math.min(video.duration||0,video.currentTime+5);
+    if(e.code==='KeyF'){if(video.webkitEnterFullscreen){video.webkitEnterFullscreen();}else if(!document.fullscreenElement){player.requestFullscreen();}else{document.exitFullscreen();}}
+    if(e.code==='KeyM')document.getElementById('muteBtn').click();
+    showC();
+  });
+
+  var providerCursor=0;
+  var providerLoadGeneration=0; // invalidates stale provider responses after a switch
+  var raceFallbackProvider=null;
+  function providerLabel(provider){return provider==='vidgod'?'Prime':provider==='turbo'?'Turbo':provider==='selfhost'?'Direct':'Earth';}
+  function sourceTypePath(){return embedMeta.type==='tv'?'tv/'+embedMeta.tmdbId+'/'+embedMeta.season+'/'+embedMeta.episode:'movie/'+embedMeta.tmdbId;}
+  function probeMediaBytes(buffer){
+    if(!buffer||buffer.byteLength<4)return false;
+    var bytes=new Uint8Array(buffer),text='';
+    for(var i=0;i<Math.min(bytes.length,64);i++)text+=String.fromCharCode(bytes[i]);
+    return bytes[0]===0x47||text.indexOf('ftyp')>=0;
+  }
+  function probeHlsPlaylist(url,depth,signal){
+    if(depth>2)return Promise.resolve(false);
+    return fetch(url,{cache:'no-store',signal:signal}).then(function(response){
+      if(!response.ok)return false;
+      return response.arrayBuffer().then(function(buffer){
+        if(probeMediaBytes(buffer))return true;
+        var text=new TextDecoder().decode(buffer);
+        if(!text.includes('#EXTM3U'))return false;
+        var lines=text.split(/\r?\n/).map(function(line){return line.trim();}).filter(function(line){return line&&!line.startsWith('#')&&!line.startsWith('//');});
+        return lines.length?probeHlsPlaylist(lines[0],depth+1,signal):false;
+      });
+    }).catch(function(){return false;});
+  }
+  function probeEarthSource(url){
+    var controller=new AbortController(),timer=setTimeout(function(){controller.abort();},5000);
+    return probeHlsPlaylist(url,0,controller.signal).finally(function(){clearTimeout(timer);});
+  }
+  function orderPlayableEarthSources(items){
+    if(items.length<2)return Promise.resolve(items);
+    var checks=items.map(function(item,index){
+      return probeEarthSource(item.url).then(function(ok){return ok?index:Promise.reject(new Error('unplayable'));});
+    });
+    return Promise.any(checks).then(function(winner){
+      return [items[winner]].concat(items.filter(function(_,index){return index!==winner;}));
+    }).catch(function(){return items;});
+  }
+  function loadProviderAt(index){
+    if(index<0||index>=providers.length){
+      sourceSwitching=false;
+      if(finishPreroll)finishPreroll();
+      player.classList.remove('loading');loader.classList.remove('show');
+      setLoaderStatus('Internal sources unavailable — switching to CinemaOS…');
+      try{ window.parent.postMessage({type:'vidrift:external-fallback',provider:'cinemaos',tmdbId:embedMeta.tmdbId,mediaType:embedMeta.type,season:embedMeta.season,episode:embedMeta.episode,currentTime:video.currentTime||0},'*'); }catch(e){}
+      return;
+    }
+    providerCursor=index;
+    currentProvider=providers[index];
+    sourceSwitching=true;
+    var loadGeneration=++providerLoadGeneration;
+    var label=providerLabel(currentProvider);
+    setStage('Contacting '+label,35);pFoot.textContent='Looking for '+label+' sources…';
+    fetch('/api/source/'+sourceTypePath()+'?token='+encodeURIComponent(embedMeta.playbackToken)+'&provider='+encodeURIComponent(currentProvider))
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(data){
+        if(loadGeneration!==providerLoadGeneration)return;
+        sourceSwitching=false;
+        if(!data||!Array.isArray(data.streams)||!data.streams.length){loadProviderAt(index+1);return;}
+        streams=data.streams.map(function(s,i){return{index:i,provider:currentProvider,pIdx:i,type:s.type||'hls',label:label+' '+(i+1),url:(s.url||s.proxyUrl)};});
+        var orderPromise=currentProvider==='vaplayer'?orderPlayableEarthSources(streams):Promise.resolve(streams);
+        setStage(currentProvider==='vaplayer'?'Racing Earth sources':'Loading '+label,55);
+        pFoot.textContent=currentProvider==='vaplayer'?'Testing '+streams.length+' Earth sources in parallel…':'Trying '+label+'…';
+        return orderPromise.then(function(orderedStreams){
+          streams=orderedStreams;
+        attemptedSources={};prerollStates={};
+        // Boot at the remembered source: global majority memory (embedMeta.source) first,
+        // per-browser localStorage layered on top, fall back to 0. Was hardcoded to 0
+        // (memory was write-only) — fixed 2026-08-05.
+        var preferred = currentProvider==='vaplayer' ? 0 : (Number(embedMeta.source) || 0);
+        var local = currentProvider==='vaplayer' ? -1 : preferredSource(streams.length);
+        if (local >= 0) preferred = local;
+        if (!(preferred >= 0 && preferred < streams.length)) preferred = 0;
+        currentSource = preferred;
+        setStage('Loading '+streams[currentSource].label,70);pFoot.textContent='Trying '+streams[currentSource].label+' of '+streams.length;
+        renderPrerollRail(currentSource);updateServerPanel();loadStream(currentSource,true);
+        });
+      }).catch(function(){
+        if(loadGeneration!==providerLoadGeneration)return;
+        sourceSwitching=false;loadProviderAt(index+1);
+      });
+  }
+  function loadNextProvider(){
+    if(raceFallbackProvider!==null){
+      var raced=raceFallbackProvider;raceFallbackProvider=null;loadProviderAt(raced);return;
+    }
+    var next=providerCursor+1;
+    if(next>=providers.length){loadProviderAt(next);return;}
+    var label=providerLabel(providers[next]);
+    setLoaderStatus(providerLabel(currentProvider)+' unavailable — trying '+label+'…');
+    setStage('Trying '+label,55);pFoot.textContent='All '+providerLabel(currentProvider)+' sources failed — contacting '+label;
+    loadProviderAt(next);
+  }
+  function raceInitialProviders(){
+    var raceGeneration=++providerLoadGeneration;
+    // Turbo is a LAST-RESORT fallback (2026-08-18): EXCLUDE it from the initial
+    // race. A cached Turbo manifest resolves instantly and would win Promise.any,
+    // silently making Turbo primary again — the opposite of Earth+Prime default.
+    // Only Earth + Prime race; Turbo is reached via sequential failover.
+    var primaries = providers.filter(function(p){return p!=='turbo';});
+    if(!primaries.length) primaries = providers.slice();
+    var tasks=primaries.map(function(provider){
+      var index=providers.indexOf(provider);
+      var label=providerLabel(provider);
+      return fetch('/api/source/'+sourceTypePath()+'?token='+encodeURIComponent(embedMeta.playbackToken)+'&provider='+encodeURIComponent(provider))
+        .then(function(r){return r.ok?r.json():null;})
+        .then(function(data){
+          if(!data||!Array.isArray(data.streams)||!data.streams.length)throw new Error('no streams');
+          var items=data.streams.map(function(s,i){return{index:i,provider:provider,pIdx:i,type:s.type||'hls',label:label+' '+(i+1),url:(s.url||s.proxyUrl)};});
+          // Earth gets its existing manifest/segment probe; Prime is handed to
+          // the media element immediately because its direct MP4 is the probe.
+          return (provider==='vaplayer'?orderPlayableEarthSources(items):Promise.resolve(items)).then(function(ordered){return{provider:provider,index:index,streams:ordered};});
+        });
+    });
+    Promise.any(tasks).then(function(winner){
+      if(raceGeneration!==providerLoadGeneration)return;
+      currentProvider=winner.provider;providerCursor=winner.index;
+      var other = primaries.find(function(p){return p!==winner.provider;});
+      raceFallbackProvider = other ? providers.indexOf(other) : -1;
+      streams=winner.streams;sourceSwitching=false;attemptedSources={};prerollStates={};
+      currentSource=winner.provider==='vaplayer'?0:(Number(embedMeta.source)||0);
+      if(!(currentSource>=0&&currentSource<streams.length))currentSource=0;
+      setStage('Loading '+streams[currentSource].label,70);pFoot.textContent='Trying '+streams[currentSource].label+' of '+streams.length;
+      renderPrerollRail(currentSource);updateServerPanel();loadStream(currentSource,true);
+    }).catch(function(){if(raceGeneration===providerLoadGeneration)loadProviderAt(0);});
+  }
+  function loadInitialStreams(){
+    // Honor ?provider= / embedMeta.provider. Default is Earth; Earth + Prime
+    // race, Turbo is reached only as a last-resort sequential failover.
+    var startIdx = providers.indexOf(currentProvider);
+    if (startIdx < 0) startIdx = 0;
+    if(currentProvider==='turbo'){
+      // Turbo HD is CACHED: play it DIRECT with no parallel race. If it fails
+      // the normal provider progression falls through to Earth, then Prime.
+      runPreroll('Searching ' + providerLabel('turbo') + ' servers');
+      pFoot.textContent = 'Contacting ' + providerLabel('turbo') + '…';
+      loadProviderAt(startIdx);
+    }else if(currentProvider==='vaplayer' && providers.length>1){
+      runPreroll('Searching Earth + Prime together');
+      pFoot.textContent='Probing Earth and Prime in parallel…';
+      raceInitialProviders();
+    }else{
+      runPreroll('Searching ' + providerLabel(providers[startIdx]) + ' servers');
+      pFoot.textContent = 'Contacting ' + providerLabel(providers[startIdx]) + '…';
+      loadProviderAt(startIdx);
+    }
+  }
+  updateServerPanel();
+  loadInitialStreams();
+})();
+</script>
+</body>
+</html>
