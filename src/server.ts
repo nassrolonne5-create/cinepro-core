@@ -87,11 +87,6 @@ async function main() {
                     enabled: true
                 }
             ]
-        },
-
-        // MCP for AI agents
-        mcp: {
-            enabled: getEnv('MCP_ENABLED') === 'true'
         }
     });
 
