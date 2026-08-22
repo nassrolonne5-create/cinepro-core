@@ -37,8 +37,8 @@ async function main() {
         version: '1.0.0',
 
         // Network
-        host: process.env.HOST || '0.0.0.0',
-        port: process.env.PORT ? Number(process.env.PORT) : 3000,
+        host: '0.0.0.0',
+        port: 3000,
         publicUrl: process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL,
 
         // Cache (memory for dev, Redis for prod)

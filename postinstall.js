@@ -16,7 +16,10 @@ if (fs.existsSync(sourceServiceFile)) {
     code = code.replace(/async validateSourceUrl\(proxyData, timeoutMs = 3000\) \{/, 'async validateSourceUrl(proxyData, timeoutMs = 3000) {\n        return true;');
     
     // Patch dedup logic to preserve duplicate URLs from different providers (like vidfast and vidcore)
-    code = code.replace(/const dedupKey = proxyData\.url;/g, "const dedupKey = proxyData.url + '_' + source.provider.id;");
+    code = code.replace(/allSourcesMap\.has\(proxyData\.url\)/g, "allSourcesMap.has(proxyData.url + '_' + source.provider.id)");
+    code = code.replace(/allSourcesMap\.set\(proxyData\.url, source\)/g, "allSourcesMap.set(proxyData.url + '_' + source.provider.id, source)");
+    code = code.replace(/allSourcesMap\.has\(source\.url\)/g, "allSourcesMap.has(source.url + '_' + source.provider.id)");
+    code = code.replace(/allSourcesMap\.set\(source\.url, source\)/g, "allSourcesMap.set(source.url + '_' + source.provider.id, source)");
     
     // Fix error logging to prevent crashes if error is null
     code = code.replace(/catch \{(?:\s*)return null;(?:\s*)\}/g, "catch(err){ return null; }");
