@@ -89,7 +89,10 @@ export class VidriftProvider extends BaseProvider {
                             type: isM3U8 ? 'hls' : 'mp4',
                             quality: typeof data.quality === 'string' ? data.quality : 'default',
                             audioTracks: [],
-                            provider: this
+                            provider: {
+                                name: `${this.name} ${sources.length + 1}`,
+                                id: this.id
+                            }
                         });
                     }
                 }

@@ -38,7 +38,7 @@ export class VixsrcProvider extends BaseProvider {
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
                     provider: {
-                        name: src.server ? `VixSrc (${src.server})` : this.name,
+                        name: data.sources.length > 1 ? `${this.name} ${data.sources.indexOf(src) + 1}` : this.name,
                         id: this.id
                     }
                 });
