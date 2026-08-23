@@ -15,7 +15,8 @@
         "cheerio": "^1.2.0",
         "crypto-js": "^4.2.0",
         "dotenv": "^16.4.5",
-        "kaizoku-core": "^0.2.3"
+        "kaizoku-core": "^0.2.3",
+        "puppeteer": "^25.8.0"
     },
     "devDependencies": {
         "@types/crypto-js": "^4.2.2",

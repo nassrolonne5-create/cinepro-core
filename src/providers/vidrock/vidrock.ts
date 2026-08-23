@@ -7,15 +7,12 @@ import type {
 } from '@omss/framework';
 import { fetchSources } from 'kaizoku-core/providers/movies/vidrock';
 
-export class VidRockProvider extends BaseProvider {
+export class VidrockProvider extends BaseProvider {
     readonly id = 'vidrock';
-    readonly name = 'vidrock.ru';
+    readonly name = 'Atlas';
     readonly enabled = true;
-    readonly BASE_URL = 'https://vidrock.ru';
-    readonly HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-    };
-    
+    readonly BASE_URL = '';
+    readonly HEADERS = {};
     readonly capabilities: ProviderCapabilities = {
         supportedContentTypes: ['movies', 'tv']
     };
@@ -27,13 +24,13 @@ export class VidRockProvider extends BaseProvider {
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
         return this.fetchSources(media);
     }
-    
+
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
             const data = await fetchSources(media.tmdbId, media.type, media.s, media.e);
-            const headers = data.headers || this.HEADERS;
+            const headers = data.headers || {};
             const sources: Source[] = [];
-            
+
             for (const src of data.sources) {
                 sources.push({
                     url: this.createProxyUrl(src.url, headers),
@@ -41,7 +38,7 @@ export class VidRockProvider extends BaseProvider {
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
                     provider: {
-                        name: this.name,
+                        name: src.server ? `Atlas (${src.server})` : this.name,
                         id: this.id
                     }
                 });

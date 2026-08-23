@@ -5,11 +5,11 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/vidzee';
+import { fetchSources } from 'kaizoku-core/providers/movies/vidup';
 
-export class VidzeeProvider extends BaseProvider {
-    readonly id = 'vidzee';
-    readonly name = 'VidZee';
+export class VidupProvider extends BaseProvider {
+    readonly id = 'vidup';
+    readonly name = 'Cargo';
     readonly enabled = true;
     readonly BASE_URL = '';
     readonly HEADERS = {};
@@ -38,7 +38,7 @@ export class VidzeeProvider extends BaseProvider {
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
                     provider: {
-                        name: src.server ? `VidZee (${src.server})` : this.name,
+                        name: src.server ? `Cargo (${src.server})` : this.name,
                         id: this.id
                     }
                 });
