@@ -128,7 +128,27 @@ ${borderBottom}
 `);
 }
 
-main().catch((err) => {
-    console.error("Server crashed:", err);
-    process.exit(1);
-});
+
+export default {
+    async fetch(request: any, env: any, ctx: any) {
+        return new Response(
+            JSON.stringify({
+                status: "success",
+                message: "CinePro Core is running on Cloudflare Workers",
+                note: "Full API functionality requires Node.js environment (Docker/Render/Vercel)."
+            }),
+            {
+                headers: { "Content-Type": "application/json" }
+            }
+        );
+    }
+};
+
+const isCloudflareWorker = typeof (globalThis as any).WebSocketPair !== 'undefined';
+if (!isCloudflareWorker) {
+    main().catch((err) => {
+        console.error("Server crashed:", err);
+        process.exit(1);
+    });
+}
+

@@ -2,6 +2,7 @@
     "name": "cinepro-core",
     "main": "dist/server.js",
     "compatibility_date": "2026-05-24",
+    "compatibility_flags": ["nodejs_compat"],
     "build": {
         "command": "npm install && npm run build"
     },
@@ -12,6 +13,7 @@
     "vars": {
         "HOST": "0.0.0.0",
         "PORT": "3000",
+        "IS_CLOUDFLARE_WORKER": "true",
         "NODE_ENV": "production",
         "CACHE_TYPE": "memory",
         "STREMIO_ADDON": "true",
