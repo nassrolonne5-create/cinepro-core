@@ -1,3 +1,4 @@
+import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type { ProviderCapabilities, ProviderMediaObject, ProviderResult, Source } from '@omss/framework';
 
@@ -68,6 +69,27 @@ export class VidriftProvider extends BaseProvider {
                 if (!apiRes.ok) continue;
                 const data = await apiRes.json() as any;
                 
+                
+                if (data.success && Array.isArray(data.downloads)) {
+                    for (const dl of data.downloads) {
+                        let rawUrl = dl.url || dl.file || dl.link || '';
+                        if (!rawUrl) continue;
+                        if (!rawUrl.startsWith('http')) {
+                            rawUrl = `${this.BASE_URL}/${rawUrl.replace(/^\//, '')}`;
+                        }
+                        sources.push({
+                            url: rawUrl,
+                            type: getSourceType(rawUrl, false),
+                            quality: typeof dl.quality === 'string' ? dl.quality : 'default',
+                            audioTracks: [],
+                            provider: {
+                                name: `${this.name} Download ${sources.length + 1}`,
+                                id: this.id
+                            }
+                        });
+                    }
+                }
+
                 if (data.success && Array.isArray(data.streams)) {
                     for (const stream of data.streams) {
                         let rawUrl = stream.url || stream.proxyUrl || '';
@@ -86,7 +108,7 @@ export class VidriftProvider extends BaseProvider {
                         const isM3U8 = rawUrl.includes('.m3u8');
                         sources.push({
                             url: rawUrl,
-                            type: isM3U8 ? 'hls' : 'mp4',
+                            type: getSourceType(rawUrl, isM3U8),
                             quality: typeof data.quality === 'string' ? data.quality : 'default',
                             audioTracks: [],
                             provider: {

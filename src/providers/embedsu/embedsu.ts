@@ -1,3 +1,4 @@
+import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type {
     ProviderCapabilities,
@@ -38,7 +39,7 @@ export class EmbedSuProvider extends BaseProvider {
                 sources.push({
                     url: this.createProxyUrl(src.url, headers),
                     quality: src.quality || 'auto',
-                    type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
+                    type: getSourceType(src.url, src.isM3U8),
                     audioTracks: [],
                     provider: {
                         name: data.sources.length > 1 ? `${this.name} ${data.sources.indexOf(src) + 1}` : this.name,
