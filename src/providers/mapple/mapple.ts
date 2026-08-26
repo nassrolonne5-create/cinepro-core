@@ -6,7 +6,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/mapple';
 export class MappleProvider extends BaseProvider {
     readonly id = 'mapple';
     readonly name = 'Mapple';
-    readonly enabled = true;
+    readonly enabled = false;
     readonly BASE_URL = 'https://example.com';
     readonly HEADERS = {};
     

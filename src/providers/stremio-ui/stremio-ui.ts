@@ -4,7 +4,7 @@ import type { ProviderCapabilities, ProviderMediaObject, ProviderResult, Source 
 export class StremioUIProvider extends BaseProvider {
     readonly id = 'stremio-ui';
     readonly name = 'Stremio (Addons)';
-    readonly enabled = true;
+    readonly enabled = false;
     readonly BASE_URL = 'https://stremio.com';
     readonly HEADERS = {};
     

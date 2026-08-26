@@ -76,19 +76,7 @@ async function main() {
             exposedHeaders: ['Content-Range', 'Accept-Ranges', 'ETag'],
             preflightContinue: false,
             optionsSuccessStatus: 204
-        },
-
-        stremio: {
-            enableNativeAddon: true,
-            stremioAddons: [
-                {
-                    id: "torrentio",
-                    url: "https://torrentio.strem.fun/manifest.json",
-                    enabled: true
-                }
-            ]
-        }
-    });
+        }});
 
     // Register providers
     const registry = server.getRegistry();

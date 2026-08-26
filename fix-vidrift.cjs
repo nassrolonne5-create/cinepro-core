@@ -1,8 +1,4 @@
 const fs = require('fs');
-const path = require('path');
-const file = path.join(__dirname, 'src/providers/vidrift/vidrift.ts');
-let code = fs.readFileSync(file, 'utf8');
-
-code = code.replace(/provider: this/g, "provider: {\n                                name: `${this.name} ${sources.length + 1}`,\n                                id: this.id\n                            }");
-
-fs.writeFileSync(file, code);
+let content = fs.readFileSync('src/providers/vidrift/vidrift.ts', 'utf8');
+content = content.replace('readonly enabled = false;', 'readonly enabled = true;');
+fs.writeFileSync('src/providers/vidrift/vidrift.ts', content);
