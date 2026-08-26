@@ -6,7 +6,7 @@ import { getSourceType } from '../../utils/streamType.js';
 export class ConsumetDramaCoolProvider extends BaseProvider {
     readonly id = 'consumet-dramacool';
     readonly name = 'DramaCool (Consumet)';
-    readonly enabled = true;
+    readonly enabled = false;
     readonly BASE_URL = 'https://dramacool.bg';
     readonly HEADERS = {};
     readonly capabilities: ProviderCapabilities = {

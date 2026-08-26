@@ -6,7 +6,7 @@ import { getSourceType } from '../../utils/streamType.js';
 export class ConsumetFlixHQProvider extends BaseProvider {
     readonly id = 'consumet-flixhq';
     readonly name = 'FlixHQ (Consumet)';
-    readonly enabled = true;
+    readonly enabled = false;
     readonly BASE_URL = 'https://flixhq.to';
     readonly HEADERS = {};
     readonly capabilities: ProviderCapabilities = {
