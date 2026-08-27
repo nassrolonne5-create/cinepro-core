@@ -11,7 +11,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/vidvault';
 export class VidVaultProvider extends BaseProvider {
     readonly id = 'vidvault';
     readonly name = 'VidVault';
-    readonly enabled = true;
+    readonly enabled = false;
     readonly BASE_URL = 'https://vidvault.ru';
     readonly HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
