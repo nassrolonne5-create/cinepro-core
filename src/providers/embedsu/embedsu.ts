@@ -37,7 +37,7 @@ export class EmbedSuProvider extends BaseProvider {
             
             for (const src of data.sources) {
                 sources.push({
-                    url: getSourceType(src.url, src.isM3U8) === 'mp4' ? src.url : this.createProxyUrl(src.url, headers),
+                    url: this.createProxyUrl(src.url, headers),
                     quality: src.quality || 'auto',
                     type: getSourceType(src.url, src.isM3U8),
                     audioTracks: [],

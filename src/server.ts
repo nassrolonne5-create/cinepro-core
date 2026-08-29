@@ -92,16 +92,37 @@ async function main() {
                 const data = JSON.parse(payload);
                 if (data && data.sources && Array.isArray(data.sources)) {
                     await Promise.all(data.sources.map(async (src: any) => {
-                        if (src.type === 'mp4' && src.url && src.url.startsWith('http')) {
+                        if (src.type === 'mp4' && src.url && src.url.includes('/v1/proxy')) {
                             try {
+                                // Extract the real URL from the proxy data query
+                                const urlObj = new URL(src.url);
+                                const proxyDataStr = urlObj.searchParams.get('data');
+                                if (proxyDataStr) {
+                                    const proxyData = JSON.parse(decodeURIComponent(proxyDataStr));
+                                    const realUrl = proxyData.url;
+                                    
+                                    // Fetch size from real URL to avoid proxy overhead
+                                    const res = await fetch(realUrl, { method: 'HEAD', signal: AbortSignal.timeout(1500) });
+                                    if (res.ok) {
+                                        const len = res.headers.get('content-length');
+                                        if (len) src.size = parseInt(len, 10);
+                                    }
+                                    
+                                    // Rewrite the proxy URL to have a .mp4 extension so Android DownloadManager doesn't fail
+                                    src.url = src.url.replace('/v1/proxy?', '/v1/proxy/video.mp4?');
+                                }
+                            } catch (e) {
+                                // Ignore timeout or fetch errors
+                            }
+                        } else if (src.type === 'mp4' && src.url && src.url.startsWith('http')) {
+                             // Fallback if it's already a direct URL (e.g., from SuperStream)
+                             try {
                                 const res = await fetch(src.url, { method: 'HEAD', signal: AbortSignal.timeout(1500) });
                                 if (res.ok) {
                                     const len = res.headers.get('content-length');
                                     if (len) src.size = parseInt(len, 10);
                                 }
-                            } catch (e) {
-                                // Ignore timeout or fetch errors
-                            }
+                             } catch(e) {}
                         }
                     }));
 
