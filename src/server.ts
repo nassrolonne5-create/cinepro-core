@@ -118,6 +118,17 @@ async function main() {
 
     const publicUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
 
+    // Anti-Sleep Heartbeat for Render's free tier
+    // Sends a ping to itself every 14 minutes to prevent the container from sleeping
+    if (process.env.RENDER_EXTERNAL_URL) {
+        console.log(`[Heartbeat] Anti-sleep activated. Pinging ${process.env.RENDER_EXTERNAL_URL} every 14 minutes.`);
+        setInterval(() => {
+            fetch(process.env.RENDER_EXTERNAL_URL as string)
+                .then(res => console.log(`[Heartbeat] Kept server awake: ${res.status}`))
+                .catch(err => console.error(`[Heartbeat] Ping failed:`, err.message));
+        }, 14 * 60 * 1000);
+    }
+
     const uiUrl = `https://ui.cinepro.cc/?omssurl=${encodeURIComponent(publicUrl)}`;
 
     const title = '🚀 CinePro/ui is in public testing';
