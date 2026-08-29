@@ -37,7 +37,7 @@ export class VidVaultProvider extends BaseProvider {
 
             for (const src of data.sources) {
                 sources.push({
-                    url: this.createProxyUrl(src.url, headers),
+                    url: getSourceType(src.url, src.isM3U8) === 'mp4' ? src.url : this.createProxyUrl(src.url, headers),
                     quality: src.quality || 'auto',
                     type: getSourceType(src.url, src.isM3U8),
                     audioTracks: [],
@@ -49,8 +49,8 @@ export class VidVaultProvider extends BaseProvider {
             }
 
             return { sources, subtitles: [], diagnostics: [] };
-        } catch (e) {
-            return { sources: [], subtitles: [], diagnostics: [] };
+        } catch (e: any) {
+            return { sources: [], subtitles: [], diagnostics: [{ code: 'PROVIDER_ERROR', field: '', severity: 'error', message: `VidVault failed: ${e.message}` }] };
         }
     }
 
