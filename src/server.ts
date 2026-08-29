@@ -91,6 +91,20 @@ async function main() {
             try {
                 const data = JSON.parse(payload);
                 if (data && data.sources && Array.isArray(data.sources)) {
+                    await Promise.all(data.sources.map(async (src: any) => {
+                        if (src.type === 'mp4' && src.url && src.url.startsWith('http')) {
+                            try {
+                                const res = await fetch(src.url, { method: 'HEAD', signal: AbortSignal.timeout(1500) });
+                                if (res.ok) {
+                                    const len = res.headers.get('content-length');
+                                    if (len) src.size = parseInt(len, 10);
+                                }
+                            } catch (e) {
+                                // Ignore timeout or fetch errors
+                            }
+                        }
+                    }));
+
                     data.sources.sort((a: any, b: any) => {
                         const getScore = (q: any, t: any) => {
                             const quality = (q || '').toLowerCase();
