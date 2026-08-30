@@ -49,7 +49,7 @@ export class VidLinkProvider extends BaseProvider {
             }
             return { sources, subtitles: [], diagnostics: [] };
         } catch (e) {
-            return { sources: [], subtitles: [], diagnostics: [] };
+            console.error("VIDLINK ERROR:", e); return { sources: [], subtitles: [], diagnostics: [] };
         }
     }
 
