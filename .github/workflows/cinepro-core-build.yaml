@@ -37,7 +37,7 @@ jobs:
           CI: true
           SITE_URL: ${{ inputs.site-url }}
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-        run: npm ci
+        run: npm install && npm run build
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -48,7 +48,7 @@ jobs:
         env:
           CI: true
           SITE_URL: ${{ inputs.site-url }}
-        run: npm ci
+        run: npm install && npm run build
 
 # Please do not touch the following action
       - name: Store deployment content
