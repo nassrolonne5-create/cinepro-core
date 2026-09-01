@@ -150,7 +150,7 @@ if (fs.existsSync(sourceServiceFile)) {
     let code = fs.readFileSync(sourceServiceFile, 'utf8');
     
     // First verify if not already patched
-    if (!code.includes('Provider timeout exceeded (6s)')) {
+    if (!code.includes('Provider timeout exceeded (3.5s)')) {
         const targetStr = `const promises = supportedProviders.map(async (provider) => {
             try {
                 const startTime = Date.now();
@@ -166,7 +166,7 @@ if (fs.existsSync(sourceServiceFile)) {
             try {
                 const startTime = Date.now();
                 const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Provider timeout exceeded (6s)')), 6000);
+                    setTimeout(() => reject(new Error('Provider timeout exceeded (3.5s)')), 3500);
                 });
                 let result = await Promise.race([
                     type === 'movie' ? provider.getMovieSources(media) : provider.getTVSources(media),

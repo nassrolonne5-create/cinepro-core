@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type { ProviderCapabilities, ProviderMediaObject, ProviderResult, Source } from '@omss/framework';
@@ -34,13 +35,14 @@ export class VidriftProvider extends BaseProvider {
             ? `${this.BASE_URL}/embed/tv/${media.tmdbId}/${media.s || 1}/${media.e || 1}`
             : `${this.BASE_URL}/embed/movie/${media.tmdbId}`;
 
-        const pageRes = await fetch(endpoint, {
-            headers: { ...this.HEADERS, Accept: 'text/html' }
+        const pageRes = await axios.get(endpoint, {
+            headers: { ...this.HEADERS, Accept: 'text/html' },
+            timeout: 5000
         });
         
-        if (!pageRes.ok) throw new Error(`Failed to fetch page: ${pageRes.status}`);
+        if (pageRes.status !== 200) throw new Error(`Failed to fetch page: ${pageRes.status}`);
 
-        const html = await pageRes.text();
+        const html = pageRes.data;
         
         const match = html.match(/embedMeta\s*=\s*(\{.*?\})/);
         if (!match || !match[1]) throw new Error("Failed to extract embedMeta token");
@@ -57,17 +59,18 @@ export class VidriftProvider extends BaseProvider {
             ? `tv/${media.tmdbId}/${media.s || 1}/${media.e || 1}`
             : `movie/${media.tmdbId}`;
             
-        for (const p of providers) {
+        await Promise.all(providers.map(async (p) => {
             try {
-                const apiRes = await fetch(`${this.BASE_URL}/api/source/${typePath}?token=${encodeURIComponent(token)}&provider=${p}`, {
+                const apiRes = await axios.get(`${this.BASE_URL}/api/source/${typePath}?token=${encodeURIComponent(token)}&provider=${p}`, {
                     headers: {
                         ...this.HEADERS,
                         'Referer': endpoint
-                    }
+                    },
+                    timeout: 4000
                 });
                 
-                if (!apiRes.ok) continue;
-                const data = await apiRes.json() as any;
+                if (apiRes.status !== 200) return;
+                const data = apiRes.data as any;
                 
                 if (data.success && Array.isArray(data.downloads)) {
                     for (const dl of data.downloads) {
@@ -110,7 +113,7 @@ export class VidriftProvider extends BaseProvider {
                         sources.push({
                             url: rawUrl,
                             type: getSourceType(rawUrl, isM3U8),
-                            quality: typeof data.quality === 'string' ? data.quality : 'default',
+                            quality: typeof stream.quality === 'string' ? stream.quality : (typeof data.quality === 'string' ? data.quality : 'default'),
                             audioTracks: [],
                             provider: {
                                 name: `${this.name} ${sources.length + 1}`,
@@ -122,7 +125,7 @@ export class VidriftProvider extends BaseProvider {
             } catch (err) {
                 // Ignore individual provider errors
             }
-        }
+        }));
         
         if (sources.length === 0) {
             throw new Error('No streams resolved from VidRift API');
