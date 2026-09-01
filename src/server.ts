@@ -108,8 +108,8 @@ async function main() {
                                         if (len) src.size = parseInt(len, 10);
                                     }
                                     
-                                    // Rewrite the proxy URL to have a .mp4 extension so Android DownloadManager doesn't fail
-                                    src.url = src.url.replace('/v1/proxy?', '/v1/proxy/video.mp4?');
+                                    // Removed .mp4 rewrite to fix byte-range streaming on the frontend video player
+                                    // src.url = src.url.replace('/v1/proxy?', '/v1/proxy/video.mp4?');
                                 }
                             } catch (e) {
                                 // Ignore timeout or fetch errors
