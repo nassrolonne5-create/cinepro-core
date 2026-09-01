@@ -1,6 +1,7 @@
 import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type { ProviderCapabilities, ProviderMediaObject, ProviderResult, Source } from '@omss/framework';
+import { fetchSources } from 'kaizoku-core/providers/movies/vidrift';
 
 export class VidriftProvider extends BaseProvider {
     readonly id = 'vidrift';
@@ -31,106 +32,27 @@ export class VidriftProvider extends BaseProvider {
     }
 
     private async extractSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        const endpoint = media.type === 'tv'
-            ? `${this.BASE_URL}/embed/tv/${media.tmdbId}/${media.s || 1}/${media.e || 1}`
-            : `${this.BASE_URL}/embed/movie/${media.tmdbId}`;
-
-        const pageRes = await fetch(endpoint, {
-            headers: { ...this.HEADERS, Accept: 'text/html' }
-        });
-        
-        if (!pageRes.ok) throw new Error(`Failed to fetch page: ${pageRes.status}`);
-        const html = await pageRes.text();
-        
-        const match = html.match(/embedMeta\s*=\s*(\{.*?\})/);
-        if (!match || !match[1]) throw new Error("Failed to extract embedMeta token");
-        
-        const meta = JSON.parse(match[1]);
-        const token = meta.playbackToken;
-        if (!token) throw new Error("No playbackToken found");
-        
-        const providers = ['selfhost', 'vaplayer', 'vidgod', 'turbo'];
-        const sources: Source[] = [];
-        const diagnostics: any[] = [];
-        
-        const typePath = media.type === 'tv'
-            ? `tv/${media.tmdbId}/${media.s || 1}/${media.e || 1}`
-            : `movie/${media.tmdbId}`;
+        try {
+            const data = await fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const headers = data.headers || this.HEADERS;
+            const sources: Source[] = [];
             
-        for (const p of providers) {
-            try {
-                const apiRes = await fetch(`${this.BASE_URL}/api/source/${typePath}?token=${encodeURIComponent(token)}&provider=${p}`, {
-                    headers: {
-                        ...this.HEADERS,
-                        'Referer': endpoint
+            for (const src of data.sources) {
+                sources.push({
+                    url: this.createProxyUrl(src.url, headers),
+                    quality: src.quality || 'auto',
+                    type: getSourceType(src.url, src.isM3U8),
+                    audioTracks: [],
+                    provider: {
+                        name: data.sources.length > 1 ? `${this.name} ${data.sources.indexOf(src) + 1}` : this.name,
+                        id: this.id
                     }
                 });
-                
-                if (!apiRes.ok) continue;
-                const data = await apiRes.json() as any;
-                
-                
-                if (data.success && Array.isArray(data.downloads)) {
-                    for (const dl of data.downloads) {
-                        let rawUrl = dl.url || dl.file || dl.link || '';
-                        if (!rawUrl) continue;
-                        if (!rawUrl.startsWith('http')) {
-                            rawUrl = `${this.BASE_URL}/${rawUrl.replace(/^\//, '')}`;
-                        }
-                        sources.push({
-                            url: rawUrl,
-                            type: getSourceType(rawUrl, false),
-                            quality: typeof dl.quality === 'string' ? dl.quality : 'default',
-                            audioTracks: [],
-                            provider: {
-                                name: `${this.name} Download ${sources.length + 1}`,
-                                id: this.id
-                            }
-                        });
-                    }
-                }
-
-                if (data.success && Array.isArray(data.streams)) {
-                    for (const stream of data.streams) {
-                        let rawUrl = stream.url || stream.proxyUrl || '';
-                        
-                        if (rawUrl.includes('hls?url=') || rawUrl.includes('mp4?url=')) {
-                            const matchUrl = rawUrl.match(/(?:hls|mp4)\?url=(.+?)(?:&|$)/);
-                            if (matchUrl?.[1]) {
-                                rawUrl = decodeURIComponent(matchUrl[1]);
-                            }
-                        }
-                        
-                        if (!rawUrl.startsWith('http')) {
-                            rawUrl = `${this.BASE_URL}/${rawUrl.replace(/^\//, '')}`;
-                        }
-                        
-                        const isM3U8 = rawUrl.includes('.m3u8');
-                        sources.push({
-                            url: rawUrl,
-                            type: getSourceType(rawUrl, isM3U8),
-                            quality: typeof data.quality === 'string' ? data.quality : 'default',
-                            audioTracks: [],
-                            provider: {
-                                name: `${this.name} ${sources.length + 1}`,
-                                id: this.id
-                            }
-                        });
-                    }
-                }
-            } catch (err) {
-                // Ignore individual provider errors
             }
+            return { sources, subtitles: [], diagnostics: [] };
+        } catch (e) {
+            console.error("VIDRIFT ERROR:", e); 
+            return { sources: [], subtitles: [], diagnostics: [] };
         }
-        
-        if (sources.length === 0) {
-            throw new Error('No streams resolved from VidRift API');
-        }
-        
-        return {
-            sources,
-            subtitles: [],
-            diagnostics
-        };
     }
 }

@@ -149,6 +149,12 @@ async function main() {
         return payload;
     });
 
+    app.get('/v1/proxy/video.mp4', async (request: any, reply: any) => {
+        // Redirect to the actual proxy route, keeping the query string intact
+        const query = new URLSearchParams(request.query as any).toString();
+        return reply.redirect(`/v1/proxy?${query}`);
+    });
+
     await server.start();
 
     const publicUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
