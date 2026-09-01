@@ -144,3 +144,37 @@ function parseStreamData(data) {
         console.log("Patched kaizoku-core vidnest to extract multiple streams and downloads.");
     }
 }
+
+// Add timeout wrapper to OMSS framework source.service.js fetchFromProviders
+if (fs.existsSync(sourceServiceFile)) {
+    let code = fs.readFileSync(sourceServiceFile, 'utf8');
+    
+    // First verify if not already patched
+    if (!code.includes('Provider timeout exceeded (6s)')) {
+        const targetStr = `const promises = supportedProviders.map(async (provider) => {
+            try {
+                const startTime = Date.now();
+                let result;
+                if (type === 'movie') {
+                    result = await provider.getMovieSources(media);
+                }
+                else {
+                    result = await provider.getTVSources(media);
+                }`;
+
+        const replacement = `const promises = supportedProviders.map(async (provider) => {
+            try {
+                const startTime = Date.now();
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Provider timeout exceeded (6s)')), 6000);
+                });
+                let result = await Promise.race([
+                    type === 'movie' ? provider.getMovieSources(media) : provider.getTVSources(media),
+                    timeoutPromise
+                ]);`;
+
+        code = code.replace(targetStr, replacement);
+        fs.writeFileSync(sourceServiceFile, code);
+        console.log("Patched source.service.js to add global 8-second provider timeout.");
+    }
+}
