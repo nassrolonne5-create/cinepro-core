@@ -10,7 +10,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/vidfast';
 
 export class VidfastProvider extends BaseProvider {
     readonly id = 'vidfast';
-    readonly name = 'Photon';
+    readonly name = 'Vidfast';
     readonly enabled = true;
     readonly BASE_URL = '';
     readonly HEADERS = {};

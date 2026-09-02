@@ -1,12 +1,13 @@
 import { VidriftProvider } from './src/providers/vidrift/vidrift.js';
 
-async function test() {
-    const provider = new VidriftProvider();
+async function run() {
+    const p = new VidriftProvider();
+    const media = { type: 'movie', tmdbId: '550' } as any;
     try {
-        const res = await provider.getMovieSources({ tmdbId: '550', type: 'movie', title: 'Fight Club' } as any);
+        const res = await p.getMovieSources(media);
         console.log(JSON.stringify(res, null, 2));
-    } catch (e) {
-        console.error(e);
+    } catch(e: any) {
+        console.error(e.message);
     }
 }
-test();
+run();
