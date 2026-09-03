@@ -10,7 +10,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/vidup';
 
 export class VidupProvider extends BaseProvider {
     readonly id = 'vidup';
-    readonly name = 'Cargo';
+    readonly name = 'Vidup';
     readonly enabled = true;
     readonly BASE_URL = '';
     readonly HEADERS = {};
