@@ -149,8 +149,12 @@ function parseStreamData(data) {
 if (fs.existsSync(sourceServiceFile)) {
     let code = fs.readFileSync(sourceServiceFile, 'utf8');
     
-    // First verify if not already patched
-    if (!code.includes('Provider timeout exceeded (3.5s)')) {
+    // Replace any existing timeout with 12s
+    if (code.includes('Provider timeout exceeded')) {
+        code = code.replace(/setTimeout\(\(\) => reject\(new Error\('Provider timeout exceeded \([^)]+\)'\)\), \d+\);/g, "setTimeout(() => reject(new Error('Provider timeout exceeded (12s)')), 12000);");
+        fs.writeFileSync(sourceServiceFile, code);
+        console.log("Patched source.service.js to update provider timeout to 12s.");
+    } else {
         const targetStr = `const promises = supportedProviders.map(async (provider) => {
             try {
                 const startTime = Date.now();
@@ -166,7 +170,7 @@ if (fs.existsSync(sourceServiceFile)) {
             try {
                 const startTime = Date.now();
                 const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Provider timeout exceeded (3.5s)')), 3500);
+                    setTimeout(() => reject(new Error('Provider timeout exceeded (12s)')), 12000);
                 });
                 let result = await Promise.race([
                     type === 'movie' ? provider.getMovieSources(media) : provider.getTVSources(media),
@@ -175,6 +179,6 @@ if (fs.existsSync(sourceServiceFile)) {
 
         code = code.replace(targetStr, replacement);
         fs.writeFileSync(sourceServiceFile, code);
-        console.log("Patched source.service.js to add global 8-second provider timeout.");
+        console.log("Patched source.service.js to add global 12-second provider timeout.");
     }
 }

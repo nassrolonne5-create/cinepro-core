@@ -33,9 +33,17 @@ export class VidfastProvider extends BaseProvider {
             const sources: Source[] = [];
 
             for (const src of data.sources) {
+                let quality = src.quality || 'Auto';
+                if (quality === 'default' || quality === 'auto') {
+                    if (src.url.includes('2160')) quality = '4K';
+                    else if (src.url.includes('1080')) quality = '1080p';
+                    else if (src.url.includes('720')) quality = '720p';
+                    else if (src.url.includes('480')) quality = '480p';
+                    else quality = 'Auto';
+                }
                 sources.push({
                     url: this.createProxyUrl(src.url, headers),
-                    quality: src.quality || 'auto',
+                    quality,
                     type: getSourceType(src.url, src.isM3U8),
                     audioTracks: [],
                     provider: {
@@ -46,7 +54,19 @@ export class VidfastProvider extends BaseProvider {
             }
             return { sources, subtitles: [], diagnostics: [] };
         } catch (e) {
-            return { sources: [], subtitles: [], diagnostics: [] };
+            console.error('[VidfastProvider] Error fetching sources:', (e as any)?.message || e);
+            return {
+                sources: [],
+                subtitles: [],
+                diagnostics: [
+                    {
+                        code: 'PROVIDER_ERROR',
+                        message: `Vidfast: ${(e as any)?.message || String(e)}`,
+                        field: '',
+                        severity: 'error'
+                    }
+                ]
+            };
         }
     }
 
