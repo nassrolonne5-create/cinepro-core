@@ -1,4 +1,4 @@
-import { VidriftProvider } from './src/providers/vidrift/vidrift.ts';
+import { VidriftProvider } from './src/providers/vidrift/vidrift.js';
 async function run() {
     const p = new VidriftProvider();
     const res = await p.getMovieSources({ tmdbId: '550', type: 'movie' } as any);

@@ -26,6 +26,7 @@ export class VidriftProvider extends BaseProvider {
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
         return this.extractSources(media);
     }
+
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
         return this.extractSources(media);
     }
@@ -41,7 +42,6 @@ export class VidriftProvider extends BaseProvider {
         });
         
         if (pageRes.status !== 200) throw new Error(`Failed to fetch page: ${pageRes.status}`);
-
         const html = pageRes.data;
         
         const match = html.match(/embedMeta\s*=\s*(\{.*?\})/);
@@ -76,11 +76,9 @@ export class VidriftProvider extends BaseProvider {
                     for (const dl of data.downloads) {
                         let rawUrl = dl.url || dl.file || dl.link || '';
                         if (!rawUrl) continue;
-
                         if (!rawUrl.startsWith('http')) {
                             rawUrl = `${this.BASE_URL}/${rawUrl.replace(/^\//, '')}`;
                         }
-
                         sources.push({
                             url: rawUrl,
                             type: getSourceType(rawUrl, false),
@@ -93,7 +91,6 @@ export class VidriftProvider extends BaseProvider {
                         });
                     }
                 }
-
                 if (data.success && Array.isArray(data.streams)) {
                     for (const stream of data.streams) {
                         let rawUrl = stream.url || stream.proxyUrl || '';
