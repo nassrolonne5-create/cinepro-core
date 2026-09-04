@@ -1,4 +1,3 @@
-import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type {
     ProviderCapabilities,
@@ -10,7 +9,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/vidrock';
 
 export class VidrockProvider extends BaseProvider {
     readonly id = 'vidrock';
-    readonly name = 'Vidrock';
+    readonly name = 'Atlas';
     readonly enabled = true;
     readonly BASE_URL = '';
     readonly HEADERS = {};
@@ -33,40 +32,20 @@ export class VidrockProvider extends BaseProvider {
             const sources: Source[] = [];
 
             for (const src of data.sources) {
-                let quality = src.quality || 'Auto';
-                if (quality === 'default' || quality === 'auto') {
-                    if (src.url.includes('2160')) quality = '4K';
-                    else if (src.url.includes('1080')) quality = '1080p';
-                    else if (src.url.includes('720')) quality = '720p';
-                    else if (src.url.includes('480')) quality = '480p';
-                    else quality = 'Auto';
-                }
                 sources.push({
                     url: this.createProxyUrl(src.url, headers),
-                    quality,
-                    type: getSourceType(src.url, src.isM3U8),
+                    quality: src.quality || 'auto',
+                    type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
                     provider: {
-                        name: data.sources.length > 1 ? `${this.name} ${data.sources.indexOf(src) + 1}` : this.name,
+                        name: src.server ? `Atlas (${src.server})` : this.name,
                         id: this.id
                     }
                 });
             }
             return { sources, subtitles: [], diagnostics: [] };
         } catch (e) {
-            console.error('[VidrockProvider] Error fetching sources:', (e as any)?.message || e);
-            return {
-                sources: [],
-                subtitles: [],
-                diagnostics: [
-                    {
-                        code: 'PROVIDER_ERROR',
-                        message: `Vidrock: ${(e as any)?.message || String(e)}`,
-                        field: '',
-                        severity: 'error'
-                    }
-                ]
-            };
+            return { sources: [], subtitles: [], diagnostics: [] };
         }
     }
 

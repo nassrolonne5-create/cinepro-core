@@ -5,11 +5,11 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/vidfast';
+import { fetchSources } from 'kaizoku-core/providers/movies/cinesu';
 
-export class VidfastProvider extends BaseProvider {
-    readonly id = 'vidfast';
-    readonly name = 'Photon';
+export class CinesuProvider extends BaseProvider {
+    readonly id = 'cinesu';
+    readonly name = 'Vidx';
     readonly enabled = true;
     readonly BASE_URL = '';
     readonly HEADERS = {};
@@ -38,7 +38,7 @@ export class VidfastProvider extends BaseProvider {
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
                     provider: {
-                        name: src.server ? `Photon (${src.server})` : this.name,
+                        name: src.server ? `Vidx (${src.server})` : this.name,
                         id: this.id
                     }
                 });
