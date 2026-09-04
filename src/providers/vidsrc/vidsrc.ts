@@ -42,11 +42,12 @@ export class VidSrcProvider extends BaseProvider {
                     type: getSourceType(src.url, src.isM3U8),
                     audioTracks: [],
                     provider: {
-                        name: data.sources.length > 1 ? `${this.name} ${data.sources.indexOf(src) + 1}` : this.name,
+                        name: (src as any).server ? `${this.name} (${(src as any).server})` : data.sources.length > 1 ? `${this.name} ${data.sources.indexOf(src) + 1}` : this.name,
                         id: this.id
                     }
                 });
             }
+
             return { sources, subtitles: [], diagnostics: [] };
         } catch (e) {
             return { sources: [], subtitles: [], diagnostics: [] };
