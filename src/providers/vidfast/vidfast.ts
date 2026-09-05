@@ -1,3 +1,4 @@
+import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type {
     ProviderCapabilities,
@@ -13,6 +14,7 @@ export class VidfastProvider extends BaseProvider {
     readonly enabled = true;
     readonly BASE_URL = '';
     readonly HEADERS = {};
+
     readonly capabilities: ProviderCapabilities = {
         supportedContentTypes: ['movies', 'tv']
     };
@@ -33,9 +35,9 @@ export class VidfastProvider extends BaseProvider {
 
             for (const src of data.sources) {
                 sources.push({
-                    url: this.createProxyUrl(src.url, headers).replace('/v1/proxy?', (src as any).isM3U8 || src.url.includes('.m3u8') ? '/v1/proxy/stream.m3u8?' : '/v1/proxy/video.mp4?'),
+                    url: this.createProxyUrl(src.url, headers),
                     quality: src.quality || 'auto',
-                    type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
+                    type: getSourceType(src.url, src.isM3U8),
                     audioTracks: [],
                     provider: {
                         name: this.name,
@@ -48,7 +50,6 @@ export class VidfastProvider extends BaseProvider {
             return { sources: [], subtitles: [], diagnostics: [] };
         }
     }
-
     async healthCheck(): Promise<boolean> {
         return true;
     }

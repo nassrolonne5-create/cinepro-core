@@ -31,16 +31,16 @@ const getEnv = (key: string, def?: string): any => {
 
 async function main() {
     configureKaizoku({ tmdbApiKey: (getEnv('TMDB_API_KEY') && getEnv('TMDB_API_KEY') !== 'your_tmdb_api_key_here') ? getEnv('TMDB_API_KEY') : 'fake_key' });
-    configureKaizoku({ tmdbApiKey: (getEnv('TMDB_API_KEY') && getEnv('TMDB_API_KEY') !== 'your_tmdb_api_key_here') ? getEnv('TMDB_API_KEY') : 'fake_key' });
+    
     const server = new OMSSServer({
         name: 'CinePro',
         version: '1.0.0',
-
+        
         // Network
         host: '0.0.0.0',
-        port: parseInt(process.env.PORT || '3000', 10),
+        port: 3000,
         publicUrl: process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL,
-
+        
         // Cache (memory for dev, Redis for prod)
         cache: {
             type: (getEnv('CACHE_TYPE') as 'memory' | 'redis') ?? 'memory',
@@ -54,7 +54,7 @@ async function main() {
                 password: getEnv('REDIS_PASSWORD')
             }
         },
-
+        
         // TMDB
         tmdb: {
             apiKey: (getEnv('TMDB_API_KEY') && getEnv('TMDB_API_KEY') !== 'your_tmdb_api_key_here') 
@@ -62,13 +62,13 @@ async function main() {
                 : 'fake_key',
             cacheTTL: 24 * 60 * 60 // 24h
         },
-
+        
         // Third Party Proxy removal
         proxyConfig: {
             knownThirdPartyProxies: knownThirdPartyProxies,
             streamPatterns
         },
-
+        
         cors: {
             origin: getEnv('CORS_ORIGIN', '*'),
             methods: ['GET', 'OPTIONS'],
@@ -76,20 +76,22 @@ async function main() {
             exposedHeaders: ['Content-Range', 'Accept-Ranges', 'ETag'],
             preflightContinue: false,
             optionsSuccessStatus: 204
-        }});
+        }
+    });
 
     // Register providers
     const registry = server.getRegistry();
     await registry.discoverProviders(path.join(__dirname, './providers/'));
     console.log("REGISTERED PROVIDERS:", registry.getProviders().map(p => p.id));
-
     
     // Smart Sorting: Internet Speed Adaptive
     const app = server.getInstance();
+    
     app.addHook('onSend', async (request: any, reply: any, payload: any) => {
         if (typeof payload === 'string' && (request.url.includes('/v1/movies') || request.url.includes('/v1/tv'))) {
             try {
                 const data = JSON.parse(payload);
+                
                 if (data && data.sources && Array.isArray(data.sources)) {
                     await Promise.all(data.sources.map(async (src: any) => {
                         if (src.type === 'mp4' && src.url && src.url.includes('/v1/proxy')) {
@@ -108,28 +110,29 @@ async function main() {
                                         if (len) src.size = parseInt(len, 10);
                                     }
                                     
-                                    // Removed .mp4 rewrite to fix byte-range streaming on the frontend video player
-                                    // src.url = src.url.replace('/v1/proxy?', '/v1/proxy/video.mp4?');
+                                    // Rewrite the proxy URL to have a .mp4 extension so Android DownloadManager doesn't fail
+                                    src.url = src.url.replace('/v1/proxy?', '/v1/proxy/video.mp4?');
                                 }
                             } catch (e) {
                                 // Ignore timeout or fetch errors
                             }
-                        } else if (src.type === 'mp4' && src.url && src.url.startsWith('http')) {
-                             // Fallback if it's already a direct URL (e.g., from SuperStream)
-                             try {
+                        } else if (src.type === 'mp4' && src.url && src.url.startsWith('http')) { 
+                            // Fallback if it's already a direct URL (e.g., from SuperStream) 
+                            try {
                                 const res = await fetch(src.url, { method: 'HEAD', signal: AbortSignal.timeout(1500) });
                                 if (res.ok) {
                                     const len = res.headers.get('content-length');
                                     if (len) src.size = parseInt(len, 10);
-                                }
-                             } catch(e) {}
+                                } 
+                            } catch(e) {}
                         }
                     }));
-
+                    
                     data.sources.sort((a: any, b: any) => {
                         const getScore = (q: any, t: any) => {
                             const quality = (q || '').toLowerCase();
                             const type = (t || '').toLowerCase();
+                            
                             if (quality === 'auto' || type === 'hls' || type === 'dash') return 100;
                             if (quality.includes('4k') || quality.includes('2160')) return 90;
                             if (quality.includes('1080')) return 80;
@@ -140,6 +143,7 @@ async function main() {
                         };
                         return getScore(b.quality, b.type) - getScore(a.quality, a.type);
                     });
+                    
                     return JSON.stringify(data);
                 }
             } catch (e) {
@@ -149,10 +153,6 @@ async function main() {
         return payload;
     });
 
-    app.get('/v1/proxy/stream.m3u8', async (request: any, reply: any) => {
-        const query = new URLSearchParams(request.query as any).toString();
-        return reply.redirect(`/v1/proxy?${query}`);
-    });
     app.get('/v1/proxy/video.mp4', async (request: any, reply: any) => {
         // Redirect to the actual proxy route, keeping the query string intact
         const query = new URLSearchParams(request.query as any).toString();
@@ -160,9 +160,9 @@ async function main() {
     });
 
     await server.start();
-
+    
     const publicUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
-
+    
     // Anti-Sleep Heartbeat for Render's free tier
     // Sends a ping to itself every 14 minutes to prevent the container from sleeping
     if (process.env.RENDER_EXTERNAL_URL) {
@@ -173,36 +173,23 @@ async function main() {
                 .catch(err => console.error(`[Heartbeat] Ping failed:`, err.message));
         }, 14 * 60 * 1000);
     }
-
+    
     const uiUrl = `https://ui.cinepro.cc/?omssurl=${encodeURIComponent(publicUrl)}`;
-
     const title = '🚀 CinePro/ui is in public testing';
-    const contrib =
-        '🤝 We are looking for contributors to improve and develop!';
+    const contrib = '🤝 We are looking for contributors to improve and develop!';
     const repo = 'Contribute: https://github.com/cinepro-org/ui';
-    const tryIt = `🌐 Try it out: ${uiUrl} !`;
-    const note =
-        'You will need to give the website "access to local applications" that it works.';
-
+    const tryIt = `💻 Try it out: ${uiUrl} 💻!`;
+    const note = 'You will need to give the website "access to local applications" that it works.';
     const lines = [title, '', repo, '', contrib, '', tryIt, '', note];
-
+    
     // compute box width based on longest line
     const width = Math.max(...lines.map((l) => l.length)) + 2;
-
-    const borderTop = '╭' + '─'.repeat(width) + '╮';
-    const borderBottom = '╰' + '─'.repeat(width) + '╯';
-
+    const borderTop = '┌' + '─'.repeat(width) + '┐';
+    const borderBottom = '└' + '─'.repeat(width) + '┘';
     const pad = (line: string) => '│ ' + line.padEnd(width - 2, ' ') + ' │';
-
-    console.log(`
-================== CINEPRO BETA ANNOUNCEMENT ==================
-
-${borderTop}
-${lines.map(pad).join('\n')}
-${borderBottom}
-`);
+    
+    console.log(`\n\n================== CINEPRO BETA ANNOUNCEMENT ==================\n${borderTop}\n${lines.map(pad).join('\n')}\n${borderBottom}\n\n`);
 }
-
 
 export default {
     async fetch(request: any, env: any, ctx: any) {
@@ -226,4 +213,3 @@ if (!isCloudflareWorker) {
         process.exit(1);
     });
 }
-

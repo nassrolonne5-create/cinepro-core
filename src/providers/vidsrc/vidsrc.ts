@@ -37,7 +37,7 @@ export class VidSrcProvider extends BaseProvider {
             
             for (const src of data.sources) {
                 sources.push({
-                    url: this.createProxyUrl(src.url, headers).replace('/v1/proxy?', (src as any).isM3U8 || src.url.includes('.m3u8') ? '/v1/proxy/stream.m3u8?' : '/v1/proxy/video.mp4?'),
+                    url: this.createProxyUrl(src.url, headers),
                     quality: src.quality || 'auto',
                     type: getSourceType(src.url, src.isM3U8),
                     audioTracks: [],
@@ -47,13 +47,11 @@ export class VidSrcProvider extends BaseProvider {
                     }
                 });
             }
-
             return { sources, subtitles: [], diagnostics: [] };
         } catch (e) {
             return { sources: [], subtitles: [], diagnostics: [] };
         }
     }
-
     async healthCheck(): Promise<boolean> {
         return true;
     }
