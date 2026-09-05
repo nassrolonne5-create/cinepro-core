@@ -9,7 +9,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/vidup';
 
 export class VidupProvider extends BaseProvider {
     readonly id = 'vidup';
-    readonly name = 'Cargo';
+    readonly name = 'VidUp';
     readonly enabled = true;
     readonly BASE_URL = '';
     readonly HEADERS = {};
@@ -38,7 +38,7 @@ export class VidupProvider extends BaseProvider {
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
                     provider: {
-                        name: src.server ? `Cargo (${src.server})` : this.name,
+                        name: this.name,
                         id: this.id
                     }
                 });

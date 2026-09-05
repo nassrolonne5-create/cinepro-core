@@ -10,7 +10,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/vidlink';
 
 export class VidLinkProvider extends BaseProvider {
     readonly id = 'vidlink';
-    readonly name = 'vidlink.pro';
+    readonly name = 'VidLink';
     readonly enabled = true;
     readonly BASE_URL = 'https://vidlink.pro';
     readonly HEADERS = {
@@ -42,7 +42,7 @@ export class VidLinkProvider extends BaseProvider {
                     type: getSourceType(src.url, src.isM3U8),
                     audioTracks: [],
                     provider: {
-                        name: (src as any).server ? `${this.name} (${(src as any).server})` : data.sources.length > 1 ? `${this.name} ${data.sources.indexOf(src) + 1}` : this.name,
+                        name: this.name,
                         id: this.id
                     }
                 });

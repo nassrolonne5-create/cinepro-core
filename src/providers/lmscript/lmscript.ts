@@ -29,7 +29,7 @@ export class LmscriptProvider extends BaseProvider {
                     type: getSourceType(src.url, src.isM3U8),
                     audioTracks: [],
                     provider: {
-                        name: (src as any).server ? (src as any).server : data.sources.length > 1 ? `${this.name} ${data.sources.indexOf(src) + 1}` : this.name,
+                        name: this.name,
                         id: this.id
                     }
                 });

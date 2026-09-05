@@ -9,7 +9,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/cinesu';
 
 export class CinesuProvider extends BaseProvider {
     readonly id = 'cinesu';
-    readonly name = 'Vidx';
+    readonly name = 'CineSu';
     readonly enabled = true;
     readonly BASE_URL = '';
     readonly HEADERS = {};
@@ -38,7 +38,7 @@ export class CinesuProvider extends BaseProvider {
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
                     provider: {
-                        name: src.server ? `Vidx (${src.server})` : this.name,
+                        name: this.name,
                         id: this.id
                     }
                 });

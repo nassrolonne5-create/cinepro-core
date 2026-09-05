@@ -85,7 +85,7 @@ export class VidriftProvider extends BaseProvider {
                             quality: typeof dl.quality === 'string' ? dl.quality : 'default',
                             audioTracks: [],
                             provider: {
-                                name: `${this.name} Download ${sources.length + 1}`,
+                                name: this.name,
                                 id: this.id
                             }
                         });
@@ -113,7 +113,7 @@ export class VidriftProvider extends BaseProvider {
                             quality: typeof stream.quality === 'string' ? stream.quality : (typeof data.quality === 'string' ? data.quality : 'default'),
                             audioTracks: [],
                             provider: {
-                                name: `${this.name} ${sources.length + 1}`,
+                                name: this.name,
                                 id: this.id
                             }
                         });

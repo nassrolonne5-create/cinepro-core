@@ -9,7 +9,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/vidrock';
 
 export class VidrockProvider extends BaseProvider {
     readonly id = 'vidrock';
-    readonly name = 'Atlas';
+    readonly name = 'VidRock';
     readonly enabled = true;
     readonly BASE_URL = '';
     readonly HEADERS = {};
@@ -38,7 +38,7 @@ export class VidrockProvider extends BaseProvider {
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
                     provider: {
-                        name: src.server ? `Atlas (${src.server})` : this.name,
+                        name: this.name,
                         id: this.id
                     }
                 });

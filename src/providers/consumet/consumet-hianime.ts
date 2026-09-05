@@ -5,7 +5,7 @@ import { getSourceType } from '../../utils/streamType.js';
 
 export class ConsumetHiAnimeProvider extends BaseProvider {
     readonly id = 'consumet-hianime';
-    readonly name = 'HiAnime (Consumet)';
+    readonly name = 'consumet-hianime';
     readonly enabled = false;
     readonly BASE_URL = 'https://hianime.to';
     readonly HEADERS = {};

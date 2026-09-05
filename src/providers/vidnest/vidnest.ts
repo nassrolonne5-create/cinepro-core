@@ -9,7 +9,7 @@ import { fetchSources } from 'kaizoku-core/providers/movies/vidnest';
 
 export class VidnestProvider extends BaseProvider {
     readonly id = 'vidnest';
-    readonly name = 'Cabin';
+    readonly name = 'VidNest';
     readonly enabled = true;
     readonly BASE_URL = '';
     readonly HEADERS = {};
@@ -38,7 +38,7 @@ export class VidnestProvider extends BaseProvider {
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
                     provider: {
-                        name: src.server ? `Cabin (${src.server})` : this.name,
+                        name: this.name,
                         id: this.id
                     }
                 });
