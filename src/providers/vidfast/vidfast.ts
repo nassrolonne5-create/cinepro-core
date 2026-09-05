@@ -38,7 +38,7 @@ export class VidfastProvider extends BaseProvider {
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
                     provider: {
-                        name: src.server ? `VidFast (${src.server})` : this.name,
+                        name: this.name,
                         id: this.id
                     }
                 });
