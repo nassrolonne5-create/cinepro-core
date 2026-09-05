@@ -33,7 +33,7 @@ export class VidnestProvider extends BaseProvider {
 
             for (const src of data.sources) {
                 sources.push({
-                    url: this.createProxyUrl(src.url, headers),
+                    url: src.url,
                     quality: src.quality || 'auto',
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
