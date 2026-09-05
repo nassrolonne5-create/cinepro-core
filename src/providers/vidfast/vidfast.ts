@@ -33,7 +33,7 @@ export class VidfastProvider extends BaseProvider {
 
             for (const src of data.sources) {
                 sources.push({
-                    url: src.url,
+                    url: this.createProxyUrl(src.url, headers).replace('/v1/proxy?', (src as any).isM3U8 || src.url.includes('.m3u8') ? '/v1/proxy/stream.m3u8?' : '/v1/proxy/video.mp4?'),
                     quality: src.quality || 'auto',
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],

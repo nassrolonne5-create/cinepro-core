@@ -149,6 +149,10 @@ async function main() {
         return payload;
     });
 
+    app.get('/v1/proxy/stream.m3u8', async (request: any, reply: any) => {
+        const query = new URLSearchParams(request.query as any).toString();
+        return reply.redirect(`/v1/proxy?${query}`);
+    });
     app.get('/v1/proxy/video.mp4', async (request: any, reply: any) => {
         // Redirect to the actual proxy route, keeping the query string intact
         const query = new URLSearchParams(request.query as any).toString();
