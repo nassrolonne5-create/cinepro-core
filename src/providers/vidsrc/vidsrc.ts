@@ -37,7 +37,7 @@ export class VidSrcProvider extends BaseProvider {
             
             for (const src of data.sources) {
                 sources.push({
-                    url: src.url,
+                    url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id,
                     quality: src.quality || 'auto',
                     type: getSourceType(src.url, src.isM3U8),
                     audioTracks: [],

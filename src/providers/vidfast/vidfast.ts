@@ -31,11 +31,11 @@ export class VidfastProvider extends BaseProvider {
         try {
             const data = await fetchSources(media.tmdbId, media.type, media.s, media.e);
             const headers = data.headers || {};
-            const sources: Source[] = [];
+            const sources: Source[] = []; console.log("Vidfast fetched", data.sources.length);
 
             for (const src of data.sources) {
                 sources.push({
-                    url: src.url,
+                    url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id,
                     quality: src.quality || 'auto',
                     type: getSourceType(src.url, src.isM3U8),
                     audioTracks: [],
