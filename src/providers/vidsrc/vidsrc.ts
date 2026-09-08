@@ -36,8 +36,9 @@ export class VidSrcProvider extends BaseProvider {
             const sources: Source[] = [];
             
             for (const src of data.sources) {
+                const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
                 sources.push({
-                    url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id,
+                    url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
                     quality: src.quality || 'auto',
                     type: getSourceType(src.url, src.isM3U8),
                     audioTracks: [],
