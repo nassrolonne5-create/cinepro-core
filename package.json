@@ -18,7 +18,7 @@
         "crypto-js": "^4.2.0",
         "dotenv": "^16.4.5",
         "glob": "^13.0.6",
-        "kaizoku-core": "^0.3.1"
+        "kaizoku-core": "^0.3.3"
     },
     "devDependencies": {
         "@types/crypto-js": "^4.2.2",
