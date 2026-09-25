@@ -182,3 +182,18 @@ if (fs.existsSync(sourceServiceFile)) {
         console.log("Patched source.service.js to add global 12-second provider timeout.");
     }
 }
+
+// Patch OMSS framework provider-registry.js to support custom and tsx providers
+const registryFile = 'node_modules/@omss/framework/dist/providers/provider-registry.js';
+if (fs.existsSync(registryFile)) {
+    let code = fs.readFileSync(registryFile, 'utf8');
+    if (!code.includes('ExportedClass.name.endsWith')) {
+        code = code.replace(
+            'if (BaseProvider.prototype.isPrototypeOf(ExportedClass.prototype)) {',
+            'if (BaseProvider.prototype.isPrototypeOf(ExportedClass.prototype) || ExportedClass.name.endsWith("Provider") || (ExportedClass.prototype && typeof ExportedClass.prototype.getMovieSources === "function")) {'
+        );
+        fs.writeFileSync(registryFile, code);
+        console.log("Patched provider-registry.js for robust class detection.");
+    }
+}
+
