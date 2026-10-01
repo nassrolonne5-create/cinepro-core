@@ -6,12 +6,24 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/vidvault';
+interface FetchSourcesResult {
+    sources: Array<{ url: string; quality?: string; isM3U8?: boolean }>;
+    headers?: Record<string, string>;
+}
+
+async function fetchSources(
+    _tmdbId: string | number,
+    _type: string,
+    _season?: number,
+    _episode?: number
+): Promise<FetchSourcesResult> {
+    return { sources: [], headers: {} };
+}
 
 export class VidVaultProvider extends BaseProvider {
     readonly id = 'vidvault';
     readonly name = 'VidVault';
-    readonly enabled = true;
+    readonly enabled = false;
     readonly BASE_URL = 'https://vidvault.ru';
     readonly HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'

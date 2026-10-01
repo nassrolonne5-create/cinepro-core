@@ -6,12 +6,24 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/cinesu';
+interface FetchSourcesResult {
+    sources: Array<{ url: string; quality?: string; isM3U8?: boolean }>;
+    headers?: Record<string, string>;
+}
+
+async function fetchSources(
+    _tmdbId: string | number,
+    _type: string,
+    _season?: number,
+    _episode?: number
+): Promise<FetchSourcesResult> {
+    return { sources: [], headers: {} };
+}
 
 export class EmbedSuProvider extends BaseProvider {
     readonly id = 'embedsu';
     readonly name = 'EmbedSU';
-    readonly enabled = true;
+    readonly enabled = false;
     readonly BASE_URL = 'https://cinesu.net';
     readonly HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'

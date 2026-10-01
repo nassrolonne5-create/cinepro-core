@@ -1,0 +1,8 @@
+{
+  "name": "CinePro Core",
+  "description": "Multi-provider streaming media scraper and proxy core API.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

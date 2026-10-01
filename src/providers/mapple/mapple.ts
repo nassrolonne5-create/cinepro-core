@@ -1,7 +1,19 @@
 import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type { ProviderCapabilities, ProviderMediaObject, ProviderResult, Source } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/mapple';
+interface FetchSourcesResult {
+    sources: Array<{ url: string; quality?: string; isM3U8?: boolean }>;
+    headers?: Record<string, string>;
+}
+
+async function fetchSources(
+    _tmdbId: string | number,
+    _type: string,
+    _season?: number,
+    _episode?: number
+): Promise<FetchSourcesResult> {
+    return { sources: [], headers: {} };
+}
 
 export class MappleProvider extends BaseProvider {
     readonly id = 'mapple';
