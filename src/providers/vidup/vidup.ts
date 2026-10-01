@@ -32,8 +32,9 @@ export class VidupProvider extends BaseProvider {
             const sources: Source[] = [];
 
             for (const src of data.sources) {
+                const url = Object.keys(headers).length > 0 ? this.createProxyUrl(src.url, headers) : src.url;
                 sources.push({
-                    url: src.url,
+                    url,
                     quality: src.quality || 'auto',
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                     audioTracks: [],
