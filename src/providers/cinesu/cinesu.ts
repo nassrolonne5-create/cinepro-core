@@ -1,3 +1,4 @@
+import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type {
     ProviderCapabilities,
@@ -5,25 +6,13 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-interface FetchSourcesResult {
-    sources: Array<{ url: string; quality?: string; isM3U8?: boolean }>;
-    headers?: Record<string, string>;
-}
-
-async function fetchSources(
-    _tmdbId: string | number,
-    _type: string,
-    _season?: number,
-    _episode?: number
-): Promise<FetchSourcesResult> {
-    return { sources: [], headers: {} };
-}
+import { fetchSources } from 'kaizoku-core/providers/movies/rivestream';
 
 export class CinesuProvider extends BaseProvider {
     readonly id = 'cinesu';
     readonly name = 'CineSu';
-    readonly enabled = false;
-    readonly BASE_URL = '';
+    readonly enabled = true;
+    readonly BASE_URL = 'https://cinesu.net';
     readonly HEADERS = {};
     readonly capabilities: ProviderCapabilities = {
         supportedContentTypes: ['movies', 'tv']
@@ -40,20 +29,21 @@ export class CinesuProvider extends BaseProvider {
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
             const data = await fetchSources(media.tmdbId, media.type, media.s, media.e);
-            const headers = data.headers || {};
             const sources: Source[] = [];
 
-            for (const src of data.sources) {
-                sources.push({
-                    url: src.url,
-                    quality: src.quality || 'auto',
-                    type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
-                    audioTracks: [],
-                    provider: {
-                        name: this.name,
-                        id: this.id
-                    }
-                });
+            if (data && Array.isArray(data.sources)) {
+                for (const src of data.sources) {
+                    sources.push({
+                        url: src.url,
+                        quality: src.quality || 'auto',
+                        type: getSourceType(src.url, src.isM3U8),
+                        audioTracks: [],
+                        provider: {
+                            name: this.name,
+                            id: this.id
+                        }
+                    });
+                }
             }
             return { sources, subtitles: [], diagnostics: [] };
         } catch (e) {

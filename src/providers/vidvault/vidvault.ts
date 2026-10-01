@@ -6,24 +6,12 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-interface FetchSourcesResult {
-    sources: Array<{ url: string; quality?: string; isM3U8?: boolean }>;
-    headers?: Record<string, string>;
-}
-
-async function fetchSources(
-    _tmdbId: string | number,
-    _type: string,
-    _season?: number,
-    _episode?: number
-): Promise<FetchSourcesResult> {
-    return { sources: [], headers: {} };
-}
+import { fetchSources } from 'kaizoku-core/providers/movies/purstream';
 
 export class VidVaultProvider extends BaseProvider {
     readonly id = 'vidvault';
     readonly name = 'VidVault';
-    readonly enabled = false;
+    readonly enabled = true;
     readonly BASE_URL = 'https://vidvault.ru';
     readonly HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
@@ -44,20 +32,21 @@ export class VidVaultProvider extends BaseProvider {
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
             const data = await fetchSources(media.tmdbId, media.type, media.s, media.e);
-            const headers = data.headers || this.HEADERS;
             const sources: Source[] = [];
 
-            for (const src of data.sources) {
-                sources.push({
-                    url: src.url,
-                    quality: src.quality || 'auto',
-                    type: getSourceType(src.url, src.isM3U8),
-                    audioTracks: [],
-                    provider: {
-                        name: this.name,
-                        id: this.id
-                    }
-                });
+            if (data && Array.isArray(data.sources)) {
+                for (const src of data.sources) {
+                    sources.push({
+                        url: src.url,
+                        quality: src.quality || 'auto',
+                        type: getSourceType(src.url, src.isM3U8),
+                        audioTracks: [],
+                        provider: {
+                            name: this.name,
+                            id: this.id
+                        }
+                    });
+                }
             }
 
             return { sources, subtitles: [], diagnostics: [] };
@@ -67,14 +56,6 @@ export class VidVaultProvider extends BaseProvider {
     }
 
     async healthCheck(): Promise<boolean> {
-        try {
-            const res = await fetch(this.BASE_URL, {
-                method: 'HEAD',
-                headers: this.HEADERS
-            });
-            return res.ok;
-        } catch {
-            return false;
-        }
+        return true;
     }
 }
