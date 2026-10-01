@@ -18,25 +18,27 @@ if (fs.existsSync(kaizokuPkgFile)) {
 const kaizokuIndexDts = 'node_modules/kaizoku-core/dist/index.d.ts';
 if (fs.existsSync(kaizokuIndexDts)) {
     let code = fs.readFileSync(kaizokuIndexDts, 'utf8');
-    if (!code.includes('lmscript')) {
-        code = code.replace(
-            'export * as vidnest',
-            'export * as lmscript from "./providers/movies/lmscript.js";\nexport * as vidnest'
-        );
+    const toAdd = [];
+    if (!code.includes('rivestream')) toAdd.push('export * as rivestream from "./providers/movies/rivestream.js";');
+    if (!code.includes('vidgod')) toAdd.push('export * as vidgod from "./providers/movies/vidgod.js";');
+    if (!code.includes('lmscript')) toAdd.push('export * as lmscript from "./providers/movies/lmscript.js";');
+    if (toAdd.length > 0) {
+        code += '\n' + toAdd.join('\n') + '\n';
         fs.writeFileSync(kaizokuIndexDts, code);
-        console.log("Patched kaizoku-core index.d.ts for lmscript.");
+        console.log("Patched kaizoku-core index.d.ts with missing exports.");
     }
 }
 const kaizokuIndexJs = 'node_modules/kaizoku-core/dist/index.js';
 if (fs.existsSync(kaizokuIndexJs)) {
     let code = fs.readFileSync(kaizokuIndexJs, 'utf8');
-    if (!code.includes('lmscript')) {
-        code = code.replace(
-            'export * as vidnest',
-            'export * as lmscript from "./providers/movies/lmscript.js";\nexport * as vidnest'
-        );
+    const toAdd = [];
+    if (!code.includes('rivestream')) toAdd.push('export * as rivestream from "./providers/movies/rivestream.js";');
+    if (!code.includes('vidgod')) toAdd.push('export * as vidgod from "./providers/movies/vidgod.js";');
+    if (!code.includes('lmscript')) toAdd.push('export * as lmscript from "./providers/movies/lmscript.js";');
+    if (toAdd.length > 0) {
+        code += '\n' + toAdd.join('\n') + '\n';
         fs.writeFileSync(kaizokuIndexJs, code);
-        console.log("Patched kaizoku-core index.js for lmscript.");
+        console.log("Patched kaizoku-core index.js with missing exports.");
     }
 }
 
