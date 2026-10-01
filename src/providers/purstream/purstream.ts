@@ -1,7 +1,7 @@
 import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type { ProviderCapabilities, ProviderMediaObject, ProviderResult, Source } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/purstream';
+import { purstream } from 'kaizoku-core';
 
 export class PurstreamProvider extends BaseProvider {
     readonly id = 'purstream';
@@ -16,7 +16,7 @@ export class PurstreamProvider extends BaseProvider {
     
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
-            const data = await fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const data = await purstream.fetchSources(media.tmdbId, media.type, media.s, media.e);
             const headers = data.headers || this.HEADERS;
             const sources: Source[] = [];
             for (const src of data.sources) {

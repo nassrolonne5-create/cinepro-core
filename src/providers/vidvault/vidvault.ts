@@ -6,7 +6,7 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/purstream';
+import { purstream } from 'kaizoku-core';
 
 export class VidVaultProvider extends BaseProvider {
     readonly id = 'vidvault';
@@ -31,7 +31,7 @@ export class VidVaultProvider extends BaseProvider {
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
-            const data = await fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const data = await purstream.fetchSources(media.tmdbId, media.type, media.s, media.e);
             const sources: Source[] = [];
 
             if (data && Array.isArray(data.sources)) {

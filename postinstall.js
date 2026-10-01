@@ -1,5 +1,45 @@
 import fs from 'fs';
 
+// Patch kaizoku-core package.json exports to properly declare TypeScript declaration types for subpaths
+const kaizokuPkgFile = 'node_modules/kaizoku-core/package.json';
+if (fs.existsSync(kaizokuPkgFile)) {
+    try {
+        const pkg = JSON.parse(fs.readFileSync(kaizokuPkgFile, 'utf8'));
+        pkg.exports["./providers/*"] = {
+            "types": "./dist/providers/*.d.ts",
+            "import": "./dist/providers/*.js",
+            "default": "./dist/providers/*.js"
+        };
+        fs.writeFileSync(kaizokuPkgFile, JSON.stringify(pkg, null, 2));
+        console.log("Patched kaizoku-core package.json exports.");
+    } catch(e) {}
+}
+
+const kaizokuIndexDts = 'node_modules/kaizoku-core/dist/index.d.ts';
+if (fs.existsSync(kaizokuIndexDts)) {
+    let code = fs.readFileSync(kaizokuIndexDts, 'utf8');
+    if (!code.includes('lmscript')) {
+        code = code.replace(
+            'export * as vidnest',
+            'export * as lmscript from "./providers/movies/lmscript.js";\nexport * as vidnest'
+        );
+        fs.writeFileSync(kaizokuIndexDts, code);
+        console.log("Patched kaizoku-core index.d.ts for lmscript.");
+    }
+}
+const kaizokuIndexJs = 'node_modules/kaizoku-core/dist/index.js';
+if (fs.existsSync(kaizokuIndexJs)) {
+    let code = fs.readFileSync(kaizokuIndexJs, 'utf8');
+    if (!code.includes('lmscript')) {
+        code = code.replace(
+            'export * as vidnest',
+            'export * as lmscript from "./providers/movies/lmscript.js";\nexport * as vidnest'
+        );
+        fs.writeFileSync(kaizokuIndexJs, code);
+        console.log("Patched kaizoku-core index.js for lmscript.");
+    }
+}
+
 const validationFile = 'node_modules/@omss/framework/dist/middleware/validation.js';
 if (fs.existsSync(validationFile)) {
     let code = fs.readFileSync(validationFile, 'utf8');

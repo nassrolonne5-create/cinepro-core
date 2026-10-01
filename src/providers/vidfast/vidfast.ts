@@ -6,7 +6,7 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/vidfast';
+import { vidfast } from 'kaizoku-core';
 
 export class VidfastProvider extends BaseProvider {
     readonly id = 'vidfast';
@@ -29,7 +29,7 @@ export class VidfastProvider extends BaseProvider {
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
-            const data = await fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const data = await vidfast.fetchSources(media.tmdbId, media.type, media.s, media.e);
             const headers = data.headers || {};
             const sources: Source[] = []; console.log("Vidfast fetched", data.sources.length);
 

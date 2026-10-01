@@ -5,7 +5,7 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/vidrock';
+import { vidrock } from 'kaizoku-core';
 
 export class VidrockProvider extends BaseProvider {
     readonly id = 'vidrock';
@@ -27,7 +27,7 @@ export class VidrockProvider extends BaseProvider {
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
-            const data = await fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const data = await vidrock.fetchSources(media.tmdbId, media.type, media.s, media.e);
             const headers = data.headers || {};
             const sources: Source[] = [];
 

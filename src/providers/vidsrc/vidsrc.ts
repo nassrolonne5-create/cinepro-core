@@ -6,7 +6,7 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { fetchSources } from 'kaizoku-core/providers/movies/vidnest';
+import { vidnest } from 'kaizoku-core';
 
 export class VidSrcProvider extends BaseProvider {
     readonly id = 'vidsrc';
@@ -31,7 +31,7 @@ export class VidSrcProvider extends BaseProvider {
     
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
-            const data = await fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const data = await vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e);
             const headers = data.headers || this.HEADERS;
             const sources: Source[] = [];
             
