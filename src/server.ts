@@ -128,20 +128,67 @@ async function main() {
                         }
                     }));
                     
+                    // Filter out known dead or forbidden domains
+                    data.sources = data.sources.filter((s: any) => {
+                        const url = (s.url || '').toLowerCase();
+                        if (url.includes('animecurx.tech')) return false;
+                        return true;
+                    });
+
+                    // English-First Adaptive Sorting
                     data.sources.sort((a: any, b: any) => {
-                        const getScore = (q: any, t: any) => {
-                            const quality = (q || '').toLowerCase();
-                            const type = (t || '').toLowerCase();
-                            
-                            if (quality === 'auto' || type === 'hls' || type === 'dash') return 100;
-                            if (quality.includes('4k') || quality.includes('2160')) return 90;
-                            if (quality.includes('1080')) return 80;
-                            if (quality.includes('720')) return 70;
-                            if (quality.includes('480')) return 60;
-                            if (quality.includes('360')) return 50;
-                            return 10;
+                        const getScore = (s: any) => {
+                            const quality = (s.quality || '').toLowerCase();
+                            const type = (s.type || '').toLowerCase();
+                            const server = (s.server || '').toLowerCase();
+                            const provName = (s.provider?.name || s.provider || '').toLowerCase();
+                            const url = (s.url || '').toLowerCase();
+
+                            // Severe penalty for Indian/dubbed audio
+                            const hasOnlyNonEnglish = Array.isArray(s.audioTracks) && s.audioTracks.length > 0 && !s.audioTracks.some((t: any) => (typeof t === 'string' ? t === 'en' : t?.language === 'en'));
+                            if (
+                                quality.includes('hindi') || quality.includes('tamil') || quality.includes('telugu') ||
+                                server.includes('hindi') || server.includes('tamil') || server.includes('telugu') ||
+                                hasOnlyNonEnglish
+                            ) {
+                                return -1000;
+                            }
+
+                            // Vanguard (cheaptruckrepairs) has Tamil as default Track 1 on the m3u8 playlist.
+                            // Keep as fallback option but place below verified English sources.
+                            if (server.includes('vanguard') || provName.includes('vanguard') || url.includes('cheaptruckrepairs')) {
+                                return 15;
+                            }
+
+                            let score = 50;
+
+                            // Verified English-first providers receive a solid priority boost
+                            if (
+                                provName.includes('vidnest') || provName.includes('vidsrc') ||
+                                provName.includes('superstream') || provName.includes('vidzee') ||
+                                provName.includes('vidrock') || provName.includes('vidgod') ||
+                                provName.includes('cinesu') || provName.includes('embedsu')
+                            ) {
+                                score += 35;
+                            }
+
+                            if (quality.includes('english')) score += 20;
+
+                            if (quality === 'auto' || type === 'hls' || type === 'dash') {
+                                score += 20;
+                            } else if (quality.includes('4k') || quality.includes('2160')) {
+                                score += 18;
+                            } else if (quality.includes('1080')) {
+                                score += 15;
+                            } else if (quality.includes('720')) {
+                                score += 10;
+                            } else if (quality.includes('480')) {
+                                score += 5;
+                            }
+
+                            return score;
                         };
-                        return getScore(b.quality, b.type) - getScore(a.quality, a.type);
+                        return getScore(b) - getScore(a);
                     });
                     
                     return JSON.stringify(data);

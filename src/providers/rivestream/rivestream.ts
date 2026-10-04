@@ -37,11 +37,28 @@ export class RivestreamProvider extends BaseProvider {
 
             if (data && Array.isArray(data.sources)) {
                 for (const src of data.sources) {
+                    const qLower = (src.quality || '').toLowerCase();
+                    const sLower = (src.server || '').toLowerCase();
+                    const urlLower = (src.url || '').toLowerCase();
+
+                    // Filter out purely Indian / Hindi / Tamil dubbed streams
+                    if (
+                        qLower.includes('hindi') || qLower.includes('tamil') || qLower.includes('telugu') ||
+                        sLower.includes('hindi') || sLower.includes('tamil') || sLower.includes('telugu')
+                    ) {
+                        continue;
+                    }
+
+                    // For Vanguard (which has Tamil as Track 1), mark audio tracks appropriately
+                    const isVanguard = sLower.includes('vanguard') || urlLower.includes('cheaptruckrepairs');
+
                     sources.push({
                         url: src.url,
                         quality: src.quality || 'auto',
                         type: getSourceType(src.url, src.isM3U8),
-                        audioTracks: [],
+                        audioTracks: isVanguard
+                            ? [{ language: 'ta', label: 'Tamil' }, { language: 'en', label: 'English' }]
+                            : [{ language: 'en', label: 'English' }],
                         provider: {
                             name: src.server ? `${this.name} (${src.server})` : this.name,
                             id: this.id

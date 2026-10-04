@@ -6,13 +6,13 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { rivestream } from 'kaizoku-core';
+import { vidnest } from 'kaizoku-core';
 
 export class EmbedSuProvider extends BaseProvider {
     readonly id = 'embedsu';
     readonly name = 'EmbedSU';
     readonly enabled = true;
-    readonly BASE_URL = 'https://cinesu.net';
+    readonly BASE_URL = 'https://embed.su';
     readonly HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
     };
@@ -31,16 +31,17 @@ export class EmbedSuProvider extends BaseProvider {
     
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
-            const data = await rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const data = await vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e);
             const sources: Source[] = [];
             
             if (data && Array.isArray(data.sources)) {
                 for (const src of data.sources) {
+                    const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
                     sources.push({
-                        url: src.url,
+                        url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
                         quality: src.quality || 'auto',
                         type: getSourceType(src.url, src.isM3U8),
-                        audioTracks: [],
+                        audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
                             name: this.name,
                             id: this.id
