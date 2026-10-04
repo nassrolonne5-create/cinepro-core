@@ -3,11 +3,12 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+COPY package*.json postinstall.js* ./
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 COPY . .
 RUN npm run build
+RUN npm prune --omit=dev
 
 # Production stage
 FROM node:22-alpine
@@ -39,8 +40,7 @@ ENV PORT=${PORT}
 ENV CACHE_TYPE=${CACHE_TYPE}
 
 COPY package*.json ./
-RUN npm ci --only=production
-
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
 RUN addgroup -g 1001 -S nodejs && \
