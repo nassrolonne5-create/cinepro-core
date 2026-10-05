@@ -36,7 +36,7 @@ export class VidzeeProvider extends BaseProvider {
                     url: src.url,
                     quality: src.quality || 'auto',
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
-                    audioTracks: [],
+                    audioTracks: [{ language: 'en', label: 'English' }],
                     provider: {
                         name: this.name,
                         id: this.id

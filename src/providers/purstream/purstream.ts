@@ -24,7 +24,7 @@ export class PurstreamProvider extends BaseProvider {
                     url: src.url,
                     quality: src.quality || 'auto',
                     type: getSourceType(src.url, src.isM3U8),
-                    audioTracks: [],
+                    audioTracks: [{ language: 'en', label: 'English' }],
                     provider: {
                         name: this.name,
                         id: this.id

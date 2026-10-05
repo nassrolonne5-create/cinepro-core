@@ -1,3 +1,4 @@
+import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type {
     ProviderCapabilities,
@@ -5,14 +6,15 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { vidup } from 'kaizoku-core';
+import { vidup, vidnest } from 'kaizoku-core';
 
 export class VidupProvider extends BaseProvider {
     readonly id = 'vidup';
     readonly name = 'VidUp';
     readonly enabled = true;
-    readonly BASE_URL = '';
+    readonly BASE_URL = 'https://vidup.to';
     readonly HEADERS = {};
+
     readonly capabilities: ProviderCapabilities = {
         supportedContentTypes: ['movies', 'tv']
     };
@@ -26,28 +28,46 @@ export class VidupProvider extends BaseProvider {
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        // Try native vidup first
         try {
             const data = await vidup.fetchSources(media.tmdbId, media.type, media.s, media.e);
-            const headers = data.headers || {};
-            const sources: Source[] = [];
-
-            for (const src of data.sources) {
-                const url = Object.keys(headers).length > 0 ? this.createProxyUrl(src.url, headers) : src.url;
-                sources.push({
-                    url,
+            if (data?.sources?.length) {
+                const sources: Source[] = data.sources.map(src => ({
+                    url: src.url,
                     quality: src.quality || 'auto',
-                    type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
-                    audioTracks: [],
+                    type: getSourceType(src.url, src.isM3U8),
+                    audioTracks: [{ language: 'en', label: 'English' }],
                     provider: {
                         name: this.name,
                         id: this.id
                     }
-                });
+                }));
+                return { sources, subtitles: [], diagnostics: [] };
             }
-            return { sources, subtitles: [], diagnostics: [] };
-        } catch (e) {
-            return { sources: [], subtitles: [], diagnostics: [] };
-        }
+        } catch {}
+
+        // Fallback
+        try {
+            const data = await vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            if (data?.sources?.length) {
+                const sources: Source[] = data.sources.map(src => {
+                    const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
+                    return {
+                        url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
+                        quality: src.quality || 'auto',
+                        type: getSourceType(src.url, src.isM3U8),
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: this.name,
+                            id: this.id
+                        }
+                    };
+                });
+                return { sources, subtitles: [], diagnostics: [] };
+            }
+        } catch {}
+
+        return { sources: [], subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

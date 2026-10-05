@@ -167,6 +167,9 @@ async function main() {
                                 provName.includes('vidnest') || provName.includes('vidsrc') ||
                                 provName.includes('superstream') || provName.includes('vidzee') ||
                                 provName.includes('vidrock') || provName.includes('vidgod') ||
+                                provName.includes('vidlink') || provName.includes('videasy') ||
+                                provName.includes('lmscript') || provName.includes('purstream') ||
+                                provName.includes('vidfast') || provName.includes('vidup') ||
                                 provName.includes('cinesu') || provName.includes('embedsu')
                             ) {
                                 score += 35;
