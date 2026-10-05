@@ -141,9 +141,7 @@ async function main() {
                         if (
                             url.includes('animanga.fun') ||
                             url.includes('tiktoks') ||
-                            url.includes('aoneroom.com') ||
-                            url.includes('boomchick.org') ||
-                            url.includes('bigtits.m3u8')
+                            url.includes('aoneroom.com')
                         ) {
                             return false;
                         }

@@ -24,11 +24,19 @@ export class VidriftProvider extends BaseProvider {
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.extractSources(media);
+        try {
+            return await this.extractSources(media);
+        } catch {
+            return { sources: [], subtitles: [], diagnostics: [] };
+        }
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.extractSources(media);
+        try {
+            return await this.extractSources(media);
+        } catch {
+            return { sources: [], subtitles: [], diagnostics: [] };
+        }
     }
 
     private async extractSources(media: ProviderMediaObject): Promise<ProviderResult> {
@@ -36,12 +44,20 @@ export class VidriftProvider extends BaseProvider {
             ? `${this.BASE_URL}/embed/tv/${media.tmdbId}/${media.s || 1}/${media.e || 1}`
             : `${this.BASE_URL}/embed/movie/${media.tmdbId}`;
 
-        const pageRes = await axios.get(endpoint, {
-            headers: { ...this.HEADERS, Accept: 'text/html' },
-            timeout: 5000
-        });
+        let pageRes: any;
+        try {
+            pageRes = await axios.get(endpoint, {
+                headers: { ...this.HEADERS, Accept: 'text/html' },
+                timeout: 5000,
+                validateStatus: (status) => status < 400
+            });
+        } catch {
+            return { sources: [], subtitles: [], diagnostics: [] };
+        }
         
-        if (pageRes.status !== 200) throw new Error(`Failed to fetch page: ${pageRes.status}`);
+        if (!pageRes || pageRes.status !== 200 || !pageRes.data) {
+            return { sources: [], subtitles: [], diagnostics: [] };
+        }
         const html = pageRes.data;
         
         let meta: any = null;

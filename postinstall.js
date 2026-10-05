@@ -90,8 +90,30 @@ if (fs.existsSync(sourceServiceFile)) {
                     } else {
                         proxyData = ProxyService.decodeProxyData(data);
                     }`);
+    // Allow native subtitle URLs in SourceService
+    code = code.replace(/r\.subtitles\.forEach\(\(subtitle\) => \{[\s\S]*?console\.warn\(`\[SourceService\] Failed to decode subtitle URL: \$\{subtitle\.url\}`, error\);[\s\S]*?\}\);/, `r.subtitles.forEach((subtitle) => {
+                try {
+                    let subKey = subtitle.url;
+                    try {
+                        const urlObj = new URL(subtitle.url);
+                        const data = urlObj.searchParams.get('data');
+                        if (data) {
+                            const proxyData = ProxyService.decodeProxyData(data);
+                            subKey = proxyData.url;
+                        }
+                    } catch {}
+                    if (!allSubtitlesMap.has(subKey)) {
+                        allSubtitlesMap.set(subKey, subtitle);
+                    }
+                }
+                catch (error) {
+                    if (!allSubtitlesMap.has(subtitle.url)) {
+                        allSubtitlesMap.set(subtitle.url, subtitle);
+                    }
+                }
+            });`);
     fs.writeFileSync(sourceServiceFile, code);
-    console.log("Patched source.service.js to allow native embed URLs.");
+    console.log("Patched source.service.js to allow native embed and subtitle URLs.");
 }
 
 // Patch kaizoku-core vidnest to return ALL streams and downloads instead of just the first one
