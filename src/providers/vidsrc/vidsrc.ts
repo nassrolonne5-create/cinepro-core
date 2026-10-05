@@ -59,7 +59,6 @@ export class VidSrcProvider extends BaseProvider {
 
         const backends = [
             { name: 'HollyMovieHD', path: 'hollymoviehd' },
-            { name: 'MovieBox', path: 'moviebox' },
             { name: 'KlikXXI', path: 'klikxxi' }
         ];
 
@@ -83,6 +82,8 @@ export class VidSrcProvider extends BaseProvider {
                 if (Array.isArray(data.streams)) {
                     for (const s of data.streams) {
                         if (s?.url) {
+                            const uLower = s.url.toLowerCase();
+                            if (uLower.includes('tiktoks') || uLower.includes('animanga') || uLower.includes('aoneroom') || uLower.includes('boomchick')) continue;
                             sources.push({
                                 url: s.url,
                                 quality: s.language || s.quality || 'Auto',
@@ -97,28 +98,12 @@ export class VidSrcProvider extends BaseProvider {
                     }
                 }
 
-                // Handle moviebox url array
-                if (Array.isArray(data.url)) {
-                    for (const u of data.url) {
-                        if (u?.link) {
-                            sources.push({
-                                url: u.link,
-                                quality: u.resolution ? `${u.resolution}p` : '1080p',
-                                type: 'mp4',
-                                audioTracks: [{ language: 'en', label: 'English' }],
-                                provider: {
-                                    name: this.name,
-                                    id: this.id
-                                }
-                            });
-                        }
-                    }
-                }
-
                 // Handle sources array
                 if (Array.isArray(data.sources)) {
                     for (const s of data.sources) {
                         if (s?.url) {
+                            const uLower = s.url.toLowerCase();
+                            if (uLower.includes('tiktoks') || uLower.includes('animanga') || uLower.includes('aoneroom') || uLower.includes('boomchick')) continue;
                             sources.push({
                                 url: s.url,
                                 quality: s.quality || 'Auto',

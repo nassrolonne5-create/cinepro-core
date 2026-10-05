@@ -135,6 +135,21 @@ async function main() {
                         return true;
                     });
 
+                    // Filter out short clips, trailers, TikTok samples, and fake teaser streams
+                    data.sources = data.sources.filter((s: any) => {
+                        const url = (s.url || '').toLowerCase();
+                        if (
+                            url.includes('animanga.fun') ||
+                            url.includes('tiktoks') ||
+                            url.includes('aoneroom.com') ||
+                            url.includes('boomchick.org') ||
+                            url.includes('bigtits.m3u8')
+                        ) {
+                            return false;
+                        }
+                        return true;
+                    });
+
                     // English-First Adaptive Sorting
                     data.sources.sort((a: any, b: any) => {
                         const getScore = (s: any) => {
@@ -162,15 +177,29 @@ async function main() {
 
                             let score = 50;
 
+                            // Verified full-length movie/TV CDN streams receive highest priority boost (+60)
+                            if (
+                                url.includes('klnwm.com') ||
+                                url.includes('hbsxcn.com') ||
+                                url.includes('streamflixserver.site') ||
+                                url.includes('goodstream.cc') ||
+                                url.includes('halcyoncreative.site') ||
+                                url.includes('tormisted.cyou') ||
+                                url.includes('remoteconsultinggroup.site')
+                            ) {
+                                score += 60;
+                            }
+
                             // Verified English-first providers receive a solid priority boost
                             if (
-                                provName.includes('vidnest') || provName.includes('vidsrc') ||
-                                provName.includes('superstream') || provName.includes('vidzee') ||
-                                provName.includes('vidrock') || provName.includes('vidgod') ||
-                                provName.includes('vidlink') || provName.includes('videasy') ||
-                                provName.includes('lmscript') || provName.includes('purstream') ||
-                                provName.includes('vidfast') || provName.includes('vidup') ||
-                                provName.includes('cinesu') || provName.includes('embedsu')
+                                provName.includes('rivestream') || provName.includes('vidnest') ||
+                                provName.includes('vidsrc') || provName.includes('superstream') ||
+                                provName.includes('vidzee') || provName.includes('vidrock') ||
+                                provName.includes('vidgod') || provName.includes('vidlink') ||
+                                provName.includes('videasy') || provName.includes('lmscript') ||
+                                provName.includes('purstream') || provName.includes('vidfast') ||
+                                provName.includes('vidup') || provName.includes('cinesu') ||
+                                provName.includes('embedsu') || provName.includes('vidrift')
                             ) {
                                 score += 35;
                             }
