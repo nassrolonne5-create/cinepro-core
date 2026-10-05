@@ -38,9 +38,9 @@ export class VidgodProvider extends BaseProvider {
                         url: src.url,
                         quality: src.quality || 'auto',
                         type: getSourceType(src.url, src.isM3U8),
-                        audioTracks: [],
+                        audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: src.server ? `${this.name} (${src.server})` : this.name,
+                            name: this.name,
                             id: this.id
                         }
                     });

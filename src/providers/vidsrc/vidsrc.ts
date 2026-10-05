@@ -89,7 +89,7 @@ export class VidSrcProvider extends BaseProvider {
                                 type: getSourceType(s.url, s.type === 'hls' || s.url.includes('.m3u8')),
                                 audioTracks: [{ language: 'en', label: 'English' }],
                                 provider: {
-                                    name: `${this.name} (${b.name})`,
+                                    name: this.name,
                                     id: this.id
                                 }
                             });
@@ -107,7 +107,7 @@ export class VidSrcProvider extends BaseProvider {
                                 type: 'mp4',
                                 audioTracks: [{ language: 'en', label: 'English' }],
                                 provider: {
-                                    name: `${this.name} (${b.name})`,
+                                    name: this.name,
                                     id: this.id
                                 }
                             });
@@ -125,7 +125,7 @@ export class VidSrcProvider extends BaseProvider {
                                 type: getSourceType(s.url, s.url.includes('.m3u8')),
                                 audioTracks: [{ language: 'en', label: 'English' }],
                                 provider: {
-                                    name: `${this.name} (${b.name})`,
+                                    name: this.name,
                                     id: this.id
                                 }
                             });

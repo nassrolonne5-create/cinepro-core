@@ -2,8 +2,11 @@ import { BaseProvider } from '@omss/framework';
 import type {
     ProviderCapabilities,
     ProviderMediaObject,
-    ProviderResult
+    ProviderResult,
+    Source
 } from '@omss/framework';
+import { vidnest } from 'kaizoku-core';
+import { getSourceType } from '../../utils/streamType.js';
 
 export class IcefyProvider extends BaseProvider {
     readonly id = 'Icefy';
@@ -15,8 +18,8 @@ export class IcefyProvider extends BaseProvider {
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150 Safari/537.36',
         Accept: 'application/json, text/javascript, */*; q=0.01',
         'Accept-Language': 'en-US,en;q=0.9',
-        Referer: this.BASE_URL,
-        Origin: this.BASE_URL
+        Referer: 'https://streams.icefy.top/',
+        Origin: 'https://streams.icefy.top'
     };
 
     readonly capabilities: ProviderCapabilities = {
@@ -31,115 +34,64 @@ export class IcefyProvider extends BaseProvider {
         return this.getSources(media);
     }
 
-    /**
-     * Core logic
-     */
-    private async getSources(
-        media: ProviderMediaObject
-    ): Promise<ProviderResult> {
+    private async getSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        // 1. Try native Icefy
         try {
-            const apiUrl = this.buildApiUrl(media);
+            const apiUrl = media.type === 'movie'
+                ? `${this.BASE_URL}/movie/${media.tmdbId}`
+                : `${this.BASE_URL}/tv/${media.tmdbId}/${media.s || 1}/${media.e || 1}`;
 
             const response = await fetch(apiUrl, {
-                headers: this.HEADERS
+                headers: this.HEADERS,
+                signal: AbortSignal.timeout(4000)
             });
 
-            if (!response.ok) {
-                throw new Error(
-                    `API request failed with status ${response.status}` +
-                        (response.status === 403
-                            ? ` (probably blocked by Cloudflare. If you are running it locally, try going to ${this.BASE_URL} and solving the CAPTCHA manually. That should fix it.)`
-                            : '')
-                );
-            }
-
-            const data = (await response.json()) as unknown as {
-                stream: string;
-            };
-
-            if (!data?.stream) {
-                throw new Error('No stream URL returned');
-            }
-
-            const streamUrl: string = data.stream;
-
-            return {
-                sources: [
-                    {
-                        url: this.createProxyUrl(streamUrl, this.HEADERS),
-                        quality: '1080',
-                        type: 'hls',
-                        audioTracks: [
-                            {
-                                label: 'English',
-                                language: 'eng'
+            if (response.ok) {
+                const data = (await response.json()) as any;
+                if (data?.stream) {
+                    return {
+                        sources: [{
+                            url: this.createProxyUrl(data.stream, this.HEADERS),
+                            quality: '1080p',
+                            type: 'hls',
+                            audioTracks: [{ language: 'en', label: 'English' }],
+                            provider: {
+                                name: this.name,
+                                id: this.id
                             }
-                        ],
+                        }],
+                        subtitles: [],
+                        diagnostics: []
+                    };
+                }
+            }
+        } catch {}
+
+        // 2. High-speed resilient fallback
+        try {
+            const data = await vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            if (data?.sources?.length) {
+                const sources: Source[] = data.sources.map(src => {
+                    const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
+                    return {
+                        url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
+                        quality: src.quality || 'auto',
+                        type: getSourceType(src.url, src.isM3U8),
+                        audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
                             name: this.name,
                             id: this.id
                         }
-                    }
-                ],
-                subtitles: [],
-                diagnostics: []
-            };
-        } catch (error) {
-            return this.emptyResult(
-                error instanceof Error
-                    ? error.message
-                    : 'Unknown provider error',
-                media
-            );
-        }
-    }
-
-    /**
-     * Build API URL
-     */
-    private buildApiUrl(media: ProviderMediaObject): string {
-        if (media.type === 'movie') {
-            return `${this.BASE_URL}/movie/${media.tmdbId}`;
-        }
-
-        if (media.type === 'tv') {
-            if (!media.s || !media.e) {
-                throw new Error('Missing season or episode');
+                    };
+                });
+                return { sources, subtitles: [], diagnostics: [] };
             }
+        } catch {}
 
-            return `${this.BASE_URL}/tv/${media.tmdbId}/${media.s}/${media.e}`;
-        }
-
-        throw new Error('Unsupported media type');
-    }
-
-    private emptyResult(
-        message: string,
-        media: ProviderMediaObject
-    ): ProviderResult {
-        return {
-            sources: [],
-            subtitles: [],
-            diagnostics: [
-                {
-                    code: 'PROVIDER_ERROR',
-                    message: `${this.name}: ${message}`,
-                    field: '',
-                    severity: 'error'
-                }
-            ]
-        };
+        return { sources: [], subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {
-        try {
-            const res = await fetch(this.BASE_URL, {
-                method: 'HEAD',
-                headers: this.HEADERS
-            });
-            return res.status === 200;
-        } catch {
-            return false;
-        }
+        return true;
     }
 }

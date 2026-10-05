@@ -6,7 +6,7 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { vidup } from 'kaizoku-core';
+import { vidup, vidnest } from 'kaizoku-core';
 
 export class VixsrcProvider extends BaseProvider {
     readonly id = 'vixsrc';
@@ -29,26 +29,42 @@ export class VixsrcProvider extends BaseProvider {
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
             const data = await vidup.fetchSources(media.tmdbId, media.type, media.s, media.e);
-            const sources: Source[] = [];
+            if (data?.sources?.length) {
+                const sources: Source[] = data.sources.map(src => ({
+                    url: src.url,
+                    quality: src.quality || 'auto',
+                    type: getSourceType(src.url, src.isM3U8),
+                    audioTracks: [{ language: 'en', label: 'English' }],
+                    provider: {
+                        name: this.name,
+                        id: this.id
+                    }
+                }));
+                return { sources, subtitles: [], diagnostics: [] };
+            }
+        } catch {}
 
-            if (data && Array.isArray(data.sources)) {
-                for (const src of data.sources) {
-                    sources.push({
-                        url: src.url,
+        try {
+            const data = await vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            if (data?.sources?.length) {
+                const sources: Source[] = data.sources.map(src => {
+                    const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
+                    return {
+                        url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
                         quality: src.quality || 'auto',
                         type: getSourceType(src.url, src.isM3U8),
-                        audioTracks: [],
+                        audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
                             name: this.name,
                             id: this.id
                         }
-                    });
-                }
+                    };
+                });
+                return { sources, subtitles: [], diagnostics: [] };
             }
-            return { sources, subtitles: [], diagnostics: [] };
-        } catch (e) {
-            return { sources: [], subtitles: [], diagnostics: [] };
-        }
+        } catch {}
+
+        return { sources: [], subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

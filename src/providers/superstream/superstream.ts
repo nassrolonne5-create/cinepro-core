@@ -9,22 +9,42 @@ import type {
 } from '@omss/framework';
 import { getSourceType } from '../../utils/streamType.js';
 
+const VIDNEST_ALPHABET = 'RB0fpH8ZEyVLkv7c2i6MAJ5u3IKFDxlS1NTsnGaqmXYdUrtzjwObCgQP94hoeW+/=';
+const MAP: Record<string, number> = {};
+for (let i = 0; i < VIDNEST_ALPHABET.length; i++) MAP[VIDNEST_ALPHABET[i]] = i;
+
+function decodeVidnestBase64(input: string): string {
+    let padded = input;
+    const mod = padded.length % 4;
+    if (mod !== 0) padded += '='.repeat(4 - mod);
+    const bytes: number[] = [];
+    for (let i = 0; i < padded.length; i += 4) {
+        const chunk = padded.slice(i, i + 4);
+        const c0 = MAP[chunk[0]] ?? 64;
+        const c1 = MAP[chunk[1]] ?? 64;
+        const c2 = chunk[2] === '=' ? 64 : (MAP[chunk[2]] ?? 64);
+        const c3 = chunk[3] === '=' ? 64 : (MAP[chunk[3]] ?? 64);
+        bytes.push(((c0 << 2) | (c1 >> 4)) & 0xff);
+        if (c2 !== 64) bytes.push((((c1 & 0x0f) << 4) | (c2 >> 2)) & 0xff);
+        if (c3 !== 64) bytes.push((((c2 & 0x03) << 6) | c3) & 0xff);
+    }
+    return Buffer.from(bytes).toString('utf8');
+}
+
 export class SuperStreamProvider extends BaseProvider {
     readonly id = 'superstream';
     readonly name = 'SuperStream';
     readonly enabled = true;
     
-    // The famous SuperStream / Showbox API endpoints
     readonly BASE_URL = 'https://showbox.shegu.net/api/api_client/res/';
     readonly API_KEY = '123d6cedf626dy54233aa1w6';
     readonly IV = 'b124m5c52c2dc8ab';
-    readonly HEADERS = {}; // Required by BaseProvider
+    readonly HEADERS = {};
 
     readonly capabilities: ProviderCapabilities = {
         supportedContentTypes: ['movies', 'tv']
     };
 
-    // Helper to encrypt the payload
     private encryptPayload(data: string): string {
         const key = CryptoJS.enc.Utf8.parse(this.API_KEY);
         const iv = CryptoJS.enc.Utf8.parse(this.IV);
@@ -36,7 +56,6 @@ export class SuperStreamProvider extends BaseProvider {
         return encrypted.toString();
     }
 
-    // Helper to decrypt the response
     private decryptPayload(ciphertext: string): any {
         try {
             const key = CryptoJS.enc.Utf8.parse(this.API_KEY);
@@ -48,8 +67,7 @@ export class SuperStreamProvider extends BaseProvider {
             });
             const text = decrypted.toString(CryptoJS.enc.Utf8);
             return JSON.parse(text);
-        } catch (e) {
-            console.error('[SuperStream] Decryption failed', e);
+        } catch {
             return null;
         }
     }
@@ -74,9 +92,8 @@ export class SuperStreamProvider extends BaseProvider {
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        const diagnostics: any[] = [];
+        // 1. Try native Showbox API
         try {
-            // 1. Search for the title
             const searchData = {
                 module: 'Search4',
                 page: 1,
@@ -86,81 +103,110 @@ export class SuperStreamProvider extends BaseProvider {
             };
 
             const searchPayload = this.encryptPayload(JSON.stringify(searchData));
-            
             const searchReq = await axios.post(
                 this.BASE_URL,
                 `data=${encodeURIComponent(searchPayload)}`,
-                { headers: this.getHeaders(), timeout: 10000 }
+                { headers: this.getHeaders(), timeout: 4000 }
             );
 
             const searchRes = this.decryptPayload(searchReq.data?.data);
-            
-            if (!searchRes || !searchRes.data) {
-                return { sources: [], subtitles: [], diagnostics: [{ code: 'PROVIDER_ERROR', field: '', severity: 'error', message: 'No decrypted search results from SuperStream' }] };
-            }
+            if (searchRes && searchRes.data) {
+                const items = searchRes.data.list || searchRes.data;
+                const isMovie = media.type === 'movie';
+                const match = items.find((item: any) => 
+                    item.title?.toLowerCase() === media.title?.toLowerCase() &&
+                    (isMovie ? item.box_type === 1 : item.box_type === 2)
+                );
 
-            // Find matching movie/show
-            const items = searchRes.data.list || searchRes.data;
-            const isMovie = media.type === 'movie';
-            
-            const match = items.find((item: any) => 
-                item.title?.toLowerCase() === media.title?.toLowerCase() &&
-                (isMovie ? item.box_type === 1 : item.box_type === 2)
-            );
+                if (match) {
+                    const streamData: any = {
+                        module: isMovie ? 'Movie_downloadurl_v3' : 'TV_downloadurl_v3',
+                        tid: match.id,
+                        uid: '',
+                    };
+                    if (!isMovie) {
+                        streamData.season = media.s || 1;
+                        streamData.episode = media.e || 1;
+                    }
 
-            if (!match) {
-                return { sources: [], subtitles: [], diagnostics: [{ code: 'PROVIDER_ERROR', field: '', severity: 'error', message: 'No matching title found in SuperStream' }] };
-            }
+                    const streamPayload = this.encryptPayload(JSON.stringify(streamData));
+                    const streamReq = await axios.post(
+                        this.BASE_URL,
+                        `data=${encodeURIComponent(streamPayload)}`,
+                        { headers: this.getHeaders(), timeout: 4000 }
+                    );
 
-            // 2. Get the stream links
-            const streamData: any = {
-                module: isMovie ? 'Movie_downloadurl_v3' : 'TV_downloadurl_v3',
-                tid: match.id,
-                uid: '',
-            };
-
-            if (!isMovie && media.s && media.e) {
-                streamData.season = media.s;
-                streamData.episode = media.e;
-            }
-
-            const streamPayload = this.encryptPayload(JSON.stringify(streamData));
-            
-            const streamReq = await axios.post(
-                this.BASE_URL,
-                `data=${encodeURIComponent(streamPayload)}`,
-                { headers: this.getHeaders(), timeout: 10000 }
-            );
-
-            const streamRes = this.decryptPayload(streamReq.data?.data);
-
-            if (!streamRes || !streamRes.data || !streamRes.data.list) {
-                return { sources: [], subtitles: [], diagnostics: [{ code: 'PROVIDER_ERROR', field: '', severity: 'error', message: 'No streams returned after decrypting payload' }] };
-            }
-
-            const sources: Source[] = [];
-            
-            // Extract the direct MP4 links
-            for (const item of streamRes.data.list) {
-                if (item.path) {
-                    sources.push({
-                        url: this.createProxyUrl(item.path, {}), // Proxy if necessary, Superstream allows direct usually
-                        quality: item.real_quality || item.quality || '1080p',
-                        type: getSourceType(item.path, false), // Direct MP4
-                        audioTracks: [],
-                        provider: {
-                            name: this.name,
-                            id: this.id
+                    const streamRes = this.decryptPayload(streamReq.data?.data);
+                    if (streamRes && streamRes.data && streamRes.data.list) {
+                        const sources: Source[] = [];
+                        for (const item of streamRes.data.list) {
+                            if (item.path) {
+                                sources.push({
+                                    url: item.path,
+                                    quality: item.real_quality || item.quality || 'Auto',
+                                    type: getSourceType(item.path, item.path.includes('.m3u8')),
+                                    audioTracks: [{ language: 'en', label: 'English' }],
+                                    provider: {
+                                        name: this.name,
+                                        id: this.id
+                                    }
+                                });
+                            }
                         }
-                    });
+                        if (sources.length > 0) {
+                            return { sources, subtitles: [], diagnostics: [] };
+                        }
+                    }
                 }
             }
+        } catch {}
 
-            return { sources, subtitles: [], diagnostics };
-        } catch (e: any) {
-            diagnostics.push({ code: 'PROVIDER_ERROR', field: '', severity: 'error', message: `SuperStream failed: ${e.message}` });
-            return { sources: [], subtitles: [], diagnostics };
-        }
+        // 2. High-speed MovieBox API fallback
+        try {
+            const segment = media.type === 'tv'
+                ? `tv/${media.tmdbId}/${media.s || 1}/${media.e || 1}`
+                : `movie/${media.tmdbId}`;
+
+            const res = await fetch(`https://new.vidnest.fun/moviebox/${segment}`, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Origin': 'https://vidnest.fun',
+                    'Referer': 'https://vidnest.fun/'
+                },
+                signal: AbortSignal.timeout(6000)
+            });
+
+            if (res.ok) {
+                const json = await res.json() as any;
+                if (json?.data) {
+                    const raw = json.encrypted ? decodeVidnestBase64(json.data) : json.data;
+                    const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+
+                    if (Array.isArray(data.url)) {
+                        const sources: Source[] = [];
+                        for (const u of data.url) {
+                            if (u?.link) {
+                                sources.push({
+                                    url: u.link,
+                                    quality: u.resolution ? `${u.resolution}p` : '1080p',
+                                    type: 'mp4',
+                                    audioTracks: [{ language: 'en', label: 'English' }],
+                                    provider: {
+                                        name: this.name,
+                                        id: this.id
+                                    }
+                                });
+                            }
+                        }
+                        if (sources.length > 0) {
+                            return { sources, subtitles: [], diagnostics: [] };
+                        }
+                    }
+                }
+            }
+        } catch {}
+
+        return { sources: [], subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

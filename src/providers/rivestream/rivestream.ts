@@ -60,7 +60,7 @@ export class RivestreamProvider extends BaseProvider {
                             ? [{ language: 'ta', label: 'Tamil' }, { language: 'en', label: 'English' }]
                             : [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: src.server ? `${this.name} (${src.server})` : this.name,
+                            name: this.name,
                             id: this.id
                         }
                     });
