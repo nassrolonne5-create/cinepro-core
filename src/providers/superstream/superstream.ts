@@ -36,14 +36,14 @@ export class SuperStreamProvider extends BaseProvider {
                 const sources: Source[] = [];
                 for (const src of data.sources) {
                     const uLower = (src.url || '').toLowerCase();
-                    if (uLower.includes('tiktoks') || uLower.includes('aoneroom') || uLower.includes('boomchick')) continue;
+                    if (uLower.includes('goodstream.cc') || uLower.includes('tiktoks') || uLower.includes('aoneroom') || uLower.includes('boomchick')) continue;
                     sources.push({
                         url: src.url,
                         quality: src.quality || 'Auto',
                         type: getSourceType(src.url, src.isM3U8),
                         audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: this.name,
+                            name: src.server ? `${this.name} (${src.server})` : this.name,
                             id: this.id
                         }
                     });
@@ -61,14 +61,15 @@ export class SuperStreamProvider extends BaseProvider {
                 const sources: Source[] = [];
                 for (const src of data.sources) {
                     const uLower = (src.url || '').toLowerCase();
-                    if (uLower.includes('tiktoks') || uLower.includes('aoneroom') || uLower.includes('boomchick')) continue;
+                    const sLower = (src.server || '').toLowerCase();
+                    if (sLower.includes('citadel') || uLower.includes('klnwm') || uLower.includes('hlnom') || uLower.includes('tiktoks') || uLower.includes('aoneroom')) continue;
                     sources.push({
                         url: src.url,
                         quality: src.quality || 'Auto',
                         type: getSourceType(src.url, src.isM3U8),
                         audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: this.name,
+                            name: src.server ? `${this.name} (${src.server})` : this.name,
                             id: this.id
                         }
                     });

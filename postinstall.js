@@ -140,7 +140,7 @@ function parseStreamData(data) {
         if (typeof u === "string") {
             const clean = u.startsWith("//") ? "https:" + u : u;
             const uLower = clean.toLowerCase();
-            if (uLower.includes('tiktoks') || uLower.includes('animanga') || uLower.includes('aoneroom') || uLower.includes('boomchick') || uLower.includes('bigtits')) return;
+            if (uLower.includes('goodstream.cc') || uLower.includes('tiktoks') || uLower.includes('animanga') || uLower.includes('aoneroom') || uLower.includes('boomchick') || uLower.includes('bigtits')) return;
             if (isValidStreamUrl(clean)) results.push({ url: clean, quality: q || "default" });
         }
     };

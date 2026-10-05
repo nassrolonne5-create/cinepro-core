@@ -34,13 +34,14 @@ export class VidgodProvider extends BaseProvider {
 
             if (data && Array.isArray(data.sources)) {
                 for (const src of data.sources) {
+                    if (src.url && src.url.toLowerCase().includes('goodstream.cc')) continue;
                     sources.push({
                         url: src.url,
                         quality: src.quality || 'auto',
                         type: getSourceType(src.url, src.isM3U8),
                         audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: this.name,
+                            name: src.server ? `${this.name} (${src.server})` : this.name,
                             id: this.id
                         }
                     });

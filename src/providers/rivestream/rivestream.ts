@@ -36,10 +36,16 @@ export class RivestreamProvider extends BaseProvider {
             const sources: Source[] = [];
 
             if (data && Array.isArray(data.sources)) {
+                const defaultHeaders = data.headers || {};
                 for (const src of data.sources) {
                     const qLower = (src.quality || '').toLowerCase();
                     const sLower = (src.server || '').toLowerCase();
                     const urlLower = (src.url || '').toLowerCase();
+
+                    // Filter out dead Citadel servers (HTTP 403 Missing query parameter)
+                    if (sLower.includes('citadel') || urlLower.includes('hlnom.com') || urlLower.includes('klnwm.com')) {
+                        continue;
+                    }
 
                     // Filter out purely Indian / Hindi / Tamil dubbed streams
                     if (
@@ -52,15 +58,22 @@ export class RivestreamProvider extends BaseProvider {
                     // For Vanguard (which has Tamil as Track 1), mark audio tracks appropriately
                     const isVanguard = sLower.includes('vanguard') || urlLower.includes('cheaptruckrepairs');
 
+                    // Proxy streams that require Referer/Origin headers (e.g. boomchick)
+                    let streamUrl = src.url;
+                    const streamHeaders = src.headers || defaultHeaders;
+                    if (urlLower.includes('boomchick.org') || (streamHeaders && Object.keys(streamHeaders).length > 0)) {
+                        streamUrl = this.createProxyUrl(src.url, streamHeaders);
+                    }
+
                     sources.push({
-                        url: src.url,
+                        url: streamUrl,
                         quality: src.quality || 'auto',
                         type: getSourceType(src.url, src.isM3U8),
                         audioTracks: isVanguard
                             ? [{ language: 'ta', label: 'Tamil' }, { language: 'en', label: 'English' }]
                             : [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: this.name,
+                            name: src.server ? `${this.name} (${src.server})` : this.name,
                             id: this.id
                         }
                     });

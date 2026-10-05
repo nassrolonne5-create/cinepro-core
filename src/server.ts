@@ -91,9 +91,25 @@ async function main() {
         if (typeof payload === 'string' && (request.url.includes('/v1/movies') || request.url.includes('/v1/tv'))) {
             try {
                 const data = JSON.parse(payload);
+                const proto = request.headers['x-forwarded-proto'] || (request.socket?.encrypted ? 'https' : 'http');
+                const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:3000';
+                const publicBaseUrl = `${proto}://${host}`;
                 
                 if (data && data.sources && Array.isArray(data.sources)) {
                     await Promise.all(data.sources.map(async (src: any) => {
+                        // Normalize MKV to MP4 type for browser video element compatibility
+                        if (src.type === 'mkv') {
+                            src.type = 'mp4';
+                        }
+
+                        // Fix proxy baseUrl so remote clients, mobile devices, and CinePro UI connect to the real server
+                        if (src.url && src.url.includes('/v1/proxy')) {
+                            src.url = src.url.replace(/^https?:\/\/[^/]+(?=\/v1\/proxy)/, publicBaseUrl);
+                            if (src.url.startsWith('/v1/proxy')) {
+                                src.url = publicBaseUrl + src.url;
+                            }
+                        }
+
                         if (src.type === 'mp4' && src.url && src.url.includes('/v1/proxy')) {
                             try {
                                 // Extract the real URL from the proxy data query
@@ -127,11 +143,29 @@ async function main() {
                             } catch(e) {}
                         }
                     }));
+
+                    if (Array.isArray(data.subtitles)) {
+                        for (const sub of data.subtitles) {
+                            if (sub.url && sub.url.includes('/v1/proxy')) {
+                                sub.url = sub.url.replace(/^https?:\/\/[^/]+(?=\/v1\/proxy)/, publicBaseUrl);
+                                if (sub.url.startsWith('/v1/proxy')) {
+                                    sub.url = publicBaseUrl + sub.url;
+                                }
+                            }
+                        }
+                    }
                     
-                    // Filter out known dead or forbidden domains
+                    // Filter out known dead, blocked, or Cloudflare-trapped domains
                     data.sources = data.sources.filter((s: any) => {
                         const url = (s.url || '').toLowerCase();
-                        if (url.includes('animecurx.tech')) return false;
+                        if (
+                            url.includes('goodstream.cc') ||
+                            url.includes('klnwm.com') ||
+                            url.includes('hlnom.com') ||
+                            url.includes('hbsxcn.com') ||
+                            url.includes('staticreverie.site') ||
+                            url.includes('animecurx.tech')
+                        ) return false;
                         return true;
                     });
 
@@ -177,10 +211,17 @@ async function main() {
 
                             // Verified full-length movie/TV CDN streams receive highest priority boost (+60)
                             if (
-                                url.includes('klnwm.com') ||
-                                url.includes('hbsxcn.com') ||
+                                url.includes('rousav.tech') ||
+                                url.includes('cheaptruckrepairs.cc') ||
+                                url.includes('bluevelvet.space') ||
+                                url.includes('finepulfe.xyz') ||
+                                url.includes('boomchick.org') ||
+                                url.includes('sprintspeedlight.lol') ||
+                                url.includes('hakunaymatata.com') ||
                                 url.includes('streamflixserver.site') ||
-                                url.includes('goodstream.cc') ||
+                                url.includes('celestialdreamer.lol') ||
+                                url.includes('infiniteparadox.live') ||
+                                url.includes('hbsxcn.com') ||
                                 url.includes('halcyoncreative.site') ||
                                 url.includes('tormisted.cyou') ||
                                 url.includes('remoteconsultinggroup.site')
@@ -190,12 +231,12 @@ async function main() {
 
                             // Verified English-first providers receive a solid priority boost
                             if (
-                                provName.includes('rivestream') || provName.includes('vidnest') ||
-                                provName.includes('vidsrc') || provName.includes('superstream') ||
-                                provName.includes('vidzee') || provName.includes('vidrock') ||
-                                provName.includes('vidgod') || provName.includes('vidlink') ||
-                                provName.includes('videasy') || provName.includes('lmscript') ||
-                                provName.includes('purstream') || provName.includes('vidfast') ||
+                                provName.includes('rivestream') || provName.includes('purstream') ||
+                                provName.includes('vidrock') || provName.includes('vidlink') ||
+                                provName.includes('superstream') || provName.includes('vidgod') ||
+                                provName.includes('vidnest') || provName.includes('vidsrc') ||
+                                provName.includes('vidzee') || provName.includes('videasy') ||
+                                provName.includes('lmscript') || provName.includes('vidfast') ||
                                 provName.includes('vidup') || provName.includes('cinesu') ||
                                 provName.includes('embedsu') || provName.includes('vidrift')
                             ) {

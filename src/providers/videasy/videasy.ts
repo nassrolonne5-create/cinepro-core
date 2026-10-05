@@ -37,23 +37,27 @@ export class VideasyProvider extends BaseProvider {
                     const qLower = (src.quality || '').toLowerCase();
                     const sLower = (src.server || '').toLowerCase();
 
-                    // Filter out samples or non-English dubs
+                    // Filter out dead Citadel servers and non-English dubs
                     if (
+                        sLower.includes('citadel') || uLower.includes('hbsxcn.com') || uLower.includes('hlnom.com') || uLower.includes('klnwm.com') ||
                         uLower.includes('tiktoks') || uLower.includes('animanga') || uLower.includes('aoneroom') ||
-                        uLower.includes('boomchick') || uLower.includes('bigtits') ||
                         qLower.includes('hindi') || qLower.includes('tamil') || qLower.includes('telugu') ||
                         sLower.includes('hindi') || sLower.includes('tamil')
                     ) {
                         continue;
                     }
 
+                    const streamUrl = (data.headers && Object.keys(data.headers).length > 0)
+                        ? this.createProxyUrl(src.url, data.headers)
+                        : src.url;
+
                     sources.push({
-                        url: src.url,
+                        url: streamUrl,
                         quality: src.quality || 'Auto',
                         type: getSourceType(src.url, src.isM3U8),
                         audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: this.name,
+                            name: src.server ? `${this.name} (${src.server})` : this.name,
                             id: this.id
                         }
                     });
