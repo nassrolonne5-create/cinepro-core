@@ -155,17 +155,44 @@ async function main() {
                         }
                     }
                     
-                    // Filter out known dead, blocked, or Cloudflare-trapped domains
+                    // Filter out known dead, blocked, silent, or Indian/Punjabi/Hindi dubbed hosts
                     data.sources = data.sources.filter((s: any) => {
                         const url = (s.url || '').toLowerCase();
+                        const server = (s.server || '').toLowerCase();
+                        const quality = (s.quality || '').toLowerCase();
+
+                        // Dead, blocked, or Cloudflare captcha hosts
                         if (
                             url.includes('goodstream.cc') ||
                             url.includes('klnwm.com') ||
                             url.includes('hlnom.com') ||
                             url.includes('hbsxcn.com') ||
                             url.includes('staticreverie.site') ||
-                            url.includes('animecurx.tech')
+                            url.includes('animecurx.tech') ||
+                            url.includes('relay.vidrift.net')
                         ) return false;
+
+                        // Silent / video-only streams without audio
+                        if (url.includes('rousav.tech') || server.includes('apogee')) return false;
+
+                        // Indian / Punjabi / Hindi / Tamil dubbed mirror hosts
+                        if (
+                            url.includes('bluevelvet.space') ||
+                            url.includes('cheaptruckrepairs.cc') ||
+                            url.includes('streamflixserver.site') ||
+                            url.includes('480ptvseries.com') ||
+                            server.includes('zephyr') ||
+                            server.includes('vanguard') ||
+                            server.includes('hindi') ||
+                            server.includes('punjabi') ||
+                            server.includes('tamil') ||
+                            server.includes('telugu') ||
+                            quality.includes('hindi') ||
+                            quality.includes('punjabi') ||
+                            quality.includes('tamil') ||
+                            quality.includes('telugu')
+                        ) return false;
+
                         return true;
                     });
 
@@ -194,53 +221,38 @@ async function main() {
                             // Severe penalty for Indian/dubbed audio
                             const hasOnlyNonEnglish = Array.isArray(s.audioTracks) && s.audioTracks.length > 0 && !s.audioTracks.some((t: any) => (typeof t === 'string' ? t === 'en' : t?.language === 'en'));
                             if (
-                                quality.includes('hindi') || quality.includes('tamil') || quality.includes('telugu') ||
-                                server.includes('hindi') || server.includes('tamil') || server.includes('telugu') ||
+                                quality.includes('hindi') || quality.includes('punjabi') || quality.includes('tamil') || quality.includes('telugu') ||
+                                server.includes('hindi') || server.includes('punjabi') || server.includes('tamil') || server.includes('telugu') ||
                                 hasOnlyNonEnglish
                             ) {
                                 return -1000;
                             }
 
-                            // Vanguard (cheaptruckrepairs) has Tamil as default Track 1 on the m3u8 playlist.
-                            // Keep as fallback option but place below verified English sources.
-                            if (server.includes('vanguard') || provName.includes('vanguard') || url.includes('cheaptruckrepairs')) {
-                                return 15;
-                            }
-
                             let score = 50;
 
-                            // Verified full-length movie/TV CDN streams receive highest priority boost (+60)
+                            // Highest priority boost (+120) for verified 100% English audio sources
                             if (
-                                url.includes('rousav.tech') ||
-                                url.includes('cheaptruckrepairs.cc') ||
-                                url.includes('bluevelvet.space') ||
-                                url.includes('finepulfe.xyz') ||
+                                url.includes('hakunaymatata.com') ||
                                 url.includes('boomchick.org') ||
                                 url.includes('sprintspeedlight.lol') ||
-                                url.includes('hakunaymatata.com') ||
-                                url.includes('streamflixserver.site') ||
+                                url.includes('finepulfe.xyz') ||
                                 url.includes('celestialdreamer.lol') ||
-                                url.includes('infiniteparadox.live') ||
-                                url.includes('hbsxcn.com') ||
-                                url.includes('halcyoncreative.site') ||
-                                url.includes('tormisted.cyou') ||
-                                url.includes('remoteconsultinggroup.site')
+                                url.includes('infiniteparadox.live')
                             ) {
-                                score += 60;
+                                score += 120;
                             }
 
-                            // Verified English-first providers receive a solid priority boost
+                            // Verified English-first providers receive a solid priority boost (+40)
                             if (
-                                provName.includes('rivestream') || provName.includes('purstream') ||
-                                provName.includes('vidrock') || provName.includes('vidlink') ||
-                                provName.includes('superstream') || provName.includes('vidgod') ||
-                                provName.includes('vidnest') || provName.includes('vidsrc') ||
-                                provName.includes('vidzee') || provName.includes('videasy') ||
-                                provName.includes('lmscript') || provName.includes('vidfast') ||
-                                provName.includes('vidup') || provName.includes('cinesu') ||
-                                provName.includes('embedsu') || provName.includes('vidrift')
+                                provName.includes('vidlink') ||
+                                provName.includes('vidrock') ||
+                                provName.includes('vidzee') ||
+                                provName.includes('purstream') ||
+                                provName.includes('rivestream') ||
+                                provName.includes('superstream') ||
+                                provName.includes('vidgod')
                             ) {
-                                score += 35;
+                                score += 40;
                             }
 
                             if (quality.includes('english')) score += 20;

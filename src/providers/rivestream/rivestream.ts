@@ -42,15 +42,16 @@ export class RivestreamProvider extends BaseProvider {
                     const sLower = (src.server || '').toLowerCase();
                     const urlLower = (src.url || '').toLowerCase();
 
-                    // Filter out dead Citadel servers (HTTP 403 Missing query parameter)
-                    if (sLower.includes('citadel') || urlLower.includes('hlnom.com') || urlLower.includes('klnwm.com')) {
-                        continue;
-                    }
-
-                    // Filter out purely Indian / Hindi / Tamil dubbed streams
+                    // Filter out dead, silent, and Indian/Hindi/Punjabi dubbed servers
                     if (
-                        qLower.includes('hindi') || qLower.includes('tamil') || qLower.includes('telugu') ||
-                        sLower.includes('hindi') || sLower.includes('tamil') || sLower.includes('telugu')
+                        sLower.includes('citadel') || urlLower.includes('hlnom.com') || urlLower.includes('klnwm.com') ||
+                        sLower.includes('zephyr') || urlLower.includes('bluevelvet.space') ||
+                        sLower.includes('vanguard') || urlLower.includes('cheaptruckrepairs') ||
+                        sLower.includes('apogee') || urlLower.includes('rousav.tech') ||
+                        sLower.includes('solstice') || sLower.includes('pulse') || sLower.includes('hindicast') ||
+                        sLower.includes('guru') || sLower.includes('asiacloud') ||
+                        qLower.includes('hindi') || qLower.includes('punjabi') || qLower.includes('tamil') || qLower.includes('telugu') ||
+                        sLower.includes('hindi') || sLower.includes('punjabi') || sLower.includes('tamil') || sLower.includes('telugu')
                     ) {
                         continue;
                     }

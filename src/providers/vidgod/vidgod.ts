@@ -34,7 +34,8 @@ export class VidgodProvider extends BaseProvider {
 
             if (data && Array.isArray(data.sources)) {
                 for (const src of data.sources) {
-                    if (src.url && src.url.toLowerCase().includes('goodstream.cc')) continue;
+                    const uLower = (src.url || '').toLowerCase();
+                    if (uLower.includes('goodstream.cc') || uLower.includes('streamflixserver.site') || uLower.includes('480ptvseries')) continue;
                     sources.push({
                         url: src.url,
                         quality: src.quality || 'auto',

@@ -36,7 +36,7 @@ export class SuperStreamProvider extends BaseProvider {
                 const sources: Source[] = [];
                 for (const src of data.sources) {
                     const uLower = (src.url || '').toLowerCase();
-                    if (uLower.includes('goodstream.cc') || uLower.includes('tiktoks') || uLower.includes('aoneroom') || uLower.includes('boomchick')) continue;
+                    if (uLower.includes('streamflixserver.site') || uLower.includes('480ptvseries') || uLower.includes('goodstream.cc') || uLower.includes('tiktoks') || uLower.includes('aoneroom') || uLower.includes('boomchick')) continue;
                     sources.push({
                         url: src.url,
                         quality: src.quality || 'Auto',
@@ -59,12 +59,23 @@ export class SuperStreamProvider extends BaseProvider {
             const data = await rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e);
             if (data?.sources?.length) {
                 const sources: Source[] = [];
+                const defaultHeaders = data.headers || {};
                 for (const src of data.sources) {
                     const uLower = (src.url || '').toLowerCase();
                     const sLower = (src.server || '').toLowerCase();
-                    if (sLower.includes('citadel') || uLower.includes('klnwm') || uLower.includes('hlnom') || uLower.includes('tiktoks') || uLower.includes('aoneroom')) continue;
+                    if (
+                        sLower.includes('citadel') || sLower.includes('zephyr') || sLower.includes('vanguard') || sLower.includes('apogee') ||
+                        uLower.includes('bluevelvet') || uLower.includes('cheaptruckrepairs') || uLower.includes('rousav') ||
+                        uLower.includes('klnwm') || uLower.includes('hlnom') || uLower.includes('tiktoks') || uLower.includes('aoneroom')
+                    ) continue;
+
+                    const streamHeaders = src.headers || defaultHeaders;
+                    const url = (uLower.includes('boomchick.org') || (streamHeaders && Object.keys(streamHeaders).length > 0))
+                        ? this.createProxyUrl(src.url, streamHeaders)
+                        : src.url;
+
                     sources.push({
-                        url: src.url,
+                        url,
                         quality: src.quality || 'Auto',
                         type: getSourceType(src.url, src.isM3U8),
                         audioTracks: [{ language: 'en', label: 'English' }],
