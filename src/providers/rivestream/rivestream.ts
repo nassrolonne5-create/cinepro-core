@@ -42,10 +42,9 @@ export class RivestreamProvider extends BaseProvider {
                     const sLower = (src.server || '').toLowerCase();
                     const urlLower = (src.url || '').toLowerCase();
 
-                    // Filter out dead, silent, and Indian/Hindi/Punjabi dubbed servers
+                    // Filter out dead, silent, and Indian/Hindi/Tamil dubbed servers
                     if (
                         sLower.includes('citadel') || urlLower.includes('hlnom.com') || urlLower.includes('klnwm.com') ||
-                        sLower.includes('zephyr') || urlLower.includes('bluevelvet.space') ||
                         sLower.includes('vanguard') || urlLower.includes('cheaptruckrepairs') ||
                         sLower.includes('apogee') || urlLower.includes('rousav.tech') ||
                         sLower.includes('solstice') || sLower.includes('pulse') || sLower.includes('hindicast') ||
@@ -56,13 +55,10 @@ export class RivestreamProvider extends BaseProvider {
                         continue;
                     }
 
-                    // For Vanguard (which has Tamil as Track 1), mark audio tracks appropriately
-                    const isVanguard = sLower.includes('vanguard') || urlLower.includes('cheaptruckrepairs');
-
-                    // Proxy streams that require Referer/Origin headers (e.g. boomchick)
+                    // Proxy streams that require Referer/Origin headers (e.g. boomchick, bluevelvet)
                     let streamUrl = src.url;
                     const streamHeaders = src.headers || defaultHeaders;
-                    if (urlLower.includes('boomchick.org') || (streamHeaders && Object.keys(streamHeaders).length > 0)) {
+                    if (urlLower.includes('boomchick.org') || urlLower.includes('bluevelvet.space') || (streamHeaders && Object.keys(streamHeaders).length > 0)) {
                         streamUrl = this.createProxyUrl(src.url, streamHeaders);
                     }
 
@@ -70,9 +66,7 @@ export class RivestreamProvider extends BaseProvider {
                         url: streamUrl,
                         quality: src.quality || 'auto',
                         type: getSourceType(src.url, src.isM3U8),
-                        audioTracks: isVanguard
-                            ? [{ language: 'ta', label: 'Tamil' }, { language: 'en', label: 'English' }]
-                            : [{ language: 'en', label: 'English' }],
+                        audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
                             name: src.server ? `${this.name} (${src.server})` : this.name,
                             id: this.id

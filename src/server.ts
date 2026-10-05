@@ -177,11 +177,9 @@ async function main() {
 
                         // Indian / Punjabi / Hindi / Tamil dubbed mirror hosts
                         if (
-                            url.includes('bluevelvet.space') ||
                             url.includes('cheaptruckrepairs.cc') ||
                             url.includes('streamflixserver.site') ||
                             url.includes('480ptvseries.com') ||
-                            server.includes('zephyr') ||
                             server.includes('vanguard') ||
                             server.includes('hindi') ||
                             server.includes('punjabi') ||
@@ -230,12 +228,13 @@ async function main() {
 
                             let score = 50;
 
-                            // Highest priority boost (+120) for verified 100% English audio sources
+                            // Highest priority boost (+120) for verified 100% English audio sources (4K HDR & 1080p FHD)
                             if (
-                                url.includes('hakunaymatata.com') ||
+                                url.includes('bluevelvet.space') ||
                                 url.includes('boomchick.org') ||
                                 url.includes('sprintspeedlight.lol') ||
                                 url.includes('finepulfe.xyz') ||
+                                url.includes('hakunaymatata.com') ||
                                 url.includes('celestialdreamer.lol') ||
                                 url.includes('infiniteparadox.live')
                             ) {

@@ -37,9 +37,11 @@ export class VideasyProvider extends BaseProvider {
                     const qLower = (src.quality || '').toLowerCase();
                     const sLower = (src.server || '').toLowerCase();
 
-                    // Filter out dead Citadel servers and non-English dubs
+                    // Filter out dead, silent, and non-English dubs
                     if (
-                        sLower.includes('citadel') || uLower.includes('hbsxcn.com') || uLower.includes('hlnom.com') || uLower.includes('klnwm.com') ||
+                        sLower.includes('citadel') || sLower.includes('apogee') || sLower.includes('vanguard') ||
+                        uLower.includes('hbsxcn.com') || uLower.includes('hlnom.com') || uLower.includes('klnwm.com') ||
+                        uLower.includes('cheaptruckrepairs') || uLower.includes('rousav') ||
                         uLower.includes('tiktoks') || uLower.includes('animanga') || uLower.includes('aoneroom') ||
                         qLower.includes('hindi') || qLower.includes('tamil') || qLower.includes('telugu') ||
                         sLower.includes('hindi') || sLower.includes('tamil')

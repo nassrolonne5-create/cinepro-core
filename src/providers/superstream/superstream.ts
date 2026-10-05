@@ -64,13 +64,13 @@ export class SuperStreamProvider extends BaseProvider {
                     const uLower = (src.url || '').toLowerCase();
                     const sLower = (src.server || '').toLowerCase();
                     if (
-                        sLower.includes('citadel') || sLower.includes('zephyr') || sLower.includes('vanguard') || sLower.includes('apogee') ||
-                        uLower.includes('bluevelvet') || uLower.includes('cheaptruckrepairs') || uLower.includes('rousav') ||
+                        sLower.includes('citadel') || sLower.includes('vanguard') || sLower.includes('apogee') ||
+                        uLower.includes('cheaptruckrepairs') || uLower.includes('rousav') ||
                         uLower.includes('klnwm') || uLower.includes('hlnom') || uLower.includes('tiktoks') || uLower.includes('aoneroom')
                     ) continue;
 
                     const streamHeaders = src.headers || defaultHeaders;
-                    const url = (uLower.includes('boomchick.org') || (streamHeaders && Object.keys(streamHeaders).length > 0))
+                    const url = (uLower.includes('boomchick.org') || uLower.includes('bluevelvet.space') || (streamHeaders && Object.keys(streamHeaders).length > 0))
                         ? this.createProxyUrl(src.url, streamHeaders)
                         : src.url;
 
