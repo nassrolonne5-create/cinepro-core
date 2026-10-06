@@ -161,7 +161,7 @@ async function main() {
                         const server = (s.server || '').toLowerCase();
                         const quality = (s.quality || '').toLowerCase();
 
-                        // Dead, blocked, or Cloudflare captcha hosts
+                        // Dead, blocked, 404, or Cloudflare captcha hosts
                         if (
                             url.includes('goodstream.cc') ||
                             url.includes('klnwm.com') ||
@@ -169,7 +169,22 @@ async function main() {
                             url.includes('hbsxcn.com') ||
                             url.includes('staticreverie.site') ||
                             url.includes('animecurx.tech') ||
-                            url.includes('relay.vidrift.net')
+                            url.includes('relay.vidrift.net') ||
+                            url.includes('halcyoncreative.site') ||
+                            url.includes('homechefrecipes.sbs') ||
+                            url.includes('boltx.stream') ||
+                            url.includes('bestx.stream') ||
+                            url.includes('appnumber.top') ||
+                            url.endsWith('.txt') ||
+                            url.includes('.txt?')
+                        ) return false;
+
+                        // Promotional teaser / sample short videos (e.g. 21s MovieBox clip)
+                        if (
+                            url.includes('aoneroom.com') ||
+                            url.includes('/sample/') ||
+                            url.includes('sample.mp4') ||
+                            url.includes('trailer.mp4')
                         ) return false;
 
                         // Silent / video-only streams without audio
