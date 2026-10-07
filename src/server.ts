@@ -176,7 +176,6 @@ async function main() {
                             url.includes('hbsxcn.com') ||
                             url.includes('staticreverie.site') ||
                             url.includes('animecurx.tech') ||
-                            url.includes('relay.vidrift.net') ||
                             url.includes('halcyoncreative.site') ||
                             url.includes('homechefrecipes.sbs') ||
                             url.includes('boltx.stream') ||
@@ -263,6 +262,8 @@ async function main() {
                                 url.includes('bluevelvet.space') ||
                                 url.includes('boomchick.org') ||
                                 url.includes('zenoak.top') ||
+                                url.includes('vidrift.net') ||
+                                url.includes('remoteconsultinggroup.site') ||
                                 url.includes('sprintspeedlight.lol') ||
                                 url.includes('finepulfe.xyz') ||
                                 url.includes('hakunaymatata.com') ||
@@ -274,6 +275,7 @@ async function main() {
 
                             // Verified English-first providers receive a solid priority boost (+40)
                             if (
+                                provName.includes('vidrift') ||
                                 provName.includes('vidsrcwin') ||
                                 provName.includes('vidvault') ||
                                 provName.includes('vidfast') ||

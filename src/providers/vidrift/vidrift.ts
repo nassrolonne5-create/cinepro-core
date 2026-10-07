@@ -7,20 +7,20 @@ export class VidriftProvider extends BaseProvider {
     readonly id = 'vidrift';
     readonly name = 'VidRift';
     readonly enabled = true;
-    
+
     readonly capabilities: ProviderCapabilities = {
         supportedContentTypes: ['movies', 'tv']
     };
-    
-    readonly BASE_URL = 'https://embed.vidrift.in';
+
+    readonly BASE_URL = 'https://embed.vidrift.net';
     readonly HEADERS = {
-        'Accept': '*/*',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-        'Referer': `${this.BASE_URL}/`,
-        'Origin': this.BASE_URL,
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0'
+        'Referer': 'https://vidrift.net/',
+        'Sec-Fetch-Dest': 'iframe',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'cross-site',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
@@ -47,21 +47,21 @@ export class VidriftProvider extends BaseProvider {
         let pageRes: any;
         try {
             pageRes = await axios.get(endpoint, {
-                headers: { ...this.HEADERS, Accept: 'text/html' },
-                timeout: 5000,
+                headers: this.HEADERS,
+                timeout: 6000,
                 validateStatus: (status) => status < 400
             });
         } catch {
             return { sources: [], subtitles: [], diagnostics: [] };
         }
-        
+
         if (!pageRes || pageRes.status !== 200 || !pageRes.data) {
             return { sources: [], subtitles: [], diagnostics: [] };
         }
         const html = pageRes.data;
-        
+
         let meta: any = null;
-        const match = html.match(/embedMeta\s*=\s*(\{.+?\});\s*(?:const|let|var|<\/script>)/s);
+        const match = html.match(/var embedMeta = (\{.*?\});/s) || html.match(/embedMeta\s*=\s*(\{.+?\});\s*(?:const|let|var|<\/script>)/s);
         if (match) {
             try { meta = JSON.parse(match[1]); } catch (e) {}
         }
@@ -86,109 +86,91 @@ export class VidriftProvider extends BaseProvider {
                 }
             }
         }
-        
-        if (!meta) throw new Error("Failed to extract embedMeta");
+
+        if (!meta) return { sources: [], subtitles: [], diagnostics: [] };
 
         const sources: Source[] = [];
-        const diagnostics: any[] = [];
+        const seenUrls = new Set<string>();
 
-        // 1. Add pre-warmed direct HLS streams from warmStreams
+        const addSource = (url: string, quality: string, serverName: string) => {
+            if (!url || seenUrls.has(url)) return;
+            seenUrls.add(url);
+
+            let streamUrl = url;
+            if (url.includes('relay.vidrift.net') || url.includes('remoteconsultinggroup.site') || url.includes('/api/proxy/hls')) {
+                const requiredHeaders = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Referer': 'https://embed.vidrift.net/',
+                    'Origin': 'https://embed.vidrift.net'
+                };
+                const proxyData = JSON.stringify({ url, headers: requiredHeaders });
+                streamUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.m3u8`;
+            }
+
+            sources.push({
+                url: streamUrl,
+                quality: quality || '1080p',
+                type: getSourceType(url, true),
+                audioTracks: [{ language: 'en', label: 'English' }],
+                provider: {
+                    name: `${this.name} (${serverName})`,
+                    id: this.id
+                }
+            });
+        };
+
+        // 1. Pre-warmed master HLS streams from warmStreams
         if (Array.isArray(meta.warmStreams)) {
             for (const ws of meta.warmStreams) {
                 const streamUrl = ws.proxyUrl || ws.url;
                 if (streamUrl && typeof streamUrl === 'string' && streamUrl.startsWith('http')) {
-                    sources.push({
-                        url: streamUrl,
-                        type: getSourceType(streamUrl, true),
-                        quality: typeof ws.quality === 'string' ? ws.quality : '1080p',
-                        audioTracks: [],
-                        provider: {
-                            name: `${this.name} (${ws.provider || 'Direct'})`,
-                            id: this.id
-                        }
-                    });
+                    addSource(streamUrl, ws.quality || '1080p', ws.provider || 'Earth');
                 }
             }
         }
 
-        // 2. Query provider APIs if token exists
+        // 2. Query provider APIs if playbackToken exists
         const token = meta.playbackToken;
         if (token) {
-            const providers = ['vaplayer', 'selfhost', 'vidgod', 'turbo'];
+            const providers = ['vaplayer', 'zephyr', 'vidgod'];
             const typePath = media.type === 'tv'
                 ? `tv/${media.tmdbId}/${media.s || 1}/${media.e || 1}`
                 : `movie/${media.tmdbId}`;
-                
-            await Promise.all(providers.map(async (p) => {
+
+            await Promise.allSettled(providers.map(async (p) => {
                 try {
                     const apiRes = await axios.get(`${this.BASE_URL}/api/source/${typePath}?token=${encodeURIComponent(token)}&provider=${p}`, {
                         headers: {
-                            ...this.HEADERS,
-                            'Referer': endpoint
+                            'User-Agent': this.HEADERS['User-Agent'],
+                            'Referer': endpoint,
+                            'Sec-Fetch-Dest': 'empty',
+                            'Sec-Fetch-Mode': 'cors',
+                            'Accept': 'application/json, text/plain, */*'
                         },
-                        timeout: 4000
+                        timeout: 5000
                     });
-                    
-                    if (apiRes.status !== 200) return;
+
+                    if (apiRes.status !== 200 || !apiRes.data?.success) return;
                     const data = apiRes.data as any;
-                    
-                    if (data.success && Array.isArray(data.downloads)) {
-                        for (const dl of data.downloads) {
-                            let rawUrl = dl.url || dl.file || dl.link || '';
-                            if (!rawUrl) continue;
-                            if (!rawUrl.startsWith('http')) {
-                                rawUrl = `${this.BASE_URL}/${rawUrl.replace(/^\//, '')}`;
-                            }
-                            sources.push({
-                                url: rawUrl,
-                                type: getSourceType(rawUrl, false),
-                                quality: typeof dl.quality === 'string' ? dl.quality : 'default',
-                                audioTracks: [],
-                                provider: {
-                                    name: this.name,
-                                    id: this.id
-                                }
-                            });
-                        }
-                    }
-                    if (data.success && Array.isArray(data.streams)) {
+
+                    if (Array.isArray(data.streams)) {
                         for (const stream of data.streams) {
-                            let rawUrl = stream.url || stream.proxyUrl || '';
-                            
-                            if (rawUrl.includes('hls?url=') || rawUrl.includes('mp4?url=')) {
-                                const matchUrl = rawUrl.match(/(?:hls|mp4)\?url=(.+?)(?:&|$)/);
-                                if (matchUrl?.[1]) {
-                                    rawUrl = decodeURIComponent(matchUrl[1]);
-                                }
+                            let rawUrl = stream.proxyUrl || stream.url || '';
+                            if (!rawUrl) continue;
+                            if (rawUrl.startsWith('/')) {
+                                rawUrl = `${this.BASE_URL}${rawUrl}`;
                             }
-                            
-                            if (!rawUrl.startsWith('http')) {
-                                rawUrl = `${this.BASE_URL}/${rawUrl.replace(/^\//, '')}`;
-                            }
-                            
-                            const isM3U8 = rawUrl.includes('.m3u8');
-                            sources.push({
-                                url: rawUrl,
-                                type: getSourceType(rawUrl, isM3U8),
-                                quality: typeof stream.quality === 'string' ? stream.quality : (typeof data.quality === 'string' ? data.quality : 'default'),
-                                audioTracks: [],
-                                provider: {
-                                    name: this.name,
-                                    id: this.id
-                                }
-                            });
+                            addSource(rawUrl, data.quality || stream.quality || '1080p', p === 'vaplayer' ? 'VAPlayer' : (p === 'zephyr' ? 'Zephyr' : p));
                         }
                     }
-                } catch (err) {
-                    // Ignore individual provider errors
-                }
+                } catch {}
             }));
         }
-        
+
         return {
             sources,
             subtitles: [],
-            diagnostics
+            diagnostics: []
         };
     }
 }

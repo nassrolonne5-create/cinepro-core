@@ -60,13 +60,15 @@ export class VidLinkProvider extends BaseProvider {
 
             if (data?.stream?.qualities) {
                 const qualities = data.stream.qualities;
-                for (const q of Object.keys(qualities)) {
+                const sortedKeys = Object.keys(qualities).sort((a, b) => Number(b) - Number(a));
+                for (const q of sortedKeys) {
                     const item = qualities[q];
                     if (item?.url) {
+                        const isM3U8 = item.type === 'hls' || item.url.includes('.m3u8');
                         sources.push({
                             url: item.url,
                             quality: `${q}p`,
-                            type: 'mp4',
+                            type: isM3U8 ? 'hls' : 'mp4',
                             audioTracks: [{ language: 'en', label: 'English' }],
                             provider: {
                                 name: this.name,
@@ -83,7 +85,7 @@ export class VidLinkProvider extends BaseProvider {
                         subtitles.push({
                             url: cap.url,
                             label: cap.language || 'English',
-                            format: 'srt'
+                            format: cap.type === 'vtt' || cap.url.includes('.vtt') ? 'vtt' : 'srt'
                         });
                     }
                 }
