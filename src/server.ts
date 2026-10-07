@@ -274,6 +274,8 @@ async function main() {
 
                             // Verified English-first providers receive a solid priority boost (+40)
                             if (
+                                provName.includes('vidsrcwin') ||
+                                provName.includes('vidvault') ||
                                 provName.includes('vidfast') ||
                                 provName.includes('cinecat') ||
                                 provName.includes('vidlink') ||
