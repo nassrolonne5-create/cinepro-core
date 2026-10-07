@@ -16,6 +16,7 @@ if (!process.env.TMDB_API_KEY || process.env.TMDB_API_KEY === 'your_tmdb_api_key
 
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import fs from 'node:fs';
 import { knownThirdPartyProxies } from './thirdPartyProxies.js';
 import { streamPatterns } from './streamPatterns.js';
 import { configure as configureKaizoku } from 'kaizoku-core';
@@ -81,7 +82,10 @@ async function main() {
 
     // Register providers
     const registry = server.getRegistry();
-    await registry.discoverProviders(path.join(__dirname, './providers/'));
+    const providersDir = fs.existsSync(path.join(process.cwd(), 'dist/providers'))
+        ? path.join(process.cwd(), 'dist/providers')
+        : path.join(__dirname, './providers/');
+    await registry.discoverProviders(providersDir);
     console.log("REGISTERED PROVIDERS:", registry.getProviders().map(p => p.id));
     
     // Smart Sorting: Internet Speed Adaptive
@@ -157,9 +161,12 @@ async function main() {
                     
                     // Filter out known dead, blocked, silent, or Indian/Punjabi/Hindi dubbed hosts
                     data.sources = data.sources.filter((s: any) => {
-                        const url = (s.url || '').toLowerCase();
+                        const rawUrl = (s.url || '').toLowerCase();
+                        let url = rawUrl;
+                        try { url = decodeURIComponent(rawUrl); } catch {}
                         const server = (s.server || '').toLowerCase();
                         const quality = (s.quality || '').toLowerCase();
+                        const provName = (s.provider?.name || s.provider?.id || s.provider || '').toLowerCase();
 
                         // Dead, blocked, 404, or Cloudflare captcha hosts
                         if (
@@ -195,6 +202,10 @@ async function main() {
                             url.includes('cheaptruckrepairs.cc') ||
                             url.includes('streamflixserver.site') ||
                             url.includes('480ptvseries.com') ||
+                            url.includes('hindi') ||
+                            url.includes('punjabi') ||
+                            url.includes('tamil') ||
+                            url.includes('telugu') ||
                             server.includes('vanguard') ||
                             server.includes('hindi') ||
                             server.includes('punjabi') ||
@@ -203,7 +214,11 @@ async function main() {
                             quality.includes('hindi') ||
                             quality.includes('punjabi') ||
                             quality.includes('tamil') ||
-                            quality.includes('telugu')
+                            quality.includes('telugu') ||
+                            provName.includes('hindi') ||
+                            provName.includes('punjabi') ||
+                            provName.includes('tamil') ||
+                            provName.includes('telugu')
                         ) return false;
 
                         return true;
@@ -247,6 +262,7 @@ async function main() {
                             if (
                                 url.includes('bluevelvet.space') ||
                                 url.includes('boomchick.org') ||
+                                url.includes('zenoak.top') ||
                                 url.includes('sprintspeedlight.lol') ||
                                 url.includes('finepulfe.xyz') ||
                                 url.includes('hakunaymatata.com') ||
@@ -258,6 +274,8 @@ async function main() {
 
                             // Verified English-first providers receive a solid priority boost (+40)
                             if (
+                                provName.includes('vidfast') ||
+                                provName.includes('cinecat') ||
                                 provName.includes('vidlink') ||
                                 provName.includes('vidrock') ||
                                 provName.includes('vidzee') ||
