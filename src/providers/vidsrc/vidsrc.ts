@@ -59,7 +59,7 @@ export class VidSrcProvider extends BaseProvider {
 
         const backends = [
             { name: 'HollyMovieHD', path: 'hollymoviehd' },
-            { name: 'KlikXXI', path: 'klikxxi' }
+            { name: 'MovieBox', path: 'moviebox' }
         ];
 
         const sources: Source[] = [];

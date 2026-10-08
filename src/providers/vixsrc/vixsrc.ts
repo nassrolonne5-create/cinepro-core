@@ -6,7 +6,7 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { vidup, vidnest } from 'kaizoku-core';
+import { vidup, vidnest, trendimovies } from 'kaizoku-core';
 
 export class VixsrcProvider extends BaseProvider {
     readonly id = 'vixsrc';
@@ -61,6 +61,27 @@ export class VixsrcProvider extends BaseProvider {
                     };
                 });
                 return { sources, subtitles: [], diagnostics: [] };
+            }
+        } catch {}
+
+        try {
+            const downloads = await (trendimovies as any).getDownloads(media.tmdbId, media.type, media.s, media.e);
+            if (downloads && Array.isArray(downloads) && downloads.length > 0) {
+                const sources: Source[] = downloads
+                    .filter((l: any) => l?.url && l.active !== false)
+                    .map((l: any) => ({
+                        url: l.url,
+                        quality: l.quality || 'HD',
+                        type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: `${this.name} (Direct)`,
+                            id: this.id
+                        }
+                    }));
+                if (sources.length > 0) {
+                    return { sources, subtitles: [], diagnostics: [] };
+                }
             }
         } catch {}
 

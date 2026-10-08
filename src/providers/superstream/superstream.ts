@@ -5,7 +5,7 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { vidgod, rivestream } from 'kaizoku-core';
+import { vidgod, rivestream, vidnest } from 'kaizoku-core';
 import { getSourceType } from '../../utils/streamType.js';
 
 export class SuperStreamProvider extends BaseProvider {
@@ -89,6 +89,27 @@ export class SuperStreamProvider extends BaseProvider {
                 if (sources.length > 0) {
                     return { sources, subtitles: [], diagnostics: [] };
                 }
+            }
+        } catch {}
+
+        // Fallback upstream mirror via vidnest
+        try {
+            const data = await vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            if (data?.sources?.length) {
+                const sources: Source[] = data.sources.map(src => {
+                    const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
+                    return {
+                        url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
+                        quality: src.quality || 'auto',
+                        type: getSourceType(src.url, src.isM3U8),
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: `${this.name} (Mirror)`,
+                            id: this.id
+                        }
+                    };
+                });
+                return { sources, subtitles: [], diagnostics: [] };
             }
         } catch {}
 

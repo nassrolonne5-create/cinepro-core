@@ -12,4 +12,8 @@ declare module 'kaizoku-core' {
     export const lmscript: {
         fetchSources(tmdbId: string, type: "movie" | "tv", season?: number, episode?: number): Promise<any>;
     };
+
+    export const trendimovies: {
+        getDownloads(tmdbId: string, type: "movie" | "tv", season?: number, episode?: number): Promise<any>;
+    };
 }

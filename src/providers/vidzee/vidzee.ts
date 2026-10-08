@@ -5,7 +5,7 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { vidzee } from 'kaizoku-core';
+import { vidzee, vidnest } from 'kaizoku-core';
 
 export class VidzeeProvider extends BaseProvider {
     readonly id = 'vidzee';
@@ -49,10 +49,33 @@ export class VidzeeProvider extends BaseProvider {
                     }
                 });
             }
-            return { sources, subtitles: [], diagnostics: [] };
-        } catch (e) {
-            return { sources: [], subtitles: [], diagnostics: [] };
-        }
+            if (sources.length > 0) {
+                return { sources, subtitles: [], diagnostics: [] };
+            }
+        } catch (e) {}
+
+        // Fallback upstream mirror via vidnest
+        try {
+            const data = await vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            if (data?.sources?.length) {
+                const sources: Source[] = data.sources.map(src => {
+                    const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
+                    return {
+                        url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
+                        quality: src.quality || 'auto',
+                        type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: `${this.name} (Mirror)`,
+                            id: this.id
+                        }
+                    };
+                });
+                return { sources, subtitles: [], diagnostics: [] };
+            }
+        } catch {}
+
+        return { sources: [], subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

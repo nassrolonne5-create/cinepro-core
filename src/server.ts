@@ -147,23 +147,38 @@ async function main() {
                         // Silent / video-only streams without audio
                         if (url.includes('rousav.tech') || server.includes('apogee')) return false;
 
-                        // Indian / Punjabi / Hindi / Tamil dubbed mirror hosts
+                        // Indian / Punjabi / Hindi / Tamil / Indonesian / Spanish / Foreign dubbed mirror hosts
                         if (
                             url.includes('cheaptruckrepairs.cc') ||
                             url.includes('480ptvseries.com') ||
+                            url.includes('klikxxi') ||
+                            url.includes('indoxxi') ||
+                            url.includes('layarkaca') ||
+                            url.includes('vividdubbing') ||
                             url.includes('hindi') ||
                             url.includes('punjabi') ||
                             url.includes('tamil') ||
                             url.includes('telugu') ||
+                            url.includes('latino') ||
+                            url.includes('dublado') ||
+                            url.includes('castellano') ||
                             server.includes('vanguard') ||
+                            server.includes('klikxxi') ||
+                            server.includes('movies4f') ||
+                            server.includes('movies5f') ||
                             server.includes('hindi') ||
                             server.includes('punjabi') ||
                             server.includes('tamil') ||
                             server.includes('telugu') ||
+                            server.includes('latino') ||
+                            server.includes('dublado') ||
+                            server.includes('castellano') ||
                             quality.includes('hindi') ||
                             quality.includes('punjabi') ||
                             quality.includes('tamil') ||
                             quality.includes('telugu') ||
+                            quality.includes('latino') ||
+                            quality.includes('dub') ||
                             provName.includes('hindi') ||
                             provName.includes('punjabi') ||
                             provName.includes('tamil') ||
@@ -241,11 +256,12 @@ async function main() {
                             const provName = (s.provider?.name || s.provider || '').toLowerCase();
                             const url = (s.url || '').toLowerCase();
 
-                            // Severe penalty for Indian/dubbed audio
+                            // Severe penalty for foreign/dubbed audio
                             const hasOnlyNonEnglish = Array.isArray(s.audioTracks) && s.audioTracks.length > 0 && !s.audioTracks.some((t: any) => (typeof t === 'string' ? t === 'en' : t?.language === 'en'));
                             if (
-                                quality.includes('hindi') || quality.includes('punjabi') || quality.includes('tamil') || quality.includes('telugu') ||
-                                server.includes('hindi') || server.includes('punjabi') || server.includes('tamil') || server.includes('telugu') ||
+                                quality.includes('hindi') || quality.includes('punjabi') || quality.includes('tamil') || quality.includes('telugu') || quality.includes('latino') || quality.includes('dub') ||
+                                server.includes('hindi') || server.includes('punjabi') || server.includes('tamil') || server.includes('telugu') || server.includes('klikxxi') || server.includes('movies4f') || server.includes('movies5f') || server.includes('latino') || server.includes('dublado') ||
+                                url.includes('klikxxi') || url.includes('indoxxi') || url.includes('layarkaca') || url.includes('vividdubbing') ||
                                 hasOnlyNonEnglish
                             ) {
                                 return -1000;
@@ -263,13 +279,16 @@ async function main() {
                                 url.includes('finepulfe.xyz') ||
                                 url.includes('hakunaymatata.com') ||
                                 url.includes('celestialdreamer.lol') ||
-                                url.includes('infiniteparadox.live')
+                                url.includes('infiniteparadox.live') ||
+                                url.includes('trendimovies.com')
                             ) {
                                 score += 120;
                             }
 
                             // Verified English-first providers receive a solid priority boost (+40)
                             if (
+                                provName.includes('watchflix') ||
+                                provName.includes('trendimovies') ||
                                 provName.includes('vidrift') ||
                                 provName.includes('vidsrcwin') ||
                                 provName.includes('vidvault') ||

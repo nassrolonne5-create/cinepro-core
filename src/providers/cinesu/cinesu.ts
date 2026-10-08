@@ -6,7 +6,7 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { vidnest } from 'kaizoku-core';
+import { vidnest, vidup } from 'kaizoku-core';
 
 export class CinesuProvider extends BaseProvider {
     readonly id = 'cinesu';
@@ -45,11 +45,31 @@ export class CinesuProvider extends BaseProvider {
                         }
                     });
                 }
+                if (sources.length > 0) {
+                    return { sources, subtitles: [], diagnostics: [] };
+                }
             }
-            return { sources, subtitles: [], diagnostics: [] };
-        } catch (e) {
-            return { sources: [], subtitles: [], diagnostics: [] };
-        }
+        } catch (e) {}
+
+        // Fallback upstream mirror via vidup
+        try {
+            const data = await vidup.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            if (data?.sources?.length) {
+                const sources: Source[] = data.sources.map(src => ({
+                    url: src.url,
+                    quality: src.quality || 'auto',
+                    type: getSourceType(src.url, src.isM3U8),
+                    audioTracks: [{ language: 'en', label: 'English' }],
+                    provider: {
+                        name: `${this.name} (Mirror)`,
+                        id: this.id
+                    }
+                }));
+                return { sources, subtitles: [], diagnostics: [] };
+            }
+        } catch {}
+
+        return { sources: [], subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {
