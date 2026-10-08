@@ -114,8 +114,9 @@ export class WatchflixProvider extends BaseProvider {
             const decSrvJson = (await decSrvRes.json()) as any;
             const servers = Array.isArray(decSrvJson.result) ? decSrvJson.result : [];
 
-            // 7. Resolve all English servers in parallel (Supreme, Prime, Orbit, Premiere 4K, Horizon)
-            const serverPromises = servers.map(async (srv: any) => {
+            // 7. Resolve top English servers in parallel (Supreme, Prime, Orbit/4K)
+            const targetServers = servers.slice(0, 3);
+            const serverPromises = targetServers.map(async (srv: any) => {
                 if (!srv?.data) return null;
                 try {
                     const strRes = await fetch(`${streamUrl}/${srv.data}`, {
@@ -126,7 +127,7 @@ export class WatchflixProvider extends BaseProvider {
                             'Referer': `${BASE_URL}/`,
                             'X-CSRF-Token': token2
                         },
-                        signal: AbortSignal.timeout(8000)
+                        signal: AbortSignal.timeout(4500)
                     });
                     const strEnc = await strRes.text();
 
@@ -134,7 +135,7 @@ export class WatchflixProvider extends BaseProvider {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ text: strEnc }),
-                        signal: AbortSignal.timeout(8000)
+                        signal: AbortSignal.timeout(4500)
                     });
                     const streamData = (await decStrRes.json()) as any;
                     const res = streamData?.result;
@@ -156,6 +157,7 @@ export class WatchflixProvider extends BaseProvider {
                             url: streamUrl,
                             quality,
                             type: getSourceType(res.url, !res.mp4),
+                            server: srv.name || 'Core',
                             audioTracks: [{ language: 'en', label: 'English' }],
                             provider: {
                                 name: `${this.name} (${srv.name || 'Core'})`,
