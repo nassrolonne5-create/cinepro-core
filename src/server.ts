@@ -181,16 +181,20 @@ async function main() {
                             url.includes('boltx.stream') ||
                             url.includes('bestx.stream') ||
                             url.includes('appnumber.top') ||
+                            url.includes('steman.cyou') ||
+                            url.includes('finepulfe.xyz') ||
                             url.endsWith('.txt') ||
                             url.includes('.txt?')
                         ) return false;
 
-                        // Promotional teaser / sample short videos (e.g. 21s MovieBox clip)
+                        // Promotional teaser / sample short videos (e.g. 12s/21s promo clips)
                         if (
                             url.includes('aoneroom.com') ||
                             url.includes('/sample/') ||
                             url.includes('sample.mp4') ||
-                            url.includes('trailer.mp4')
+                            url.includes('trailer.mp4') ||
+                            url.includes('/promo/') ||
+                            url.includes('promo/cinecat')
                         ) return false;
 
                         // Silent / video-only streams without audio

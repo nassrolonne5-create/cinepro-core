@@ -123,8 +123,20 @@ export class VidfastProvider extends BaseProvider {
                     const res = streamData?.result;
                     if (res?.url) {
                         const quality = res['4kAvailable'] ? '4K' : (srv.name?.includes('4K') ? '4K' : '1080p');
+                        
+                        let streamUrl = res.url;
+                        if (streamUrl.includes('zenoak.top') || streamUrl.includes('peakpine.top')) {
+                            const requiredHeaders = {
+                                'User-Agent': HEADERS['User-Agent'],
+                                'Referer': 'https://vidfast.vc/',
+                                'Origin': 'https://vidfast.vc'
+                            };
+                            const proxyData = JSON.stringify({ url: streamUrl, headers: requiredHeaders });
+                            streamUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.m3u8`;
+                        }
+
                         return {
-                            url: res.url,
+                            url: streamUrl,
                             quality,
                             type: getSourceType(res.url, !res.mp4),
                             audioTracks: [{ language: 'en', label: 'English' }],
