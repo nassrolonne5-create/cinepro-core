@@ -6,11 +6,12 @@ export const streamPatterns: RegExp[] = [
     /hub\.(raj\.lat|toxix\.buzz|oreao-cdn\.buzz)/,
     /wasabisys\.com/,
     /hakunaymatata\.com/,
-    /streamflixserver\.site|tripplestream\.online/,
+    /tripplestream\.online/,
     /illimitableinkwell\.site/,
     /frostcomet5\.pro/,
     /(epimetheus63|earth14|pandora20)\.workers\.dev/, // streammafia's workers.dev proxy domains
     /tiktokcdn\.com/,
-    /\/content\/(.)*\/page\-(.)*\.html/,
+    /page\-\d+\.html/i,
+    /\/content\/.*\/page\-.*\.html/i,
     /trendimovies\.com\/tgstream\/stream/
 ];

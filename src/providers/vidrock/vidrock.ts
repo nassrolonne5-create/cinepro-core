@@ -31,8 +31,17 @@ export class VidrockProvider extends BaseProvider {
             const headers = data.headers || {};
             const sources: Source[] = [];
 
+            const rawCandidates = (data.sources || []).filter((src: any) => {
+                const uLower = (src.url || '').toLowerCase();
+                const sLower = (src.server || '').toLowerCase();
+                if (uLower.includes('boomchick') || sLower.includes('atlas') || uLower.includes('streamflix')) {
+                    return false;
+                }
+                return true;
+            });
+
             // Pre-validate streams concurrently with a fast ping to weed out 403 / bot-blocked CDN hosts (e.g. staticreverie)
-            const validationPromises = (data.sources || []).map(async (src: any) => {
+            const validationPromises = rawCandidates.map(async (src: any) => {
                 let isAlive = true;
                 try {
                     const ping = await fetch(src.url, {

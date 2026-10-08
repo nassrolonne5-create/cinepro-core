@@ -32,6 +32,11 @@ export class VidzeeProvider extends BaseProvider {
             const sources: Source[] = [];
 
             for (const src of data.sources) {
+                const uLower = (src.url || '').toLowerCase();
+                const sLower = (src.server || '').toLowerCase();
+                if (uLower.includes('boomchick') || sLower.includes('tcloud') || uLower.includes('streamflix')) {
+                    continue;
+                }
                 const url = (headers && Object.keys(headers).length > 0) ? this.createProxyUrl(src.url, headers) : src.url;
                 sources.push({
                     url,

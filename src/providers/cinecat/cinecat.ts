@@ -48,11 +48,15 @@ export class CinecatProvider extends BaseProvider {
                     const sLower = (src.server || '').toLowerCase();
                     const urlLower = (src.url || '').toLowerCase();
 
-                    // Only take Cinecat-relevant premium servers (Zephyr 4K HDR & PrimeVids)
-                    const isZephyr = sLower.includes('zephyr') || urlLower.includes('bluevelvet') || qLower.includes('4k');
-                    const isPrimeVids = sLower.includes('primevids') || urlLower.includes('boomchick') || sLower.includes('tcloud');
+                    // Skip expired/dead boomchick and streamflix servers
+                    if (urlLower.includes('boomchick') || urlLower.includes('streamflix') || sLower.includes('tcloud')) {
+                        continue;
+                    }
 
-                    if (!isZephyr && !isPrimeVids) continue;
+                    // Only take Cinecat-relevant premium servers (Zephyr 4K HDR & reliable sources)
+                    const isZephyr = sLower.includes('zephyr') || urlLower.includes('bluevelvet') || qLower.includes('4k') || sLower.includes('primevids');
+
+                    if (!isZephyr) continue;
 
                     // Exclude non-English audio dubs
                     if (
@@ -68,18 +72,13 @@ export class CinecatProvider extends BaseProvider {
                     let streamUrl = src.url;
                     const streamHeaders = src.headers || defaultHeaders || {};
 
-                    if (src.url.includes('bluevelvet.space') || src.url.includes('boomchick.org')) {
+                    if (src.url.includes('bluevelvet.space')) {
                         const requiredHeaders: Record<string, string> = {
                             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                            'Referer': 'https://www.bluevelvet.space/',
+                            'Origin': 'https://www.bluevelvet.space',
                             ...streamHeaders
                         };
-                        if (src.url.includes('bluevelvet.space')) {
-                            requiredHeaders['Referer'] = 'https://www.bluevelvet.space/';
-                            requiredHeaders['Origin'] = 'https://www.bluevelvet.space';
-                        } else if (src.url.includes('boomchick.org')) {
-                            requiredHeaders['Referer'] = 'https://boomchick.org/';
-                            requiredHeaders['Origin'] = 'https://boomchick.org';
-                        }
                         const proxyData = JSON.stringify({ url: src.url, headers: requiredHeaders });
                         streamUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}`;
                     }

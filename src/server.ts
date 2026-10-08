@@ -100,6 +100,79 @@ async function main() {
                 const publicBaseUrl = `${proto}://${host}`;
                 
                 if (data && data.sources && Array.isArray(data.sources)) {
+                    // Filter out known dead, blocked, silent, or Indian/Punjabi/Hindi dubbed hosts FIRST
+                    data.sources = data.sources.filter((s: any) => {
+                        const rawUrl = (s.url || '').toLowerCase();
+                        let url = rawUrl;
+                        try { url = decodeURIComponent(rawUrl); } catch {}
+                        const server = (s.server || '').toLowerCase();
+                        const quality = (s.quality || '').toLowerCase();
+                        const provName = (s.provider?.name || s.provider?.id || s.provider || '').toLowerCase();
+
+                        // Dead, blocked, 404, or Cloudflare captcha hosts (including BoomChick and StreamFlix)
+                        if (
+                            url.includes('boomchick.org') ||
+                            url.includes('boomchick') ||
+                            url.includes('streamflixserver.site') ||
+                            url.includes('cf.streamflixserver') ||
+                            url.includes('goodstream.cc') ||
+                            url.includes('klnwm.com') ||
+                            url.includes('hlnom.com') ||
+                            url.includes('hbsxcn.com') ||
+                            url.includes('staticreverie.site') ||
+                            url.includes('animecurx.tech') ||
+                            url.includes('halcyoncreative.site') ||
+                            url.includes('homechefrecipes.sbs') ||
+                            url.includes('boltx.stream') ||
+                            url.includes('bestx.stream') ||
+                            url.includes('appnumber.top') ||
+                            url.includes('steman.cyou') ||
+                            url.includes('finepulfe.xyz') ||
+                            url.endsWith('.txt') ||
+                            url.includes('.txt?')
+                        ) return false;
+
+                        // Promotional teaser / sample short videos (e.g. 12s/21s promo clips)
+                        if (
+                            url.includes('aoneroom.com') ||
+                            url.includes('animanga.fun') ||
+                            url.includes('tiktoks') ||
+                            url.includes('/sample/') ||
+                            url.includes('sample.mp4') ||
+                            url.includes('trailer.mp4') ||
+                            url.includes('/promo/') ||
+                            url.includes('promo/cinecat')
+                        ) return false;
+
+                        // Silent / video-only streams without audio
+                        if (url.includes('rousav.tech') || server.includes('apogee')) return false;
+
+                        // Indian / Punjabi / Hindi / Tamil dubbed mirror hosts
+                        if (
+                            url.includes('cheaptruckrepairs.cc') ||
+                            url.includes('480ptvseries.com') ||
+                            url.includes('hindi') ||
+                            url.includes('punjabi') ||
+                            url.includes('tamil') ||
+                            url.includes('telugu') ||
+                            server.includes('vanguard') ||
+                            server.includes('hindi') ||
+                            server.includes('punjabi') ||
+                            server.includes('tamil') ||
+                            server.includes('telugu') ||
+                            quality.includes('hindi') ||
+                            quality.includes('punjabi') ||
+                            quality.includes('tamil') ||
+                            quality.includes('telugu') ||
+                            provName.includes('hindi') ||
+                            provName.includes('punjabi') ||
+                            provName.includes('tamil') ||
+                            provName.includes('telugu')
+                        ) return false;
+
+                        return true;
+                    });
+
                     await Promise.all(data.sources.map(async (src: any) => {
                         // Normalize MKV to MP4 type for browser video element compatibility
                         if (src.type === 'mkv') {
@@ -158,87 +231,6 @@ async function main() {
                             }
                         }
                     }
-                    
-                    // Filter out known dead, blocked, silent, or Indian/Punjabi/Hindi dubbed hosts
-                    data.sources = data.sources.filter((s: any) => {
-                        const rawUrl = (s.url || '').toLowerCase();
-                        let url = rawUrl;
-                        try { url = decodeURIComponent(rawUrl); } catch {}
-                        const server = (s.server || '').toLowerCase();
-                        const quality = (s.quality || '').toLowerCase();
-                        const provName = (s.provider?.name || s.provider?.id || s.provider || '').toLowerCase();
-
-                        // Dead, blocked, 404, or Cloudflare captcha hosts
-                        if (
-                            url.includes('goodstream.cc') ||
-                            url.includes('klnwm.com') ||
-                            url.includes('hlnom.com') ||
-                            url.includes('hbsxcn.com') ||
-                            url.includes('staticreverie.site') ||
-                            url.includes('animecurx.tech') ||
-                            url.includes('halcyoncreative.site') ||
-                            url.includes('homechefrecipes.sbs') ||
-                            url.includes('boltx.stream') ||
-                            url.includes('bestx.stream') ||
-                            url.includes('appnumber.top') ||
-                            url.includes('steman.cyou') ||
-                            url.includes('finepulfe.xyz') ||
-                            url.endsWith('.txt') ||
-                            url.includes('.txt?')
-                        ) return false;
-
-                        // Promotional teaser / sample short videos (e.g. 12s/21s promo clips)
-                        if (
-                            url.includes('aoneroom.com') ||
-                            url.includes('/sample/') ||
-                            url.includes('sample.mp4') ||
-                            url.includes('trailer.mp4') ||
-                            url.includes('/promo/') ||
-                            url.includes('promo/cinecat')
-                        ) return false;
-
-                        // Silent / video-only streams without audio
-                        if (url.includes('rousav.tech') || server.includes('apogee')) return false;
-
-                        // Indian / Punjabi / Hindi / Tamil dubbed mirror hosts
-                        if (
-                            url.includes('cheaptruckrepairs.cc') ||
-                            url.includes('streamflixserver.site') ||
-                            url.includes('480ptvseries.com') ||
-                            url.includes('hindi') ||
-                            url.includes('punjabi') ||
-                            url.includes('tamil') ||
-                            url.includes('telugu') ||
-                            server.includes('vanguard') ||
-                            server.includes('hindi') ||
-                            server.includes('punjabi') ||
-                            server.includes('tamil') ||
-                            server.includes('telugu') ||
-                            quality.includes('hindi') ||
-                            quality.includes('punjabi') ||
-                            quality.includes('tamil') ||
-                            quality.includes('telugu') ||
-                            provName.includes('hindi') ||
-                            provName.includes('punjabi') ||
-                            provName.includes('tamil') ||
-                            provName.includes('telugu')
-                        ) return false;
-
-                        return true;
-                    });
-
-                    // Filter out short clips, trailers, TikTok samples, and fake teaser streams
-                    data.sources = data.sources.filter((s: any) => {
-                        const url = (s.url || '').toLowerCase();
-                        if (
-                            url.includes('animanga.fun') ||
-                            url.includes('tiktoks') ||
-                            url.includes('aoneroom.com')
-                        ) {
-                            return false;
-                        }
-                        return true;
-                    });
 
                     // English-First Adaptive Sorting
                     data.sources.sort((a: any, b: any) => {
@@ -264,7 +256,6 @@ async function main() {
                             // Highest priority boost (+120) for verified 100% English audio sources (4K HDR & 1080p FHD)
                             if (
                                 url.includes('bluevelvet.space') ||
-                                url.includes('boomchick.org') ||
                                 url.includes('zenoak.top') ||
                                 url.includes('vidrift.net') ||
                                 url.includes('remoteconsultinggroup.site') ||

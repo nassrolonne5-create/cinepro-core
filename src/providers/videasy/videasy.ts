@@ -40,6 +40,7 @@ export class VideasyProvider extends BaseProvider {
                     // Filter out dead, silent, and non-English dubs
                     if (
                         sLower.includes('citadel') || sLower.includes('apogee') || sLower.includes('vanguard') ||
+                        sLower.includes('primevids') || uLower.includes('boomchick') || uLower.includes('streamflix') ||
                         uLower.includes('hbsxcn.com') || uLower.includes('hlnom.com') || uLower.includes('klnwm.com') ||
                         uLower.includes('cheaptruckrepairs') || uLower.includes('rousav') ||
                         uLower.includes('tiktoks') || uLower.includes('animanga') || uLower.includes('aoneroom') ||

@@ -62,11 +62,34 @@ export class LmscriptProvider extends BaseProvider {
             const sources: Source[] = [];
             const qualities = ['1080p', '720p', '480p', '360p'];
 
+            // Probe the primary stream to ensure upstream hash signature is accepted
+            const probeUrl = streams['1080p'] || streams['720p'] || streams['480p'] || streams['360p'];
+            if (probeUrl && typeof probeUrl === 'string') {
+                try {
+                    const probeRes = await fetch(probeUrl, {
+                        headers: this.HEADERS,
+                        signal: AbortSignal.timeout(2500)
+                    });
+                    if (!probeRes.ok) {
+                        return { sources: [], subtitles: [], diagnostics: [] };
+                    }
+                    const sampleText = await probeRes.text();
+                    if (sampleText.includes('WRONG HASH')) {
+                        console.warn('[LMScript] Upstream rejected hash signature ("WRONG HASH!"). Skipping LMScript streams.');
+                        return { sources: [], subtitles: [], diagnostics: [] };
+                    }
+                } catch {
+                    // In case of timeout or network glitch, proceed with proxying
+                }
+            }
+
             for (const q of qualities) {
                 const streamUrl = streams[q];
                 if (streamUrl && typeof streamUrl === 'string') {
+                    // Always proxy through CinePro proxy so requests come from the matching scraper IP
+                    const proxiedUrl = this.createProxyUrl(streamUrl, this.HEADERS);
                     sources.push({
-                        url: streamUrl,
+                        url: proxiedUrl,
                         quality: q,
                         type: streamUrl.includes('.m3u8') ? 'hls' : 'mp4',
                         audioTracks: [{ language: 'en', label: 'English' }],

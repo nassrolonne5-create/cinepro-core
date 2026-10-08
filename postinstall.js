@@ -263,3 +263,20 @@ if (fs.existsSync(registryFile)) {
     }
 }
 
+// Patch OMSS framework proxy.service.js to prevent binary mangling of .html / .txt video chunks
+const proxyServiceFile = 'node_modules/@omss/framework/dist/services/proxy.service.js';
+if (fs.existsSync(proxyServiceFile)) {
+    let code = fs.readFileSync(proxyServiceFile, 'utf8');
+    if (!code.includes('isPlaylist')) {
+        code = code.replace(
+            "if (this.isManifestFile(contentType, proxyData.url)) {",
+            `const isPlaylist = (contentType && /application\\/(vnd\\.apple\\.mpegurl|x-mpegurl|dash\\+xml)/i.test(contentType)) ||
+            (responseData.length >= 7 && (responseData.subarray(0, 7).toString('utf8').startsWith('#EXT') || responseData.subarray(0, 20).toString('utf8').includes('<MPD') || responseData.subarray(0, 20).toString('utf8').includes('<?xml')));
+        if (isPlaylist && !/\\.(vtt|srt|ass|ssa|ttml)(\\?.*)?$/i.test(proxyData.url)) {`
+        );
+        fs.writeFileSync(proxyServiceFile, code);
+        console.log("Patched proxy.service.js to prevent binary video mangling.");
+    }
+}
+
+

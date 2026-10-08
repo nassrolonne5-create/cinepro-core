@@ -65,12 +65,13 @@ export class SuperStreamProvider extends BaseProvider {
                     const sLower = (src.server || '').toLowerCase();
                     if (
                         sLower.includes('citadel') || sLower.includes('vanguard') || sLower.includes('apogee') ||
+                        sLower.includes('primevids') || uLower.includes('boomchick') || uLower.includes('streamflix') ||
                         uLower.includes('cheaptruckrepairs') || uLower.includes('rousav') ||
                         uLower.includes('klnwm') || uLower.includes('hlnom') || uLower.includes('tiktoks') || uLower.includes('aoneroom')
                     ) continue;
 
                     const streamHeaders = src.headers || defaultHeaders;
-                    const url = (uLower.includes('boomchick.org') || uLower.includes('bluevelvet.space') || (streamHeaders && Object.keys(streamHeaders).length > 0))
+                    const url = (uLower.includes('bluevelvet.space') || (streamHeaders && Object.keys(streamHeaders).length > 0))
                         ? this.createProxyUrl(src.url, streamHeaders)
                         : src.url;
 

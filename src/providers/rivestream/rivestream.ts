@@ -49,16 +49,17 @@ export class RivestreamProvider extends BaseProvider {
                         sLower.includes('apogee') || urlLower.includes('rousav.tech') ||
                         sLower.includes('solstice') || sLower.includes('pulse') || sLower.includes('hindicast') ||
                         sLower.includes('guru') || sLower.includes('asiacloud') ||
+                        sLower.includes('primevids') || urlLower.includes('boomchick') || urlLower.includes('streamflix') ||
                         qLower.includes('hindi') || qLower.includes('punjabi') || qLower.includes('tamil') || qLower.includes('telugu') ||
                         sLower.includes('hindi') || sLower.includes('punjabi') || sLower.includes('tamil') || sLower.includes('telugu')
                     ) {
                         continue;
                     }
 
-                    // Proxy streams that require Referer/Origin headers (e.g. boomchick, bluevelvet)
+                    // Proxy streams that require Referer/Origin headers (e.g. bluevelvet)
                     let streamUrl = src.url;
                     const streamHeaders = src.headers || defaultHeaders;
-                    if (urlLower.includes('boomchick.org') || urlLower.includes('bluevelvet.space') || (streamHeaders && Object.keys(streamHeaders).length > 0)) {
+                    if (urlLower.includes('bluevelvet.space') || (streamHeaders && Object.keys(streamHeaders).length > 0)) {
                         streamUrl = this.createProxyUrl(src.url, streamHeaders);
                     }
 
