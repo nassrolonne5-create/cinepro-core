@@ -284,6 +284,7 @@ async function main() {
                                 provName.includes('vidvault') ||
                                 provName.includes('vidfast') ||
                                 provName.includes('cinecat') ||
+                                provName.includes('icefy') ||
                                 provName.includes('vidlink') ||
                                 provName.includes('vidrock') ||
                                 provName.includes('vidzee') ||
