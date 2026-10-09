@@ -62,24 +62,24 @@ export class LmscriptProvider extends BaseProvider {
             const sources: Source[] = [];
             const qualities = ['1080p', '720p', '480p', '360p'];
 
-            // Probe the primary stream to ensure upstream hash signature is accepted
+            // Probe the primary stream to ensure upstream hash signature is valid and returns an actual playlist
             const probeUrl = streams['1080p'] || streams['720p'] || streams['480p'] || streams['360p'];
             if (probeUrl && typeof probeUrl === 'string') {
                 try {
                     const probeRes = await fetch(probeUrl, {
                         headers: this.HEADERS,
-                        signal: AbortSignal.timeout(2500)
+                        signal: AbortSignal.timeout(3000)
                     });
                     if (!probeRes.ok) {
                         return { sources: [], subtitles: [], diagnostics: [] };
                     }
                     const sampleText = await probeRes.text();
-                    if (sampleText.includes('WRONG HASH')) {
-                        console.warn('[LMScript] Upstream rejected hash signature ("WRONG HASH!"). Skipping LMScript streams.');
+                    if (!sampleText.includes('#EXTM3U') || sampleText.includes('WRONG HASH')) {
+                        console.warn('[LMScript] Upstream stream invalid or rejected hash. Skipping LMScript.');
                         return { sources: [], subtitles: [], diagnostics: [] };
                     }
                 } catch {
-                    // In case of timeout or network glitch, proceed with proxying
+                    return { sources: [], subtitles: [], diagnostics: [] };
                 }
             }
 

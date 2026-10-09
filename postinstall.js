@@ -51,6 +51,17 @@ if (fs.existsSync(validationFile)) {
     console.log("Patched validation.js successfully.");
 }
 
+// Patch kaizoku-core vidrock to use updated vidrock.to domain
+const vidrockFile = 'node_modules/kaizoku-core/dist/providers/movies/vidrock.js';
+if (fs.existsSync(vidrockFile)) {
+    let code = fs.readFileSync(vidrockFile, 'utf8');
+    if (code.includes('vidrock.ru')) {
+        code = code.replace(/vidrock\.ru/g, 'vidrock.to');
+        fs.writeFileSync(vidrockFile, code);
+        console.log("Patched kaizoku-core vidrock domain to vidrock.to.");
+    }
+}
+
 const sourceServiceFile = 'node_modules/@omss/framework/dist/services/source.service.js';
 if (fs.existsSync(sourceServiceFile)) {
     let code = fs.readFileSync(sourceServiceFile, 'utf8');
