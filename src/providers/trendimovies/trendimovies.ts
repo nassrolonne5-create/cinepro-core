@@ -11,7 +11,7 @@ import { trendimovies } from 'kaizoku-core';
 export class TrendimoviesProvider extends BaseProvider {
     readonly id = 'trendimovies';
     readonly name = 'TrendiMovies';
-    readonly enabled = true;
+    readonly enabled = false;
     readonly BASE_URL = 'https://trendimovies.com';
     readonly HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'

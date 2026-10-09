@@ -150,10 +150,10 @@ export class WatchflixProvider extends BaseProvider {
                                 'Origin': 'https://vidcore.io'
                             };
                             const proxyData = JSON.stringify({ url: streamUrl, headers: proxyHeaders });
-                            streamUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.m3u8`;
+                            streamUrl = `http://localhost:3000/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.m3u8`;
                         }
 
-                        return {
+                        const srcObj: any = {
                             url: streamUrl,
                             quality,
                             type: getSourceType(res.url, !res.mp4),
@@ -164,6 +164,7 @@ export class WatchflixProvider extends BaseProvider {
                                 id: this.id
                             }
                         };
+                        return srcObj as Source;
                     }
                 } catch {
                     return null;
@@ -178,10 +179,71 @@ export class WatchflixProvider extends BaseProvider {
                 }
             }
 
-            return { sources, subtitles: [], diagnostics: [] };
+            if (sources.length > 0) {
+                return { sources, subtitles: [], diagnostics: [] };
+            }
         } catch {
-            return { sources: [], subtitles: [], diagnostics: [] };
+            // Proceed to mirror fallback
         }
+
+        // Secondary Upstream Mirror: VidVault High-Speed HD Nodes
+        try {
+            const bodyPayload = media.type === 'tv'
+                ? { type: 'tv', tmdbId: Number(media.tmdbId), season: Number(media.s || 1), episode: Number(media.e || 1) }
+                : { type: 'movie', tmdbId: Number(media.tmdbId) };
+
+            const tokenRes = await fetch('https://vidvault.to/api/get-token', {
+                headers: { 'User-Agent': HEADERS['User-Agent'], 'Referer': 'https://vidvault.ru/' },
+                signal: AbortSignal.timeout(4000)
+            });
+            if (tokenRes.ok) {
+                const tokenJson = (await tokenRes.json()) as any;
+                if (tokenJson?.t) {
+                    const streamRes = await fetch('https://vidvault.to/api/download-proxy', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-request-token': tokenJson.t,
+                            'User-Agent': HEADERS['User-Agent'],
+                            'Referer': 'https://vidvault.ru/'
+                        },
+                        body: JSON.stringify(bodyPayload),
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    if (streamRes.ok) {
+                        const streamData = (await streamRes.json()) as any;
+                        const candidates = [
+                            ...(streamData?.mkvV2Data?.url ? [{ ...streamData.mkvV2Data, label: 'Master HD' }] : []),
+                            ...(streamData?.mkvData?.url ? [{ ...streamData.mkvData, label: 'Direct HD' }] : []),
+                            ...(Array.isArray(streamData?.mp4Data?.links) ? streamData.mp4Data.links.map((l: any) => ({ ...l, label: 'Fast MP4' })) : [])
+                        ];
+                        for (const item of candidates) {
+                            if (!item.url) continue;
+                            const proxyData = JSON.stringify({
+                                url: item.url,
+                                headers: { 'User-Agent': HEADERS['User-Agent'], 'Referer': 'https://vidvault.ru/' }
+                            });
+                            const proxiedUrl = `http://localhost:3000/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.mp4`;
+                            const quality = item.quality ? String(item.quality).replace(/p$/i, '') + 'p' : '1080p';
+                            const fbSrc: any = {
+                                url: proxiedUrl,
+                                quality,
+                                type: 'mp4',
+                                server: item.label || 'Master HD',
+                                audioTracks: [{ language: 'en', label: 'English' }],
+                                provider: {
+                                    name: `${this.name} (${item.label || 'Master HD'})`,
+                                    id: this.id
+                                }
+                            };
+                            sources.push(fbSrc as Source);
+                        }
+                    }
+                }
+            }
+        } catch {}
+
+        return { sources, subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

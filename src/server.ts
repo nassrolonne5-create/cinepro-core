@@ -46,7 +46,7 @@ async function main() {
         cache: {
             type: (getEnv('CACHE_TYPE') as 'memory' | 'redis') ?? 'memory',
             ttl: {
-                sources: 60 * 60 * 6,
+                sources: 60 * 10, // 10 minutes
                 subtitles: 60 * 60 * 24
             },
             redis: {

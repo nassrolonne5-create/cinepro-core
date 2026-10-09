@@ -218,8 +218,10 @@ if (fs.existsSync(sourceServiceFile)) {
     // Replace any existing timeout with 12s
     if (code.includes('Provider timeout exceeded')) {
         code = code.replace(/setTimeout\(\(\) => reject\(new Error\('Provider timeout exceeded \([^)]+\)'\)\), \d+\);/g, "setTimeout(() => reject(new Error('Provider timeout exceeded (12s)')), 12000);");
+        code = code.replace(/const urlObj = new URL\(source\.url\);/g, "const urlObj = new URL(source.url, 'http://localhost:3000');");
+        code = code.replace(/catch\(err\)\{\s*return null;\s*\}/g, "catch(err){ return source; }");
         fs.writeFileSync(sourceServiceFile, code);
-        console.log("Patched source.service.js to update provider timeout to 12s.");
+        console.log("Patched source.service.js to update provider timeout to 12s and handle relative proxy URLs.");
     } else {
         const targetStr = `const promises = supportedProviders.map(async (provider) => {
             try {
