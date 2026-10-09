@@ -109,10 +109,14 @@ async function main() {
                         const quality = (s.quality || '').toLowerCase();
                         const provName = (s.provider?.name || s.provider?.id || s.provider || '').toLowerCase();
 
-                        // Dead, blocked, 404, or Cloudflare captcha hosts (including BoomChick and StreamFlix)
+                        // Dead, blocked, 404, or Cloudflare captcha hosts (including BoomChick, Neward WRONG HASH, 4pa.top timeouts)
                         if (
                             url.includes('boomchick.org') ||
                             url.includes('boomchick') ||
+                            url.includes('neward.cyou') ||
+                            url.includes('4pa.top') ||
+                            url.includes('trendimovies.com') ||
+                            url.includes('professionaladvisory.sbs') ||
                             url.includes('streamflixserver.site') ||
                             url.includes('cf.streamflixserver') ||
                             url.includes('goodstream.cc') ||
@@ -271,6 +275,7 @@ async function main() {
 
                             // Highest priority boost (+120) for verified 100% English audio sources (4K HDR & 1080p FHD)
                             if (
+                                url.includes('cookiebakers') ||
                                 url.includes('bluevelvet.space') ||
                                 url.includes('zenoak.top') ||
                                 url.includes('vidrift.net') ||
@@ -287,6 +292,7 @@ async function main() {
 
                             // Verified English-first providers receive a solid priority boost (+40)
                             if (
+                                provName.includes('cinemaarmy') ||
                                 provName.includes('watchflix') ||
                                 provName.includes('trendimovies') ||
                                 provName.includes('vidrift') ||

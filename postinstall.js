@@ -265,19 +265,43 @@ if (fs.existsSync(registryFile)) {
     }
 }
 
-// Patch OMSS framework proxy.service.js to prevent binary mangling of .html / .txt video chunks
+// Patch OMSS framework proxy.service.js to prevent binary mangling of .html / .txt video chunks and strip fake PNG steganography headers
 const proxyServiceFile = 'node_modules/@omss/framework/dist/services/proxy.service.js';
 if (fs.existsSync(proxyServiceFile)) {
     let code = fs.readFileSync(proxyServiceFile, 'utf8');
-    if (!code.includes('isPlaylist')) {
+    if (!code.includes('fake PNG')) {
         code = code.replace(
             "if (this.isManifestFile(contentType, proxyData.url)) {",
             `const isPlaylist = (contentType && /application\\/(vnd\\.apple\\.mpegurl|x-mpegurl|dash\\+xml)/i.test(contentType)) ||
             (responseData.length >= 7 && (responseData.subarray(0, 7).toString('utf8').startsWith('#EXT') || responseData.subarray(0, 20).toString('utf8').includes('<MPD') || responseData.subarray(0, 20).toString('utf8').includes('<?xml')));
-        if (isPlaylist && !/\\.(vtt|srt|ass|ssa|ttml)(\\?.*)?$/i.test(proxyData.url)) {`
+        if (isPlaylist && !/\\.(vtt|srt|ass|ssa|ttml)(\\?.*)?$/i.test(proxyData.url)) {
+            const manifestContent = responseData.toString('utf-8');
+            if (manifestContent.includes('WRONG HASH') || manifestContent.includes('Link expired') || manifestContent.includes('Invalid link')) {
+                throw new OMSSError('UPSTREAM_ERROR', 'Upstream link expired or invalid token', 404, { url: proxyData.url });
+            }
+            const rewrittenContent = this.rewriteManifest(manifestContent, proxyData.url, proxyData.headers);
+            responseData = Buffer.from(rewrittenContent, 'utf-8');
+        } else {
+            // Strip artificial 120-byte fake PNG steganography headers (e.g. tik.1x2.space) so MPEG-TS sync byte (0x47) aligns at offset 0
+            if (responseData.length > 120 &&
+                responseData[0] === 0x89 && responseData[1] === 0x50 && responseData[2] === 0x4E && responseData[3] === 0x47 &&
+                responseData[120] === 0x47) {
+                responseData = responseData.subarray(120);
+            }
+        }
+        
+        let outContentType = contentType || this.getMimeType(proxyData.url);
+        if (responseData.length > 0 && responseData[0] === 0x47) {
+            outContentType = 'video/mp2t';
+        }
+        if (false) {`
+        );
+        code = code.replace(
+            "contentType: contentType || this.getMimeType(proxyData.url),",
+            "contentType: (typeof outContentType !== 'undefined' ? outContentType : (contentType || this.getMimeType(proxyData.url))),"
         );
         fs.writeFileSync(proxyServiceFile, code);
-        console.log("Patched proxy.service.js to prevent binary video mangling.");
+        console.log("Patched proxy.service.js to prevent binary video mangling and strip fake PNG headers.");
     }
 }
 
