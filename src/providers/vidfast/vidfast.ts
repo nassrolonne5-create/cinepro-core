@@ -4,11 +4,19 @@ import type {
     ProviderCapabilities,
     ProviderMediaObject,
     ProviderResult,
-    Source
+    Source,
+    Subtitle
 } from '@omss/framework';
 import { vidnest } from 'kaizoku-core';
 
-const BASE_URL = 'https://vidfast.vc';
+const DOMAIN_MESH = [
+    'https://vidfast.vc',
+    'https://vidfast.pro',
+    'https://vidfast.in',
+    'https://vidfast.io',
+    'https://vidfast.net'
+];
+const BASE_URL = DOMAIN_MESH[0];
 const ENC_API = 'https://enc-dec.app/api';
 const HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
@@ -35,17 +43,40 @@ export class VidfastProvider extends BaseProvider {
         return this.fetchSources(media);
     }
 
-    private async resolveVidfast(media: ProviderMediaObject): Promise<Source[]> {
+    private async fetchSubtitles(media: ProviderMediaObject, activeBaseUrl: string): Promise<Subtitle[]> {
+        try {
+            const query = media.type === 'tv'
+                ? `id=${media.tmdbId}&season=${media.s || 1}&episode=${media.e || 1}`
+                : `id=${media.tmdbId}`;
+            const res = await fetch(`${activeBaseUrl}/wyzie?${query}`, {
+                headers: HEADERS,
+                signal: AbortSignal.timeout(4000)
+            });
+            if (!res.ok) return [];
+            const data = (await res.json()) as any[];
+            if (!Array.isArray(data)) return [];
+            return data.map(sub => ({
+                language: sub.language || 'en',
+                label: sub.display || sub.language || 'Subtitle',
+                url: sub.url,
+                format: 'vtt'
+            }));
+        } catch {
+            return [];
+        }
+    }
+
+    private async resolveVidfast(media: ProviderMediaObject, activeBaseUrl: string): Promise<Source[]> {
         const sources: Source[] = [];
         try {
             const embedUrl = media.type === 'tv'
-                ? `${BASE_URL}/tv/${media.tmdbId}/${media.s || 1}/${media.e || 1}/`
-                : `${BASE_URL}/movie/${media.tmdbId}/`;
+                ? `${activeBaseUrl}/tv/${media.tmdbId}/${media.s || 1}/${media.e || 1}/`
+                : `${activeBaseUrl}/movie/${media.tmdbId}/`;
 
             const pageRes = await fetch(embedUrl, {
                 headers: {
                     'User-Agent': HEADERS['User-Agent'],
-                    'Referer': `${BASE_URL}/`
+                    'Referer': `${activeBaseUrl}/`
                 },
                 signal: AbortSignal.timeout(8000)
             });
@@ -128,8 +159,8 @@ export class VidfastProvider extends BaseProvider {
                         if (streamUrl.includes('zenoak.top') || streamUrl.includes('peakpine.top')) {
                             const requiredHeaders = {
                                 'User-Agent': HEADERS['User-Agent'],
-                                'Referer': 'https://vidfast.vc/',
-                                'Origin': 'https://vidfast.vc'
+                                'Referer': `${activeBaseUrl}/`,
+                                'Origin': activeBaseUrl
                             };
                             const proxyData = JSON.stringify({ url: streamUrl, headers: requiredHeaders });
                             streamUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.m3u8`;
@@ -165,13 +196,20 @@ export class VidfastProvider extends BaseProvider {
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        // 1. Try native 2-stage decrypted vidfast.vc stream
-        try {
-            const nativeSources = await this.resolveVidfast(media);
-            if (nativeSources.length > 0) {
-                return { sources: nativeSources, subtitles: [], diagnostics: [] };
-            }
-        } catch {}
+        let activeDomain = BASE_URL;
+        let subtitles: Subtitle[] = [];
+
+        // 1. Try native 2-stage decrypted stream across domain mesh
+        for (const domain of DOMAIN_MESH.slice(0, 3)) {
+            try {
+                const nativeSources = await this.resolveVidfast(media, domain);
+                if (nativeSources.length > 0) {
+                    activeDomain = domain;
+                    subtitles = await this.fetchSubtitles(media, activeDomain);
+                    return { sources: nativeSources, subtitles, diagnostics: [] };
+                }
+            } catch {}
+        }
 
         // 2. High-speed fallback via vidnest mirror
         try {
@@ -190,7 +228,8 @@ export class VidfastProvider extends BaseProvider {
                         }
                     };
                 });
-                return { sources, subtitles: [], diagnostics: [] };
+                subtitles = await this.fetchSubtitles(media, activeDomain);
+                return { sources, subtitles, diagnostics: [] };
             }
         } catch {}
 
