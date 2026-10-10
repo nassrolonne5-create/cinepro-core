@@ -132,8 +132,8 @@ export class VidfastProvider extends BaseProvider {
             const decSrvJson = (await decSrvRes.json()) as any;
             const servers = Array.isArray(decSrvJson.result) ? decSrvJson.result : [];
 
-            // Resolve streams in parallel (top 4 servers)
-            const targetServers = servers.slice(0, 4);
+            // Resolve streams in parallel across all available servers
+            const targetServers = servers;
             const serverPromises = targetServers.map(async (srv: any) => {
                 if (!srv?.data) return null;
                 try {

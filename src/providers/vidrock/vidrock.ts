@@ -40,14 +40,17 @@ export class VidrockProvider extends BaseProvider {
                 return true;
             });
 
-            // Pre-validate streams concurrently with a fast ping to weed out 403 / bot-blocked CDN hosts (e.g. staticreverie)
             const validationPromises = rawCandidates.map(async (src: any) => {
                 let isAlive = true;
                 try {
                     const ping = await fetch(src.url, {
                         method: 'GET',
-                        headers: { ...headers, Range: 'bytes=0-50' },
-                        signal: AbortSignal.timeout(2500)
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                            'Referer': 'https://vidrock.to/',
+                            'Origin': 'https://vidrock.to'
+                        },
+                        signal: AbortSignal.timeout(3000)
                     });
                     if (ping.status >= 400) {
                         isAlive = false;
@@ -75,6 +78,56 @@ export class VidrockProvider extends BaseProvider {
                     }
                 });
             }
+
+            // Always attempt to also attach Mirror HD as an active high-speed alternative
+            try {
+                const bodyPayload = media.type === 'tv'
+                    ? { type: 'tv', tmdbId: Number(media.tmdbId), season: Number(media.s || 1), episode: Number(media.e || 1) }
+                    : { type: 'movie', tmdbId: Number(media.tmdbId) };
+
+                const tokenRes = await fetch('https://vidvault.to/api/get-token', {
+                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Referer': 'https://vidvault.ru/' },
+                    signal: AbortSignal.timeout(2500)
+                });
+                if (tokenRes.ok) {
+                    const tokenJson = (await tokenRes.json()) as any;
+                    if (tokenJson?.t) {
+                        const streamRes = await fetch('https://vidvault.to/api/download-proxy', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-request-token': tokenJson.t,
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                                'Referer': 'https://vidvault.ru/'
+                            },
+                            body: JSON.stringify(bodyPayload),
+                            signal: AbortSignal.timeout(3000)
+                        });
+                        if (streamRes.ok) {
+                            const streamData = (await streamRes.json()) as any;
+                            const fallbackUrl = streamData?.mkvV2Data?.url || streamData?.mkvData?.url;
+                            if (fallbackUrl) {
+                                const proxyData = JSON.stringify({
+                                    url: fallbackUrl,
+                                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Referer': 'https://vidvault.ru/' }
+                                });
+                                const proxiedUrl = `http://localhost:3000/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.mp4`;
+                                sources.push({
+                                    url: proxiedUrl,
+                                    quality: '1080p',
+                                    type: 'mp4',
+                                    audioTracks: [{ language: 'en', label: 'English' }],
+                                    provider: {
+                                        name: `${this.name} (Mirror HD)`,
+                                        id: this.id
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+            } catch {}
+
             if (sources.length > 0) {
                 return { sources, subtitles: [], diagnostics: [] };
             }
