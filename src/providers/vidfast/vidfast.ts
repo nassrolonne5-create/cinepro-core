@@ -166,16 +166,21 @@ export class VidfastProvider extends BaseProvider {
                             streamUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.m3u8`;
                         }
 
-                        return {
+                        const serverName = srv.name || 'Fast';
+                        const serverId = `${this.id}-${serverName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+
+                        const srcObj: any = {
                             url: streamUrl,
                             quality,
                             type: getSourceType(res.url, !res.mp4),
+                            server: serverName,
                             audioTracks: [{ language: 'en', label: 'English' }],
                             provider: {
-                                name: `${this.name} (${srv.name || 'Fast'})`,
-                                id: this.id
+                                name: `${this.name} (${serverName})`,
+                                id: serverId
                             }
                         };
+                        return srcObj as Source;
                     }
                 } catch {
                     return null;

@@ -66,17 +66,21 @@ export class VidrockProvider extends BaseProvider {
             const finalCandidates = liveSources.length > 0 ? liveSources : (data.sources || []);
 
             for (const src of finalCandidates) {
+                const srvName = src.server || 'Orion';
+                const srvId = `${this.id}-${srvName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
                 const url = Object.keys(headers).length > 0 ? this.createProxyUrl(src.url, headers) : src.url;
-                sources.push({
+                const srcObj: any = {
                     url,
                     quality: src.quality || 'Auto',
                     type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
+                    server: srvName,
                     audioTracks: [{ language: 'en', label: 'English' }],
                     provider: {
-                        name: src.server ? `${this.name} (${src.server})` : this.name,
-                        id: this.id
+                        name: `${this.name} (${srvName})`,
+                        id: srvId
                     }
-                });
+                };
+                sources.push(srcObj as Source);
             }
 
             // Always attempt to also attach Mirror HD as an active high-speed alternative
@@ -112,16 +116,18 @@ export class VidrockProvider extends BaseProvider {
                                     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Referer': 'https://vidvault.ru/' }
                                 });
                                 const proxiedUrl = `http://localhost:3000/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.mp4`;
-                                sources.push({
+                                const srcObj: any = {
                                     url: proxiedUrl,
                                     quality: '1080p',
                                     type: 'mp4',
+                                    server: 'Mirror HD',
                                     audioTracks: [{ language: 'en', label: 'English' }],
                                     provider: {
                                         name: `${this.name} (Mirror HD)`,
-                                        id: this.id
+                                        id: `${this.id}-mirrorhd`
                                     }
-                                });
+                                };
+                                sources.push(srcObj as Source);
                             }
                         }
                     }
