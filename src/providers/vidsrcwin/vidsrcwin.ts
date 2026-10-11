@@ -7,6 +7,8 @@ import type {
     Source
 } from '@omss/framework';
 
+import { getVidVaultToken } from '../../utils/vidvaultToken.js';
+
 export class VidSrcWinProvider extends BaseProvider {
     readonly id = 'vidsrcwin';
     readonly name = 'VidSrc.win';
@@ -32,17 +34,8 @@ export class VidSrcWinProvider extends BaseProvider {
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         const sources: Source[] = [];
         try {
-            // 1. Obtain request token from VidVault / VidSrc backend
-            const tokenRes = await fetch('https://vidvault.to/api/get-token', {
-                headers: {
-                    'User-Agent': this.HEADERS['User-Agent'],
-                    'Referer': 'https://vidvault.ru/'
-                },
-                signal: AbortSignal.timeout(6000)
-            });
-            if (!tokenRes.ok) return { sources: [], subtitles: [], diagnostics: [] };
-            const tokenJson = (await tokenRes.json()) as any;
-            const token = tokenJson?.t;
+            // 1. Obtain request token from cached token helper
+            const token = await getVidVaultToken();
             if (!token) return { sources: [], subtitles: [], diagnostics: [] };
 
             // 2. Query download / stream proxy
@@ -87,16 +80,21 @@ export class VidSrcWinProvider extends BaseProvider {
                 const proxiedUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.mp4`;
 
                 const quality = item.quality ? String(item.quality).replace(/p$/i, '') + 'p' : '1080p';
-                sources.push({
+                const srvLabel = item.label || 'Direct';
+                const srvId = `${this.id}-${srvLabel.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+
+                const srcObj: any = {
                     url: proxiedUrl,
                     quality,
                     type: 'mp4',
+                    server: srvLabel,
                     audioTracks: [{ language: 'en', label: 'English' }],
                     provider: {
-                        name: `${this.name} (${item.label || 'Direct'})`,
-                        id: this.id
+                        name: `${this.name} (${srvLabel})`,
+                        id: srvId
                     }
-                });
+                };
+                sources.push(srcObj as Source);
             }
 
             return { sources, subtitles: [], diagnostics: [] };

@@ -1,0 +1,6 @@
+{
+  "summary":  "Implementation plan for integrating an embeddable Live TV section with Hls.js player and channel guide into notflixtv.com, powered by CinePro Core IPTV endpoints and CORS proxies.",
+  "updatedAt":  "2026-10-11T11:55:10.676645967Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

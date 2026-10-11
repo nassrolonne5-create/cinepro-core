@@ -28,8 +28,13 @@ export class VideasyProvider extends BaseProvider {
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        const timeout = (ms: number) => new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
+
         try {
-            const data = await rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const data: any = await Promise.race([
+                rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                timeout(4500)
+            ]);
             if (data?.sources?.length) {
                 const sources: Source[] = [];
                 for (const src of data.sources) {
@@ -73,9 +78,12 @@ export class VideasyProvider extends BaseProvider {
 
         // Fallback upstream mirror via vidnest
         try {
-            const data = await vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const data: any = await Promise.race([
+                vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                timeout(4500)
+            ]);
             if (data?.sources?.length) {
-                const sources: Source[] = data.sources.map(src => {
+                const sources: Source[] = data.sources.map((src: any) => {
                     const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
                     return {
                         url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,

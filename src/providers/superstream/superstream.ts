@@ -29,9 +29,14 @@ export class SuperStreamProvider extends BaseProvider {
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        const timeout = (ms: number) => new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
+
         // Try StreamFlix full-length HD stream
         try {
-            const data = await vidgod.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const data: any = await Promise.race([
+                vidgod.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                timeout(4000)
+            ]);
             if (data?.sources?.length) {
                 const sources: Source[] = [];
                 for (const src of data.sources) {
@@ -56,7 +61,10 @@ export class SuperStreamProvider extends BaseProvider {
 
         // Fallback to RiveStream full-length stream
         try {
-            const data = await rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const data: any = await Promise.race([
+                rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                timeout(4000)
+            ]);
             if (data?.sources?.length) {
                 const sources: Source[] = [];
                 const defaultHeaders = data.headers || {};
@@ -94,9 +102,12 @@ export class SuperStreamProvider extends BaseProvider {
 
         // Fallback upstream mirror via vidnest
         try {
-            const data = await vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const data: any = await Promise.race([
+                vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                timeout(4000)
+            ]);
             if (data?.sources?.length) {
-                const sources: Source[] = data.sources.map(src => {
+                const sources: Source[] = data.sources.map((src: any) => {
                     const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
                     return {
                         url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,

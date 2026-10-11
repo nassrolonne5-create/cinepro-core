@@ -6,6 +6,7 @@ import type {
     Source
 } from '@omss/framework';
 import { vidrock } from 'kaizoku-core';
+import { getVidVaultToken } from '../../utils/vidvaultToken.js';
 
 export class VidrockProvider extends BaseProvider {
     readonly id = 'vidrock';
@@ -26,171 +27,101 @@ export class VidrockProvider extends BaseProvider {
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        try {
-            const data = await vidrock.fetchSources(media.tmdbId, media.type, media.s, media.e);
-            const headers = data.headers || {};
-            const sources: Source[] = [];
+        const sources: Source[] = [];
+        const timeout = (ms: number) => new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
 
-            const rawCandidates = (data.sources || []).filter((src: any) => {
-                const uLower = (src.url || '').toLowerCase();
-                const sLower = (src.server || '').toLowerCase();
-                if (uLower.includes('boomchick') || sLower.includes('atlas') || uLower.includes('streamflix')) {
-                    return false;
-                }
-                return true;
-            });
+        // Fetch primary VidRock nodes and Mirror HD in parallel for maximum speed
+        const [nativeResult, mirrorResult] = await Promise.allSettled([
+            // 1. Native VidRock API (Atlas, Luna, Orion) with 6.5s timeout
+            (async () => {
+                const data: any = await Promise.race([
+                    vidrock.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                    timeout(6500)
+                ]);
+                const headers = data?.headers || {};
+                const list: Source[] = [];
 
-            const validationPromises = rawCandidates.map(async (src: any) => {
-                let isAlive = true;
-                try {
-                    const ping = await fetch(src.url, {
-                        method: 'GET',
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                            'Referer': 'https://vidrock.to/',
-                            'Origin': 'https://vidrock.to'
-                        },
-                        signal: AbortSignal.timeout(3000)
-                    });
-                    if (ping.status >= 400) {
-                        isAlive = false;
+                const rawCandidates = (data?.sources || []).filter((src: any) => {
+                    const uLower = (src.url || '').toLowerCase();
+                    if (uLower.includes('boomchick') || uLower.includes('streamflix')) {
+                        return false;
                     }
-                } catch {
-                    // In case of ping timeout, keep if no 4xx was explicitly returned
+                    return true;
+                });
+
+                for (const src of rawCandidates) {
+                    const srvName = src.server || 'Orion';
+                    const srvId = `${this.id}-${srvName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+                    const url = Object.keys(headers).length > 0 ? this.createProxyUrl(src.url, headers) : src.url;
+                    list.push({
+                        url,
+                        quality: src.quality || 'Auto',
+                        type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
+                        server: srvName,
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: `${this.name} (${srvName})`,
+                            id: srvId
+                        }
+                    } as Source);
                 }
-                return { src, isAlive };
-            });
+                return list;
+            })(),
 
-            const checkedSources = await Promise.all(validationPromises);
-            const liveSources = checkedSources.filter(s => s.isAlive).map(s => s.src);
-            const finalCandidates = liveSources.length > 0 ? liveSources : (data.sources || []);
-
-            for (const src of finalCandidates) {
-                const srvName = src.server || 'Orion';
-                const srvId = `${this.id}-${srvName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
-                const url = Object.keys(headers).length > 0 ? this.createProxyUrl(src.url, headers) : src.url;
-                const srcObj: any = {
-                    url,
-                    quality: src.quality || 'Auto',
-                    type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
-                    server: srvName,
-                    audioTracks: [{ language: 'en', label: 'English' }],
-                    provider: {
-                        name: `${this.name} (${srvName})`,
-                        id: srvId
-                    }
-                };
-                sources.push(srcObj as Source);
-            }
-
-            // Always attempt to also attach Mirror HD as an active high-speed alternative
-            try {
+            // 2. High-speed Mirror HD node with cached token
+            (async () => {
                 const bodyPayload = media.type === 'tv'
                     ? { type: 'tv', tmdbId: Number(media.tmdbId), season: Number(media.s || 1), episode: Number(media.e || 1) }
                     : { type: 'movie', tmdbId: Number(media.tmdbId) };
 
-                const tokenRes = await fetch('https://vidvault.to/api/get-token', {
-                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Referer': 'https://vidvault.ru/' },
-                    signal: AbortSignal.timeout(2500)
+                const token = await getVidVaultToken();
+                if (!token) return [];
+
+                const streamRes = await fetch('https://vidvault.to/api/download-proxy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-request-token': token,
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                        'Referer': 'https://vidvault.ru/'
+                    },
+                    body: JSON.stringify(bodyPayload),
+                    signal: AbortSignal.timeout(4000)
                 });
-                if (tokenRes.ok) {
-                    const tokenJson = (await tokenRes.json()) as any;
-                    if (tokenJson?.t) {
-                        const streamRes = await fetch('https://vidvault.to/api/download-proxy', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-request-token': tokenJson.t,
-                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-                                'Referer': 'https://vidvault.ru/'
-                            },
-                            body: JSON.stringify(bodyPayload),
-                            signal: AbortSignal.timeout(3000)
+                if (streamRes.ok) {
+                    const streamData = (await streamRes.json()) as any;
+                    const fallbackUrl = streamData?.mkvV2Data?.url || streamData?.mkvData?.url;
+                    if (fallbackUrl) {
+                        const proxyData = JSON.stringify({
+                            url: fallbackUrl,
+                            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Referer': 'https://vidvault.ru/' }
                         });
-                        if (streamRes.ok) {
-                            const streamData = (await streamRes.json()) as any;
-                            const fallbackUrl = streamData?.mkvV2Data?.url || streamData?.mkvData?.url;
-                            if (fallbackUrl) {
-                                const proxyData = JSON.stringify({
-                                    url: fallbackUrl,
-                                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Referer': 'https://vidvault.ru/' }
-                                });
-                                const proxiedUrl = `http://localhost:3000/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.mp4`;
-                                const srcObj: any = {
-                                    url: proxiedUrl,
-                                    quality: '1080p',
-                                    type: 'mp4',
-                                    server: 'Mirror HD',
-                                    audioTracks: [{ language: 'en', label: 'English' }],
-                                    provider: {
-                                        name: `${this.name} (Mirror HD)`,
-                                        id: `${this.id}-mirrorhd`
-                                    }
-                                };
-                                sources.push(srcObj as Source);
+                        const proxiedUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.mp4`;
+                        return [{
+                            url: proxiedUrl,
+                            quality: '1080p',
+                            type: 'mp4',
+                            server: 'Mirror HD',
+                            audioTracks: [{ language: 'en', label: 'English' }],
+                            provider: {
+                                name: `${this.name} (Mirror HD)`,
+                                id: `${this.id}-mirrorhd`
                             }
-                        }
+                        } as Source];
                     }
                 }
-            } catch {}
+                return [];
+            })()
+        ]);
 
-            if (sources.length > 0) {
-                return { sources, subtitles: [], diagnostics: [] };
-            }
-        } catch {}
+        if (nativeResult.status === 'fulfilled' && Array.isArray(nativeResult.value)) {
+            sources.push(...nativeResult.value);
+        }
+        if (mirrorResult.status === 'fulfilled' && Array.isArray(mirrorResult.value)) {
+            sources.push(...mirrorResult.value);
+        }
 
-        // Fallback mirror if primary VidRock server is empty
-        try {
-            const bodyPayload = media.type === 'tv'
-                ? { type: 'tv', tmdbId: Number(media.tmdbId), season: Number(media.s || 1), episode: Number(media.e || 1) }
-                : { type: 'movie', tmdbId: Number(media.tmdbId) };
-
-            const tokenRes = await fetch('https://vidvault.to/api/get-token', {
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Referer': 'https://vidvault.ru/' },
-                signal: AbortSignal.timeout(3000)
-            });
-            if (tokenRes.ok) {
-                const tokenJson = (await tokenRes.json()) as any;
-                if (tokenJson?.t) {
-                    const streamRes = await fetch('https://vidvault.to/api/download-proxy', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-request-token': tokenJson.t,
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-                            'Referer': 'https://vidvault.ru/'
-                        },
-                        body: JSON.stringify(bodyPayload),
-                        signal: AbortSignal.timeout(4000)
-                    });
-                    if (streamRes.ok) {
-                        const streamData = (await streamRes.json()) as any;
-                        const fallbackUrl = streamData?.mkvV2Data?.url || streamData?.mkvData?.url;
-                        if (fallbackUrl) {
-                            const proxyData = JSON.stringify({
-                                url: fallbackUrl,
-                                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Referer': 'https://vidvault.ru/' }
-                            });
-                            const proxiedUrl = `http://localhost:3000/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.mp4`;
-                            const srcObj: any = {
-                                url: proxiedUrl,
-                                quality: '1080p',
-                                type: 'mp4',
-                                server: 'Mirror HD',
-                                audioTracks: [{ language: 'en', label: 'English' }],
-                                provider: {
-                                    name: `${this.name} (Mirror HD)`,
-                                    id: this.id
-                                }
-                            };
-                            return { sources: [srcObj as Source], subtitles: [], diagnostics: [] };
-                        }
-                    }
-                }
-            }
-        } catch {}
-
-        return { sources: [], subtitles: [], diagnostics: [] };
+        return { sources, subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

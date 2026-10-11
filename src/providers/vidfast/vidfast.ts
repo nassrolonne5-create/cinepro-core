@@ -78,7 +78,7 @@ export class VidfastProvider extends BaseProvider {
                     'User-Agent': HEADERS['User-Agent'],
                     'Referer': `${activeBaseUrl}/`
                 },
-                signal: AbortSignal.timeout(8000)
+                signal: AbortSignal.timeout(4500)
             });
             if (!pageRes.ok) return [];
 
@@ -89,7 +89,7 @@ export class VidfastProvider extends BaseProvider {
 
             // Stage 1 Encryption
             const s1Res = await fetch(`${ENC_API}/enc-vidfast?text=${encodeURIComponent(token)}&stage=1`, {
-                signal: AbortSignal.timeout(8000)
+                signal: AbortSignal.timeout(4500)
             });
             const s1Json = (await s1Res.json()) as any;
             if (s1Json.status !== 200 || !s1Json.result?.stage1) return [];
@@ -100,14 +100,14 @@ export class VidfastProvider extends BaseProvider {
             const p1Res = await fetch(stage1Url, {
                 method: 'POST',
                 headers: { ...HEADERS, 'X-CSRF-Token': token1 },
-                signal: AbortSignal.timeout(8000)
+                signal: AbortSignal.timeout(4500)
             });
             const text1 = await p1Res.text();
             if (!text1) return [];
 
             // Stage 2 Encryption
             const s2Res = await fetch(`${ENC_API}/enc-vidfast?text=${encodeURIComponent(text1)}&stage=2`, {
-                signal: AbortSignal.timeout(8000)
+                signal: AbortSignal.timeout(4500)
             });
             const s2Json = (await s2Res.json()) as any;
             if (s2Json.status !== 200 || !s2Json.result?.servers) return [];
@@ -118,7 +118,7 @@ export class VidfastProvider extends BaseProvider {
             const srvRes = await fetch(serversUrl, {
                 method: 'POST',
                 headers: { ...HEADERS, 'X-CSRF-Token': token2 },
-                signal: AbortSignal.timeout(8000)
+                signal: AbortSignal.timeout(4500)
             });
             const serversEnc = await srvRes.text();
 
@@ -127,7 +127,7 @@ export class VidfastProvider extends BaseProvider {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: serversEnc }),
-                signal: AbortSignal.timeout(8000)
+                signal: AbortSignal.timeout(4500)
             });
             const decSrvJson = (await decSrvRes.json()) as any;
             const servers = Array.isArray(decSrvJson.result) ? decSrvJson.result : [];
@@ -140,7 +140,7 @@ export class VidfastProvider extends BaseProvider {
                     const strRes = await fetch(`${streamUrl}/${srv.data}`, {
                         method: 'POST',
                         headers: { ...HEADERS, 'X-CSRF-Token': token2 },
-                        signal: AbortSignal.timeout(8000)
+                        signal: AbortSignal.timeout(4500)
                     });
                     const strEnc = await strRes.text();
 
@@ -148,7 +148,7 @@ export class VidfastProvider extends BaseProvider {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ text: strEnc }),
-                        signal: AbortSignal.timeout(8000)
+                        signal: AbortSignal.timeout(4500)
                     });
                     const streamData = (await decStrRes.json()) as any;
                     const res = streamData?.result;
@@ -204,8 +204,8 @@ export class VidfastProvider extends BaseProvider {
         let activeDomain = BASE_URL;
         let subtitles: Subtitle[] = [];
 
-        // 1. Try native 2-stage decrypted stream across domain mesh
-        for (const domain of DOMAIN_MESH.slice(0, 3)) {
+        // 1. Try native 2-stage decrypted stream across primary domain mesh
+        for (const domain of DOMAIN_MESH.slice(0, 2)) {
             try {
                 const nativeSources = await this.resolveVidfast(media, domain);
                 if (nativeSources.length > 0) {

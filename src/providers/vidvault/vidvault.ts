@@ -8,6 +8,8 @@ import type {
 } from '@omss/framework';
 import { purstream } from 'kaizoku-core';
 
+import { getVidVaultToken } from '../../utils/vidvaultToken.js';
+
 export class VidVaultProvider extends BaseProvider {
     readonly id = 'vidvault';
     readonly name = 'VidVault';
@@ -33,18 +35,9 @@ export class VidVaultProvider extends BaseProvider {
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         const sources: Source[] = [];
         try {
-            // 1. Native direct resolution via VidVault backend API
-            const tokenRes = await fetch('https://vidvault.to/api/get-token', {
-                headers: {
-                    'User-Agent': this.HEADERS['User-Agent'],
-                    'Referer': 'https://vidvault.ru/'
-                },
-                signal: AbortSignal.timeout(6000)
-            });
-            if (tokenRes.ok) {
-                const tokenJson = (await tokenRes.json()) as any;
-                const token = tokenJson?.t;
-                if (token) {
+            // 1. Native direct resolution via VidVault backend API using cached token
+            const token = await getVidVaultToken();
+            if (token) {
                     const bodyPayload = media.type === 'tv'
                         ? { type: 'tv', tmdbId: Number(media.tmdbId), season: Number(media.s || 1), episode: Number(media.e || 1) }
                         : { type: 'movie', tmdbId: Number(media.tmdbId) };
@@ -83,22 +76,25 @@ export class VidVaultProvider extends BaseProvider {
                             };
                             const proxyData = JSON.stringify({ url: item.url, headers });
                             const proxiedUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.mp4`;
+                            const srvLabel = item.label || 'Direct';
+                            const srvId = `${this.id}-${srvLabel.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
                             const quality = item.quality ? String(item.quality).replace(/p$/i, '') + 'p' : '1080p';
 
-                            sources.push({
+                            const srcObj: any = {
                                 url: proxiedUrl,
                                 quality,
                                 type: 'mp4',
+                                server: srvLabel,
                                 audioTracks: [{ language: 'en', label: 'English' }],
                                 provider: {
-                                    name: `${this.name} (${item.label || 'Direct'})`,
-                                    id: this.id
+                                    name: `${this.name} (${srvLabel})`,
+                                    id: srvId
                                 }
-                            });
+                            };
+                            sources.push(srcObj as Source);
                         }
                     }
                 }
-            }
         } catch {}
 
         // Fallback to PurStream if needed
