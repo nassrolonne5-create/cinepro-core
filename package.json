@@ -5,7 +5,7 @@
     "scripts": {
         "dev": "tsx watch src/server.ts",
         "postinstall": "node postinstall.js",
-        "build": "tsc && node -e \"import fs from 'fs'; if(fs.existsSync('src/views')) { fs.mkdirSync('dist/views', { recursive: true }); fs.cpSync('src/views', 'dist/views', { recursive: true }); }\"",
+        "build": "tsc",
         "start": "node dist/server.js",
         "lint": "tsc --noEmit",
         "format": "prettier --write src",

@@ -20,7 +20,6 @@ import fs from 'node:fs';
 import { knownThirdPartyProxies } from './thirdPartyProxies.js';
 import { streamPatterns } from './streamPatterns.js';
 import { configure as configureKaizoku } from 'kaizoku-core';
-import { IPTVService } from './services/iptv.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -93,27 +92,6 @@ async function main() {
     const app = server.getInstance();
     
     app.addHook('onSend', async (request: any, reply: any, payload: any) => {
-        if (typeof payload === 'string' && (request.url === '/' || request.url === '')) {
-            try {
-                const data = JSON.parse(payload);
-                const proto = request.headers['x-forwarded-proto'] || (request.socket?.encrypted ? 'https' : 'http');
-                const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:3000';
-                const publicBaseUrl = `${proto}://${host}`;
-                data.endpoints = {
-                    ...data.endpoints,
-                    livetv: "/livetv",
-                    iptv_channels: "/v1/iptv/channels",
-                    iptv_stream: "/v1/iptv/stream/{channelId}",
-                    iptv_playlist: "/v1/iptv/playlist.m3u",
-                    iptv_embed: "/v1/iptv/embed"
-                };
-                data.embedIframe = `<iframe src="${publicBaseUrl}/livetv" width="100%" height="800" frameborder="0" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 8px; overflow: hidden; background: #080B10;"></iframe>`;
-                return JSON.stringify(data);
-            } catch (e) {
-                return payload;
-            }
-        }
-
         if (typeof payload === 'string' && (request.url.includes('/v1/movies') || request.url.includes('/v1/tv'))) {
             try {
                 const data = JSON.parse(payload);
@@ -366,93 +344,6 @@ async function main() {
         // Redirect to the actual proxy route, keeping the query string intact
         const query = new URLSearchParams(request.query as any).toString();
         return reply.redirect(`/v1/proxy?${query}`);
-    });
-
-    // ==================== LIVE IPTV API ====================
-    // 1. Channel Directory (Sports, Broadcast, etc.)
-    app.get('/v1/iptv/channels', async (request: any, reply: any) => {
-        const category = (request.query as any)?.category;
-        const channels = IPTVService.getChannels(category);
-        return reply.send({
-            status: 'success',
-            total: channels.length,
-            channels: channels.map(c => ({
-                id: c.id,
-                name: c.name,
-                category: c.category,
-                logo: c.logo,
-                country: c.country,
-                streamEndpoint: `/v1/iptv/stream/${c.id}`
-            }))
-        });
-    });
-
-    // 2. Channel Stream Resolver (beIN Sports, Sky Sports, NBC, etc.)
-    app.get('/v1/iptv/stream/:channelId', async (request: any, reply: any) => {
-        const { channelId } = request.params as any;
-        const proto = request.headers['x-forwarded-proto'] || (request.socket?.encrypted ? 'https' : 'http');
-        const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:3000';
-        const publicBaseUrl = `${proto}://${host}`;
-
-        const resolved = await IPTVService.resolveChannelStream(channelId, publicBaseUrl);
-        if (!resolved) {
-            return reply.status(404).send({
-                status: 'error',
-                message: `Channel '${channelId}' not found or temporarily unavailable`
-            });
-        }
-
-        return reply.send({
-            status: 'success',
-            channel: {
-                id: resolved.channel.id,
-                name: resolved.channel.name,
-                category: resolved.channel.category,
-                logo: resolved.channel.logo,
-                country: resolved.channel.country
-            },
-            stream: {
-                url: resolved.streamUrl,
-                type: 'hls',
-                isProxied: resolved.isProxied
-            }
-        });
-    });
-
-    // 3. M3U Playlist Export (for VLC, TiviMate, IPTV Smarters)
-    app.get('/v1/iptv/playlist.m3u', async (request: any, reply: any) => {
-        const proto = request.headers['x-forwarded-proto'] || (request.socket?.encrypted ? 'https' : 'http');
-        const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:3000';
-        const publicBaseUrl = `${proto}://${host}`;
-
-        const playlist = IPTVService.generateM3U(publicBaseUrl);
-        reply.header('Content-Type', 'audio/x-mpegurl');
-        reply.header('Content-Disposition', 'inline; filename="cinepro-iptv.m3u"');
-        return reply.send(playlist);
-    });
-
-    // 4. Standalone & Embeddable Live TV Single Page App (for notflixtv.com)
-    const getLiveTvHtml = () => {
-        const candidates = [
-            path.join(__dirname, 'views/livetv.html'),
-            path.join(__dirname, '../src/views/livetv.html'),
-            path.join(process.cwd(), 'src/views/livetv.html'),
-            path.join(process.cwd(), 'dist/views/livetv.html')
-        ];
-        for (const p of candidates) {
-            if (fs.existsSync(p)) return fs.readFileSync(p, 'utf-8');
-        }
-        return '<h1>Live TV View not found</h1>';
-    };
-
-    app.get('/livetv', async (request: any, reply: any) => {
-        reply.header('Content-Type', 'text/html; charset=utf-8');
-        return reply.send(getLiveTvHtml());
-    });
-
-    app.get('/v1/iptv/embed', async (request: any, reply: any) => {
-        reply.header('Content-Type', 'text/html; charset=utf-8');
-        return reply.send(getLiveTvHtml());
     });
 
     await server.start();
