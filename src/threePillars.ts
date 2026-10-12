@@ -3,45 +3,28 @@ import crypto from 'node:crypto';
 
 export enum ProviderTier {
     TIER_1_INSTANT = 1,  // Lightning direct scrapers (timeout 3500ms)
-    TIER_2_STANDARD = 2, // Standard JSON/HTML scrapers (timeout 6000ms)
-    TIER_3_DEEP = 3      // Multi-stage / heavy aggregators (timeout 9000ms)
+    TIER_2_DEEP = 2      // Deep aggregators & multi-hop scrapers (timeout 6000ms)
 }
 
 export function getProviderTier(providerId: string, providerName: string): ProviderTier {
     const id = (providerId || '').toLowerCase();
     const name = (providerName || '').toLowerCase();
 
-    // Tier 1: Fastest direct API/streaming scrapers
+    // Tier 2: Deep multi-hop scrapers that take longer or frequently hit Cloudflare
     if (
-        id.includes('vidfast') || name.includes('vidfast') ||
-        id.includes('cinemaarmy') || name.includes('cinemaarmy') ||
-        id.includes('cinecat') || name.includes('cinecat') ||
-        id.includes('vidvault') || name.includes('vidvault') ||
-        id.includes('vidsrcwin') || name.includes('vidsrcwin') ||
-        id.includes('rivestream') || name.includes('rivestream') ||
-        id.includes('vidgod') || name.includes('vidgod') ||
-        id.includes('vixsrc') || name.includes('vixsrc')
-    ) {
-        return ProviderTier.TIER_1_INSTANT;
-    }
-
-    // Tier 3: Deep aggregators / multi-hop / heavy fallbacks
-    if (
-        id.includes('consumet') || name.includes('consumet') ||
-        id.includes('sflix') || name.includes('sflix') ||
-        id.includes('videasy') || name.includes('videasy') ||
+        id.includes('vidnest') || name.includes('vidnest') ||
         id.includes('vidup') || name.includes('vidup') ||
+        id.includes('vidrift') || name.includes('vidrift') ||
+        id.includes('vidsrc') && !id.includes('vidsrcwin') ||
         id.includes('talkshow') || name.includes('talkshow') ||
-        id.includes('stremio') || name.includes('stremio') ||
         id.includes('mapple') || name.includes('mapple') ||
-        id.includes('subtitles') || name.includes('subtitles') ||
-        id.includes('lmscript') || name.includes('lmscript')
+        id.includes('subtitles') || name.includes('subtitles')
     ) {
-        return ProviderTier.TIER_3_DEEP;
+        return ProviderTier.TIER_2_DEEP;
     }
 
-    // Tier 2: Standard stable scrapers (vidnest, purstream, cinesu, superstream, icefy, trendimovies, vidlink, vidrock, vidzee, watchflix, etc.)
-    return ProviderTier.TIER_2_STANDARD;
+    // Tier 1: Fast direct scrapers (trendimovies, videasy, rivestream, embedsu, vidlink, vidgod, cinesu, lmscript, icefy, cinemaarmy, purstream, sflix, superstream, vidfast, watchflix, vidvault, vidsrcwin, vixsrc, cinecat, vidrock, vidzee)
+    return ProviderTier.TIER_1_INSTANT;
 }
 
 // ==========================================
@@ -95,7 +78,7 @@ export function recordProviderFailure(providerId: string) {
 }
 
 // ==========================================
-// PILLAR 1: Concurrency Limiter
+// PILLAR 1: Outbound Request Pooling / Concurrency Limiter
 // ==========================================
 export async function runWithConcurrencyLimit<T>(
     tasks: Array<() => Promise<T>>,
@@ -123,7 +106,7 @@ export async function runWithConcurrencyLimit<T>(
 }
 
 // ==========================================
-// PILLAR 3: Universal Namespacing & Sanitization
+// PILLAR 3: Universal Namespacing, Deduplication & Sanitization
 // ==========================================
 export function formatAndNamespaceSources(sources: any[], publicBaseUrl: string = 'http://localhost:3000'): any[] {
     if (!Array.isArray(sources)) return [];
@@ -255,11 +238,11 @@ export function formatAndNamespaceSources(sources: any[], publicBaseUrl: string 
 // Dedup and merge helper
 export function mergeSources(targetSources: any[], newSources: any[]): any[] {
     const map = new Map<string, any>();
-    for (const s of targetSources) {
+    for (const s of (targetSources || [])) {
         const key = (s.url || '') + '_' + (s.provider?.id || s.server || '');
         map.set(key, s);
     }
-    for (const s of newSources) {
+    for (const s of (newSources || [])) {
         const key = (s.url || '') + '_' + (s.provider?.id || s.server || '');
         if (!map.has(key)) {
             map.set(key, s);
@@ -283,7 +266,7 @@ export function mergeSubtitles(targetSubs: any[], newSubs: any[]): any[] {
 
 // Single-flight in-progress requests
 const inFlightRequests = new Map<string, Promise<any>>();
-// Background harvester deduplication
+// Background hydration tracker
 const activeHarvesters = new Set<string>();
 
 /**
@@ -295,9 +278,6 @@ export function setupThreePillarArchitecture(server: any) {
         console.warn('[ThreePillars] No sourceService found on server instance!');
         return;
     }
-
-    const originalGetMovieSources = sourceService.getMovieSources.bind(sourceService);
-    const originalGetTVSources = sourceService.getTVSources.bind(sourceService);
 
     // Helper to scrape a single provider safely with per-tier timeout and circuit breaker
     async function scrapeProviderSafely(provider: any, type: 'movie' | 'tv', media: any, timeoutMs: number) {
@@ -337,92 +317,19 @@ export function setupThreePillarArchitecture(server: any) {
         }
     }
 
-    // Background harvester that executes remaining providers and hydrates cache
-    async function runBackgroundHarvest(
-        type: 'movie' | 'tv',
-        media: any,
-        cacheKey: string,
-        initialResponse: any,
-        providersToScrape: any[]
-    ) {
-        if (activeHarvesters.has(cacheKey)) return;
-        activeHarvesters.add(cacheKey);
-
-        try {
-            console.log(`[ThreePillars] Background Harvester started for ${cacheKey} (${providersToScrape.length} pending providers)`);
-            const publicBaseUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
-
-            // Run deep providers with concurrency limit 4 and 8500ms timeout
-            const tasks = providersToScrape.map(provider => () => 
-                scrapeProviderSafely(provider, type, media, 8500)
-            );
-            const results = await runWithConcurrencyLimit(tasks, 4);
-
-            // Also scrape Stremio addons if available
-            let stremioResult: any = null;
-            if (sourceService.stremioService?.hasEnabledAddons()) {
-                try {
-                    stremioResult = type === 'movie'
-                        ? await sourceService.stremioService.getMovieSources(media)
-                        : await sourceService.stremioService.getTVSources(media);
-                } catch {}
-            }
-
-            const allHarvested = results.filter(Boolean);
-            if (stremioResult && Array.isArray(stremioResult.sources)) {
-                allHarvested.push(stremioResult);
-            }
-
-            // Build response for harvested results
-            const harvestedResponse = sourceService.buildResponse(allHarvested);
-            const formattedHarvestedSources = formatAndNamespaceSources(harvestedResponse.sources, publicBaseUrl);
-
-            // Fetch current cache (in case earlier updates happened)
-            const currentCached = (await sourceService.cache.get(cacheKey)) || initialResponse;
-            const mergedSources = mergeSources(currentCached.sources || [], formattedHarvestedSources);
-            const mergedSubs = mergeSubtitles(currentCached.subtitles || [], harvestedResponse.subtitles || []);
-
-            const fullResponse = {
-                ...currentCached,
-                sources: mergedSources,
-                subtitles: mergedSubs,
-                diagnostics: [...(currentCached.diagnostics || []), ...(harvestedResponse.diagnostics || [])]
-            };
-
-            // Update cache with full enriched set
-            await sourceService.cache.set(cacheKey, fullResponse, sourceService.cacheTTL.sources);
-            console.log(`[ThreePillars] Background Harvester completed for ${cacheKey}. Servers expanded from ${initialResponse?.sources?.length || 0} to ${mergedSources.length}!`);
-        } catch (err: any) {
-            console.error(`[ThreePillars] Background Harvester error for ${cacheKey}:`, err?.message);
-        } finally {
-            activeHarvesters.delete(cacheKey);
-        }
-    }
-
     // Core Progressive Engine
     async function executeThreePillars(type: 'movie' | 'tv', id: string, season?: number, episode?: number) {
         const cacheKey = type === 'movie' ? `movie:${id}` : `tv:${id}:s${season}:e${episode}`;
         const publicBaseUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
 
-        // 1. CACHE CHECK
+        // 1. CACHE CHECK: Instant response if already cached (< 5ms)
         const cached = await sourceService.cache.get(cacheKey);
         if (cached && Array.isArray(cached.sources) && cached.sources.length > 0) {
             console.log(`[ThreePillars] Cache HIT for ${cacheKey} (${cached.sources.length} sources)`);
-            // If cache is partial (e.g. fewer than 22 servers), trigger background refresh to gather all 70+
-            if (cached.sources.length < 22 && !activeHarvesters.has(cacheKey)) {
-                const media = type === 'movie'
-                    ? await sourceService.tmdbService.getMediaObject('movie', id)
-                    : await sourceService.tmdbService.getMediaObject('tv', id, season, episode);
-                media.imdbId = (await sourceService.tmdbService.getImdbId(id, type)) ?? '';
-                const providers = sourceService.registry.getProviders()
-                    .filter((p: any) => p.capabilities.supportedContentTypes.includes(type === 'movie' ? 'movies' : 'tv'))
-                    .filter((p: any) => p.enabled);
-                runBackgroundHarvest(type, media, cacheKey, cached, providers);
-            }
             return cached;
         }
 
-        // 2. SINGLE-FLIGHT COALESCING
+        // 2. SINGLE-FLIGHT COALESCING: Avoid concurrent duplicate scrapes for same movie/show
         if (inFlightRequests.has(cacheKey)) {
             console.log(`[ThreePillars] Joining in-flight scrape for ${cacheKey}`);
             return await inFlightRequests.get(cacheKey)!;
@@ -442,55 +349,53 @@ export function setupThreePillarArchitecture(server: any) {
             // Group into Tiers
             const tier1Providers: any[] = [];
             const tier2Providers: any[] = [];
-            const tier3Providers: any[] = [];
 
             for (const p of allProviders) {
                 const tier = getProviderTier(p.id, p.name);
                 if (tier === ProviderTier.TIER_1_INSTANT) tier1Providers.push(p);
-                else if (tier === ProviderTier.TIER_2_STANDARD) tier2Providers.push(p);
-                else tier3Providers.push(p);
+                else tier2Providers.push(p);
             }
 
-            console.log(`[ThreePillars] Providers partitioned: Tier 1 (${tier1Providers.length}), Tier 2 (${tier2Providers.length}), Tier 3 (${tier3Providers.length})`);
+            console.log(`[ThreePillars] Partitioned ${allProviders.length} providers: Tier 1 (${tier1Providers.length} fast), Tier 2 (${tier2Providers.length} deep)`);
 
-            // Execute Tier 1 (Fast direct scrapers, max concurrency 6, timeout 3500ms)
-            const tier1Tasks = tier1Providers.map(p => () => scrapeProviderSafely(p, type, media, 3500));
-            // Start Tier 2 immediately in parallel (max concurrency 5, timeout 5500ms)
-            const tier2Tasks = tier2Providers.map(p => () => scrapeProviderSafely(p, type, media, 5500));
+            // Shared collector for progressive results across all workers
+            const sharedResults: any[] = [];
 
-            const tier1Promise = runWithConcurrencyLimit(tier1Tasks, 6);
-            const tier2Promise = runWithConcurrencyLimit(tier2Tasks, 5);
+            // Wrap provider execution to push into shared pool immediately upon resolution
+            const makeTask = (provider: any, timeoutMs: number) => async () => {
+                const res = await scrapeProviderSafely(provider, type, media, timeoutMs);
+                if (res && Array.isArray(res.sources) && res.sources.length > 0) {
+                    sharedResults.push(res);
+                }
+                return res;
+            };
 
-            // Fast-Delivery Window: 2400ms
-            const fastCutoffPromise = new Promise<{ isCutoff: true }>((resolve) => {
-                setTimeout(() => resolve({ isCutoff: true }), 2400);
+            const tier1Tasks = tier1Providers.map(p => makeTask(p, 3500));
+            const tier2Tasks = tier2Providers.map(p => makeTask(p, 6000));
+
+            // Launch all Tier 1 providers simultaneously (concurrency 20) and Tier 2 (concurrency 6)
+            const tier1Promise = runWithConcurrencyLimit(tier1Tasks, 20);
+            const tier2Promise = runWithConcurrencyLimit(tier2Tasks, 6);
+
+            // Fast delivery trigger: wait up to 3000ms OR until Tier 1 finishes
+            let fastTimerResolved = false;
+            const fastDeliveryTimer = new Promise<void>((resolve) => {
+                setTimeout(() => {
+                    fastTimerResolved = true;
+                    resolve();
+                }, 3000);
             });
 
-            // Wait for Tier 1 or cutoff
-            const earlyResult = await Promise.race([
-                tier1Promise.then(res => ({ isCutoff: false as const, res })),
-                fastCutoffPromise
-            ]);
+            await Promise.race([tier1Promise, fastDeliveryTimer]);
 
-            let initialResults: any[] = [];
-            if (!earlyResult.isCutoff) {
-                initialResults = earlyResult.res;
-            } else {
-                // Cutoff reached: collect whatever Tier 1 and Tier 2 have resolved so far
-                initialResults = (await Promise.race([
-                    tier1Promise,
-                    new Promise<any[]>(r => setTimeout(() => r([]), 150))
-                ])) || [];
-            }
-
-            const initialResponse = sourceService.buildResponse(initialResults.filter(Boolean));
+            // Check what we have collected so far
+            let initialResponse = sourceService.buildResponse(sharedResults.filter(Boolean));
             initialResponse.sources = formatAndNamespaceSources(initialResponse.sources, publicBaseUrl);
 
-            // If Tier 1 returned verified servers (e.g. >= 3 servers), DELIVER IMMEDIATELY!
+            // If we have >= 3 sources, deliver FAST initial batch to the user!
             if (initialResponse.sources.length >= 3) {
-                console.log(`[ThreePillars] FAST DELIVERY SUCCESS! Returning ${initialResponse.sources.length} servers in ~2.5s for ${cacheKey}`);
+                console.log(`[ThreePillars] FAST DELIVERY SUCCESS! Delivering ${initialResponse.sources.length} servers in ~3.0s for ${cacheKey}`);
 
-                // Store mapping & Cache initial set
                 sourceService.storeResponseIdMapping(initialResponse.responseId, {
                     cacheKey,
                     type,
@@ -501,23 +406,56 @@ export function setupThreePillarArchitecture(server: any) {
                 });
                 await sourceService.cache.set(cacheKey, initialResponse, sourceService.cacheTTL.sources);
 
-                // Asynchronously harvest remaining Tier 2 & Tier 3 in background
-                const remainingProviders = [...tier2Providers, ...tier3Providers];
-                runBackgroundHarvest(type, media, cacheKey, initialResponse, remainingProviders);
+                // Start detached background harvester to wait for the rest and hydrate cache to 50-70+ servers
+                (async () => {
+                    try {
+                        console.log(`[ThreePillars] Background Harvester waiting for remaining providers on ${cacheKey}...`);
+                        await Promise.allSettled([tier1Promise, tier2Promise]);
+
+                        // Stremio addons if available
+                        if (sourceService.stremioService?.hasEnabledAddons()) {
+                            try {
+                                const sRes = type === 'movie'
+                                    ? await sourceService.stremioService.getMovieSources(media)
+                                    : await sourceService.stremioService.getTVSources(media);
+                                if (sRes && Array.isArray(sRes.sources)) sharedResults.push(sRes);
+                            } catch {}
+                        }
+
+                        const fullResponse = sourceService.buildResponse(sharedResults.filter(Boolean));
+                        fullResponse.sources = formatAndNamespaceSources(fullResponse.sources, publicBaseUrl);
+
+                        const currentCached = (await sourceService.cache.get(cacheKey)) || initialResponse;
+                        const mergedSources = mergeSources(currentCached.sources || [], fullResponse.sources);
+                        const mergedSubs = mergeSubtitles(currentCached.subtitles || [], fullResponse.subtitles);
+
+                        const enriched = {
+                            ...currentCached,
+                            sources: mergedSources,
+                            subtitles: mergedSubs,
+                            diagnostics: [...(currentCached.diagnostics || []), ...(fullResponse.diagnostics || [])]
+                        };
+
+                        await sourceService.cache.set(cacheKey, enriched, sourceService.cacheTTL.sources);
+                        console.log(`[ThreePillars] Background Harvester complete for ${cacheKey}! Cache hydrated from ${initialResponse.sources.length} to ${mergedSources.length} servers!`);
+                    } catch (err: any) {
+                        console.error(`[ThreePillars] Background Harvester error:`, err?.message);
+                    }
+                })().catch(() => {});
 
                 return initialResponse;
             }
 
-            // Fallback: If Tier 1 yielded fewer than 6 servers (e.g. obscure title), wait for Tier 2 to finish
-            console.log(`[ThreePillars] Fast batch had ${initialResponse.sources.length} servers. Awaiting Tier 2 completion...`);
-            const tier2Results = await tier2Promise;
-            const combinedResults = [...initialResults, ...tier2Results].filter(Boolean);
-            const combinedResponse = sourceService.buildResponse(combinedResults);
-            combinedResponse.sources = formatAndNamespaceSources(combinedResponse.sources, publicBaseUrl);
+            // Fallback: If fewer than 5 sources were ready, wait for Tier 1 to completely finish (up to ~3.5s)
+            console.log(`[ThreePillars] Fast batch had only ${initialResponse.sources.length} servers. Awaiting full Tier 1 resolution...`);
+            await tier1Promise;
 
-            // If we have sources now, deliver and kick off Tier 3 in background
-            if (combinedResponse.sources.length > 0) {
-                sourceService.storeResponseIdMapping(combinedResponse.responseId, {
+            const t1FullResponse = sourceService.buildResponse(sharedResults.filter(Boolean));
+            t1FullResponse.sources = formatAndNamespaceSources(t1FullResponse.sources, publicBaseUrl);
+
+            if (t1FullResponse.sources.length >= 3) {
+                console.log(`[ThreePillars] Tier 1 full delivery: ${t1FullResponse.sources.length} servers for ${cacheKey}`);
+                sourceService.storeResponseIdMapping(t1FullResponse.responseId, {
                     cacheKey,
                     type,
                     tmdbId: id,
@@ -525,17 +463,28 @@ export function setupThreePillarArchitecture(server: any) {
                     episode,
                     createdAt: Date.now()
                 });
-                await sourceService.cache.set(cacheKey, combinedResponse, sourceService.cacheTTL.sources);
-                runBackgroundHarvest(type, media, cacheKey, combinedResponse, tier3Providers);
-                return combinedResponse;
+                await sourceService.cache.set(cacheKey, t1FullResponse, sourceService.cacheTTL.sources);
+
+                // Background hydrate Tier 2
+                (async () => {
+                    await tier2Promise;
+                    const fullResponse = sourceService.buildResponse(sharedResults.filter(Boolean));
+                    fullResponse.sources = formatAndNamespaceSources(fullResponse.sources, publicBaseUrl);
+                    const currentCached = (await sourceService.cache.get(cacheKey)) || t1FullResponse;
+                    const mergedSources = mergeSources(currentCached.sources || [], fullResponse.sources);
+                    const enriched = { ...currentCached, sources: mergedSources };
+                    await sourceService.cache.set(cacheKey, enriched, sourceService.cacheTTL.sources);
+                    console.log(`[ThreePillars] Background Tier 2 complete for ${cacheKey}: cache enriched to ${mergedSources.length} servers.`);
+                })().catch(() => {});
+
+                return t1FullResponse;
             }
 
-            // Ultimate Fallback: Wait for Tier 3
-            console.log(`[ThreePillars] Awaiting Tier 3 deep aggregators...`);
-            const tier3Tasks = tier3Providers.map(p => () => scrapeProviderSafely(p, type, media, 8000));
-            const tier3Results = await runWithConcurrencyLimit(tier3Tasks, 3);
-            const fullResults = [...combinedResults, ...tier3Results].filter(Boolean);
-            const finalResponse = sourceService.buildResponse(fullResults);
+            // Ultimate Fallback: Wait for Tier 2 deep aggregators
+            console.log(`[ThreePillars] Awaiting Tier 2 deep aggregators...`);
+            await tier2Promise;
+
+            const finalResponse = sourceService.buildResponse(sharedResults.filter(Boolean));
             finalResponse.sources = formatAndNamespaceSources(finalResponse.sources, publicBaseUrl);
 
             if (finalResponse.sources.length === 0) {
