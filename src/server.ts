@@ -20,6 +20,7 @@ import fs from 'node:fs';
 import { knownThirdPartyProxies } from './thirdPartyProxies.js';
 import { streamPatterns } from './streamPatterns.js';
 import { configure as configureKaizoku } from 'kaizoku-core';
+import { setupThreePillarArchitecture } from './threePillars.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -87,6 +88,9 @@ async function main() {
         : path.join(__dirname, './providers/');
     await registry.discoverProviders(providersDir);
     console.log("REGISTERED PROVIDERS:", registry.getProviders().map(p => p.id));
+    
+    // Mount the Three-Pillar Architecture (Batching, Progressive Delivery & Circuit Breakers)
+    setupThreePillarArchitecture(server);
     
     // Smart Sorting: Internet Speed Adaptive
     const app = server.getInstance();

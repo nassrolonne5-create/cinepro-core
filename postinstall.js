@@ -80,7 +80,7 @@ if (fs.existsSync(sourceServiceFile)) {
     // Increase provider timeout to 25s and resolve gracefully instead of throwing unhandled error
     code = code.replace(
         /const timeoutPromise = new Promise\(\(_, reject\) => \{\s*setTimeout\(\(\) => reject\(new Error\('Provider timeout exceeded \(12s\)'\)\), 12000\);\s*\}\);/g,
-        `const providerTimeoutMs = parseInt(process.env.PROVIDER_TIMEOUT || '25000', 10);
+        `const providerTimeoutMs = parseInt(process.env.PROVIDER_TIMEOUT || '9000', 10);
                 const timeoutPromise = new Promise((resolve) => {
                     setTimeout(() => {
                         console.warn(\`[SourceService] Provider '\${provider.name}' timed out after \${providerTimeoutMs}ms\`);
@@ -260,7 +260,7 @@ if (fs.existsSync(sourceServiceFile)) {
     if (code.includes('Provider timeout exceeded') || code.includes('timed out after')) {
         code = code.replace(
             /(?:const providerTimeoutMs[\s\S]*?resolve\(\{ sources: \[\], subtitles: \[\], diagnostics: \[\] \}\);\s*\}, providerTimeoutMs\);\s*\}\);|const timeoutPromise = new Promise\(\(_, reject\) => \{\s*setTimeout\(\(\) => reject\(new Error\('Provider timeout exceeded \([^)]+\)'\)\), \d+\);\s*\}\);)/g,
-            `const providerTimeoutMs = parseInt(process.env.PROVIDER_TIMEOUT || '25000', 10);
+            `const providerTimeoutMs = parseInt(process.env.PROVIDER_TIMEOUT || '9000', 10);
                 const timeoutPromise = new Promise((resolve) => {
                     setTimeout(() => {
                         console.warn(\`[SourceService] Provider '\${provider.name}' timed out after \${providerTimeoutMs}ms\`);
