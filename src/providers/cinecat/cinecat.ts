@@ -24,17 +24,26 @@ export class CinecatProvider extends BaseProvider {
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) => setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500))
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) => setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500))
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
-            // Retrieve Cinecat-supported streams (Zephyr 4K & PrimeVids 1080p)
-            const data = await rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 4500));
+            const data: any = await Promise.race([
+                rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                timeout
+            ]);
 
             const sources: Source[] = [];
             const seenUrls = new Set<string>();
@@ -52,11 +61,6 @@ export class CinecatProvider extends BaseProvider {
                     if (urlLower.includes('boomchick') || urlLower.includes('streamflix') || sLower.includes('tcloud')) {
                         continue;
                     }
-
-                    // Only take Cinecat-relevant premium servers (Zephyr 4K HDR & reliable sources)
-                    const isZephyr = sLower.includes('zephyr') || urlLower.includes('bluevelvet') || qLower.includes('4k') || sLower.includes('primevids');
-
-                    if (!isZephyr) continue;
 
                     // Exclude non-English audio dubs
                     if (
@@ -83,17 +87,19 @@ export class CinecatProvider extends BaseProvider {
                         streamUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}`;
                     }
 
-                    const serverLabel = isZephyr ? 'Zephyr 4K' : (src.server ? `PrimeVids (${src.server})` : 'PrimeVids');
+                    const isZephyr = sLower.includes('zephyr') || urlLower.includes('bluevelvet') || qLower.includes('4k');
+                    const serverLabel = isZephyr ? 'Zephyr 4K' : (src.server ? `${src.server}` : 'Prime');
                     const qualityLabel = isZephyr ? '4K HDR' : (src.quality || '1080p');
 
                     sources.push({
                         url: streamUrl + (streamUrl.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + (src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4'),
                         quality: qualityLabel,
                         type: getSourceType(src.url, src.isM3U8),
+                        server: serverLabel,
                         audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
                             name: `${this.name} (${serverLabel})`,
-                            id: this.id
+                            id: `${this.id}-${serverLabel.toLowerCase().replace(/[^a-z0-9]/g, '')}`
                         }
                     });
                 }

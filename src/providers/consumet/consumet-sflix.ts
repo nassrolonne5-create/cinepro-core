@@ -1,83 +1,102 @@
 import { BaseProvider } from '@omss/framework';
 import type { ProviderCapabilities, ProviderMediaObject, ProviderResult, Source } from '@omss/framework';
-import { MOVIES } from '@consumet/extensions';
+import { rivestream, trendimovies } from 'kaizoku-core';
 import { getSourceType } from '../../utils/streamType.js';
 
 export class ConsumetSFlixProvider extends BaseProvider {
     readonly id = 'consumet-sflix';
-    readonly name = 'consumet-sflix';
-    readonly enabled = false;
-    readonly BASE_URL = 'https://sflix.to';
-    readonly HEADERS = {};
+    readonly name = 'SFlixLine';
+    readonly enabled = true;
+    readonly BASE_URL = 'https://sflixline.com';
+    readonly HEADERS = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+        'Referer': 'https://sflixline.com/'
+    };
     readonly capabilities: ProviderCapabilities = {
         supportedContentTypes: ['tv', 'movies']
     };
 
-    private sflix = new MOVIES.SFlix();
-
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.extractSources(media);
+        return Promise.race([
+            this.extractSources(media),
+            new Promise<ProviderResult>((resolve) => setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500))
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.extractSources(media);
+        return Promise.race([
+            this.extractSources(media),
+            new Promise<ProviderResult>((resolve) => setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500))
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     private async extractSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        const diagnostics: any[] = [];
         const sources: Source[] = [];
+        const callWithTimeout = async <T>(promise: Promise<T>, ms: number): Promise<T | null> => {
+            try {
+                const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
+                return await Promise.race([promise, timeout]);
+            } catch {
+                return null;
+            }
+        };
+
+        // 1. RiveStream UpCloud & Vidcloud mirrors
         try {
-            const searchTitle = media.title || "";
-            const res = await this.sflix.search(searchTitle);
-            
-            let match = res.results.find((r: any) => 
-                r.title.toLowerCase() === searchTitle.toLowerCase() &&
-                (media.type === 'movie' ? r.type === 'Movie' : r.type === 'TV Series')
+            const data: any = await callWithTimeout(
+                rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                3500
             );
-            if (!match) match = res.results[0];
-
-            if (!match) {
-                return { sources: [], subtitles: [], diagnostics: [{ code: 'PROVIDER_ERROR', field: 'search', message: 'No match found on SFlix', severity: 'warning' }] };
-            }
-
-            const info = await this.sflix.fetchMediaInfo(match.id);
-            if (!info.episodes || info.episodes.length === 0) {
-                 return { sources: [], subtitles: [], diagnostics: [{ code: 'PROVIDER_ERROR', field: 'episodes', message: 'No episodes found', severity: 'warning' }] };
-            }
-            
-            let episodeId = "";
-            if (media.type === 'movie') {
-                episodeId = info.episodes[0].id;
-            } else {
-                const ep = info.episodes.find((e: any) => 
-                    e.season === media.s && e.number === media.e
-                );
-                if (ep) episodeId = ep.id;
-                else episodeId = info.episodes[0].id;
-            }
-
-            const streamRes = await this.sflix.fetchEpisodeSources(episodeId, match.id);
-            
-            if (streamRes && streamRes.sources) {
-                for (const src of streamRes.sources) {
+            if (data?.sources?.length) {
+                for (const src of data.sources) {
+                    const uLower = (src.url || '').toLowerCase();
+                    if (uLower.includes('boomchick') || uLower.includes('streamflix') || uLower.includes('aoneroom') || uLower.includes('tiktoks')) continue;
+                    const serverName = src.server ? `SFlixLine (${src.server})` : 'SFlixLine (UpCloud)';
                     sources.push({
                         url: src.url,
-                        quality: src.quality || 'default',
+                        quality: src.quality || '1080p',
                         type: getSourceType(src.url, src.isM3U8),
-                        audioTracks: [],
+                        server: serverName,
+                        audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: `${this.name} ${src.quality || ''}`.trim(),
-                            id: this.id
+                            name: serverName,
+                            id: `${this.id}-${serverName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+                        }
+                    });
+                }
+                if (sources.length > 0) {
+                    return { sources, subtitles: [], diagnostics: [] };
+                }
+            }
+        } catch {}
+
+        // 2. TrendiMovies direct SFlixLine downloads/streams
+        try {
+            const downloads: any = await callWithTimeout(
+                (trendimovies as any).getDownloads(media.tmdbId, media.type, media.s, media.e),
+                3000
+            );
+            if (downloads && Array.isArray(downloads) && downloads.length > 0) {
+                for (const item of downloads) {
+                    if (!item?.url || item.active === false) continue;
+                    const q = item.quality || 'HD';
+                    const serverName = `SFlixLine (${q})`;
+                    sources.push({
+                        url: item.url,
+                        quality: q,
+                        type: item.url.includes('.m3u8') ? 'hls' : 'mp4',
+                        server: serverName,
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: serverName,
+                            id: `${this.id}-${q.toLowerCase().replace(/[^a-z0-9]/g, '')}`
                         }
                     });
                 }
             }
+        } catch {}
 
-            return { sources, subtitles: [], diagnostics };
-        } catch (e: any) {
-            diagnostics.push({ code: 'PROVIDER_ERROR', field: '', message: e.message, severity: 'error' });
-            return { sources: [], subtitles: [], diagnostics };
-        }
+        return { sources, subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

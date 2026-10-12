@@ -42,14 +42,16 @@ export class SuperStreamProvider extends BaseProvider {
                 for (const src of data.sources) {
                     const uLower = (src.url || '').toLowerCase();
                     if (uLower.includes('streamflixserver.site') || uLower.includes('480ptvseries') || uLower.includes('goodstream.cc') || uLower.includes('tiktoks') || uLower.includes('aoneroom') || uLower.includes('boomchick')) continue;
+                    const serverName = src.server ? `${this.name} (${src.server})` : `${this.name} (Mirage)`;
                     sources.push({
                         url: src.url,
                         quality: src.quality || 'Auto',
                         type: getSourceType(src.url, src.isM3U8),
+                        server: serverName,
                         audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: src.server ? `${this.name} (${src.server})` : this.name,
-                            id: this.id
+                            name: serverName,
+                            id: `${this.id}-${serverName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
                         }
                     });
                 }
@@ -83,14 +85,16 @@ export class SuperStreamProvider extends BaseProvider {
                         ? this.createProxyUrl(src.url, streamHeaders)
                         : src.url;
 
+                    const serverName = src.server ? `${this.name} (${src.server})` : `${this.name} (Apex)`;
                     sources.push({
                         url,
                         quality: src.quality || 'Auto',
                         type: getSourceType(src.url, src.isM3U8),
+                        server: serverName,
                         audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: src.server ? `${this.name} (${src.server})` : this.name,
-                            id: this.id
+                            name: serverName,
+                            id: `${this.id}-${serverName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
                         }
                     });
                 }

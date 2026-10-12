@@ -115,14 +115,10 @@ async function main() {
                             url.includes('boomchick') ||
                             url.includes('neward.cyou') ||
                             url.includes('4pa.top') ||
-                            url.includes('trendimovies.com') ||
                             url.includes('professionaladvisory.sbs') ||
                             url.includes('streamflixserver.site') ||
                             url.includes('cf.streamflixserver') ||
                             url.includes('goodstream.cc') ||
-                            url.includes('klnwm.com') ||
-                            url.includes('hlnom.com') ||
-                            url.includes('hbsxcn.com') ||
                             url.includes('staticreverie.site') ||
                             url.includes('animecurx.tech') ||
                             url.includes('halcyoncreative.site') ||
@@ -131,7 +127,6 @@ async function main() {
                             url.includes('bestx.stream') ||
                             url.includes('appnumber.top') ||
                             url.includes('steman.cyou') ||
-                            url.includes('finepulfe.xyz') ||
                             url.endsWith('.txt') ||
                             url.includes('.txt?')
                         ) return false;
@@ -151,13 +146,10 @@ async function main() {
                         // Silent / video-only streams without audio
                         if (url.includes('rousav.tech') || server.includes('apogee')) return false;
 
-                        // Indian / Punjabi / Hindi / Tamil / Indonesian / Spanish / Foreign dubbed mirror hosts
+                        // Foreign non-English dubbed mirror hosts
                         if (
                             url.includes('cheaptruckrepairs.cc') ||
                             url.includes('480ptvseries.com') ||
-                            url.includes('klikxxi') ||
-                            url.includes('indoxxi') ||
-                            url.includes('layarkaca') ||
                             url.includes('vividdubbing') ||
                             url.includes('hindi') ||
                             url.includes('punjabi') ||
@@ -166,10 +158,6 @@ async function main() {
                             url.includes('latino') ||
                             url.includes('dublado') ||
                             url.includes('castellano') ||
-                            server.includes('vanguard') ||
-                            server.includes('klikxxi') ||
-                            server.includes('movies4f') ||
-                            server.includes('movies5f') ||
                             server.includes('hindi') ||
                             server.includes('punjabi') ||
                             server.includes('tamil') ||
@@ -182,7 +170,8 @@ async function main() {
                             quality.includes('tamil') ||
                             quality.includes('telugu') ||
                             quality.includes('latino') ||
-                            quality.includes('dub') ||
+                            quality.includes('dublado') ||
+                            quality.includes('castellano') ||
                             provName.includes('hindi') ||
                             provName.includes('punjabi') ||
                             provName.includes('tamil') ||
@@ -191,6 +180,40 @@ async function main() {
 
                         return true;
                     });
+
+                    // Universal Provider & Server Namespacing:
+                    // Ensures that EVERY provider and mirror has an explicit, unique Server name and Provider ID,
+                    // preventing generic names like "Direct 1080p" or undefined servers from colliding and reducing
+                    // the visible server count on the frontend from 25+ down to 7-9.
+                    for (const src of data.sources) {
+                        const rawProvName = (typeof src.provider === 'string' ? src.provider : (src.provider?.name || src.provider?.id || 'Server')).trim();
+                        const provBase = rawProvName.replace(/\s*\([^)]*\)$/, '').trim() || 'Server';
+                        const rawServer = (src.server || '').trim();
+
+                        let formattedServer = rawServer;
+                        if (!formattedServer || formattedServer.toLowerCase() === 'unknown') {
+                            const subTag = rawProvName.includes('(') ? rawProvName.replace(/^.*\(([^)]+)\).*$/, '$1') : 'Stream';
+                            formattedServer = `${provBase} (${subTag})`;
+                        } else if (
+                            formattedServer.toLowerCase().startsWith('direct') ||
+                            formattedServer.toLowerCase().startsWith('mirror') ||
+                            formattedServer.toLowerCase() === 'fast' ||
+                            formattedServer.toLowerCase() === 'prime'
+                        ) {
+                            formattedServer = `${provBase} (${formattedServer})`;
+                        } else if (!formattedServer.toLowerCase().includes(provBase.toLowerCase())) {
+                            formattedServer = `${provBase} (${formattedServer})`;
+                        }
+
+                        src.server = formattedServer;
+
+                        const serverSlug = formattedServer.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const provId = typeof src.provider === 'object' && src.provider?.id ? src.provider.id : provBase.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        src.provider = {
+                            name: formattedServer,
+                            id: provId.includes(serverSlug) ? provId : `${provId}-${serverSlug}`
+                        };
+                    }
 
                     await Promise.all(data.sources.map(async (src: any) => {
                         // Normalize MKV to MP4 type for browser video element compatibility
@@ -307,7 +330,13 @@ async function main() {
                                 provName.includes('purstream') ||
                                 provName.includes('rivestream') ||
                                 provName.includes('superstream') ||
-                                provName.includes('vidgod')
+                                provName.includes('vidgod') ||
+                                provName.includes('sflix') ||
+                                provName.includes('cinesu') ||
+                                provName.includes('vixsrc') ||
+                                provName.includes('vidup') ||
+                                provName.includes('embedsu') ||
+                                provName.includes('vidsrc')
                             ) {
                                 score += 40;
                             }

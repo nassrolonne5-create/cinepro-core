@@ -6,7 +6,7 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { vidnest } from 'kaizoku-core';
+import { vidnest, rivestream, trendimovies } from 'kaizoku-core';
 
 export class VidnestProvider extends BaseProvider {
     readonly id = 'vidnest';
@@ -20,35 +20,100 @@ export class VidnestProvider extends BaseProvider {
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) => setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500))
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) => setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500))
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        try {
-            const data = await vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e);
-            const headers = data.headers || {};
-            const sources: Source[] = [];
+        const timeout = (ms: number) => new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
 
-            for (const src of data.sources) {
-                sources.push({
-                    url: src.url,
-                    quality: src.quality || 'auto',
-                    type: getSourceType(src.url, src.isM3U8),
-                    audioTracks: [{ language: 'en', label: 'English' }],
-                    provider: {
-                        name: this.name,
-                        id: this.id
-                    }
-                });
+        try {
+            const data: any = await Promise.race([
+                vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                timeout(3000)
+            ]);
+            if (data?.sources?.length) {
+                const sources: Source[] = [];
+                for (const src of data.sources) {
+                    const sName = src.server || 'Mirror 1';
+                    sources.push({
+                        url: src.url,
+                        quality: src.quality || 'auto',
+                        type: getSourceType(src.url, src.isM3U8),
+                        server: sName,
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: `${this.name} (${sName})`,
+                            id: `${this.id}-${sName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+                        }
+                    });
+                }
+                if (sources.length > 0) return { sources, subtitles: [], diagnostics: [] };
             }
-            return { sources, subtitles: [], diagnostics: [] };
-        } catch (e) {
-            return { sources: [], subtitles: [], diagnostics: [] };
-        }
+        } catch (e) {}
+
+        // Fallback: RiveStream
+        try {
+            const data: any = await Promise.race([
+                rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                timeout(3000)
+            ]);
+            if (data?.sources?.length) {
+                const sources: Source[] = [];
+                for (const src of data.sources) {
+                    const uLower = (src.url || '').toLowerCase();
+                    if (uLower.includes('boomchick') || uLower.includes('streamflix') || uLower.includes('aoneroom')) continue;
+                    const sName = src.server || 'Mirror';
+                    sources.push({
+                        url: src.url,
+                        quality: src.quality || '1080p',
+                        type: getSourceType(src.url, src.isM3U8),
+                        server: sName,
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: `${this.name} (${sName})`,
+                            id: `${this.id}-${sName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+                        }
+                    });
+                }
+                if (sources.length > 0) return { sources, subtitles: [], diagnostics: [] };
+            }
+        } catch {}
+
+        // Fallback: TrendiMovies
+        try {
+            const downloads: any = await Promise.race([
+                (trendimovies as any).getDownloads(media.tmdbId, media.type, media.s, media.e),
+                timeout(2500)
+            ]);
+            if (downloads && Array.isArray(downloads) && downloads.length > 0) {
+                const sources: Source[] = downloads
+                    .filter((l: any) => l?.url && l.active !== false)
+                    .map((l: any) => ({
+                        url: l.url,
+                        quality: l.quality || 'HD',
+                        type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
+                        server: `Mirror ${l.quality || 'HD'}`,
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: `${this.name} (${l.quality || 'Direct'})`,
+                            id: `${this.id}-${(l.quality || 'direct').toLowerCase().replace(/[^a-z0-9]/g, '')}`
+                        }
+                    }));
+                if (sources.length > 0) return { sources, subtitles: [], diagnostics: [] };
+            }
+        } catch {}
+
+        return { sources: [], subtitles: [], diagnostics: [] };
     }
     async healthCheck(): Promise<boolean> {
         return true;

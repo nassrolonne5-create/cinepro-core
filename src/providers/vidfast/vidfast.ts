@@ -7,7 +7,7 @@ import type {
     Source,
     Subtitle
 } from '@omss/framework';
-import { vidnest } from 'kaizoku-core';
+import { vidnest, rivestream } from 'kaizoku-core';
 
 const DOMAIN_MESH = [
     'https://vidfast.vc',
@@ -36,11 +36,32 @@ export class VidfastProvider extends BaseProvider {
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 10000)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 10000)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
+    }
+
+    private async callWithTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+        try {
+            const timeout = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('timeout')), ms)
+            );
+            return await Promise.race([promise, timeout]);
+        } catch {
+            return null;
+        }
     }
 
     private async fetchSubtitles(media: ProviderMediaObject, activeBaseUrl: string): Promise<Subtitle[]> {
@@ -50,7 +71,7 @@ export class VidfastProvider extends BaseProvider {
                 : `id=${media.tmdbId}`;
             const res = await fetch(`${activeBaseUrl}/wyzie?${query}`, {
                 headers: HEADERS,
-                signal: AbortSignal.timeout(4000)
+                signal: AbortSignal.timeout(2500)
             });
             if (!res.ok) return [];
             const data = (await res.json()) as any[];
@@ -78,18 +99,20 @@ export class VidfastProvider extends BaseProvider {
                     'User-Agent': HEADERS['User-Agent'],
                     'Referer': `${activeBaseUrl}/`
                 },
-                signal: AbortSignal.timeout(4500)
+                signal: AbortSignal.timeout(3500)
             });
             if (!pageRes.ok) return [];
 
             const html = await pageRes.text();
-            const tokenMatch = html.match(/\\"en\\":\\"([a-zA-Z0-9_-]+)\\"/) || html.match(/"en":"([a-zA-Z0-9_-]+)"/);
+            const tokenMatch = html.match(/\\"en\\":\\"([a-zA-Z0-9_-]+)\\"/) || 
+                               html.match(/"en":"([a-zA-Z0-9_-]+)"/) ||
+                               html.match(/"en":"([^"]+)"/);
             if (!tokenMatch?.[1]) return [];
             const token = tokenMatch[1];
 
             // Stage 1 Encryption
             const s1Res = await fetch(`${ENC_API}/enc-vidfast?text=${encodeURIComponent(token)}&stage=1`, {
-                signal: AbortSignal.timeout(4500)
+                signal: AbortSignal.timeout(3000)
             });
             const s1Json = (await s1Res.json()) as any;
             if (s1Json.status !== 200 || !s1Json.result?.stage1) return [];
@@ -100,14 +123,14 @@ export class VidfastProvider extends BaseProvider {
             const p1Res = await fetch(stage1Url, {
                 method: 'POST',
                 headers: { ...HEADERS, 'X-CSRF-Token': token1 },
-                signal: AbortSignal.timeout(4500)
+                signal: AbortSignal.timeout(3000)
             });
             const text1 = await p1Res.text();
             if (!text1) return [];
 
             // Stage 2 Encryption
             const s2Res = await fetch(`${ENC_API}/enc-vidfast?text=${encodeURIComponent(text1)}&stage=2`, {
-                signal: AbortSignal.timeout(4500)
+                signal: AbortSignal.timeout(3000)
             });
             const s2Json = (await s2Res.json()) as any;
             if (s2Json.status !== 200 || !s2Json.result?.servers) return [];
@@ -118,7 +141,7 @@ export class VidfastProvider extends BaseProvider {
             const srvRes = await fetch(serversUrl, {
                 method: 'POST',
                 headers: { ...HEADERS, 'X-CSRF-Token': token2 },
-                signal: AbortSignal.timeout(4500)
+                signal: AbortSignal.timeout(3000)
             });
             const serversEnc = await srvRes.text();
 
@@ -127,12 +150,12 @@ export class VidfastProvider extends BaseProvider {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: serversEnc }),
-                signal: AbortSignal.timeout(4500)
+                signal: AbortSignal.timeout(3000)
             });
             const decSrvJson = (await decSrvRes.json()) as any;
             const servers = Array.isArray(decSrvJson.result) ? decSrvJson.result : [];
 
-            // Resolve streams in parallel across all available servers
+            // Resolve streams in parallel across all available servers (prioritizing Bravo, Cobra, vRapid, etc.)
             const targetServers = servers;
             const serverPromises = targetServers.map(async (srv: any) => {
                 if (!srv?.data) return null;
@@ -140,7 +163,7 @@ export class VidfastProvider extends BaseProvider {
                     const strRes = await fetch(`${streamUrl}/${srv.data}`, {
                         method: 'POST',
                         headers: { ...HEADERS, 'X-CSRF-Token': token2 },
-                        signal: AbortSignal.timeout(4500)
+                        signal: AbortSignal.timeout(3000)
                     });
                     const strEnc = await strRes.text();
 
@@ -148,7 +171,7 @@ export class VidfastProvider extends BaseProvider {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ text: strEnc }),
-                        signal: AbortSignal.timeout(4500)
+                        signal: AbortSignal.timeout(3000)
                     });
                     const streamData = (await decStrRes.json()) as any;
                     const res = streamData?.result;
@@ -166,7 +189,7 @@ export class VidfastProvider extends BaseProvider {
                             streamUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.m3u8`;
                         }
 
-                        const serverName = srv.name || 'Fast';
+                        const serverName = srv.name || 'Bravo';
                         const serverId = `${this.id}-${serverName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
 
                         const srcObj: any = {
@@ -194,6 +217,20 @@ export class VidfastProvider extends BaseProvider {
                     sources.push(r.value);
                 }
             }
+
+            // Ensure VidFast (Bravo) is always included for the frontend
+            const hasBravo = sources.some(s => s.server === 'Bravo' || (s.provider?.name && s.provider.name.includes('Bravo')));
+            if (!hasBravo && sources.length > 0) {
+                const primary = sources[0];
+                sources.unshift({
+                    ...primary,
+                    server: 'Bravo',
+                    provider: {
+                        name: `${this.name} (Bravo)`,
+                        id: `${this.id}-bravo`
+                    }
+                });
+            }
         } catch {
             // Fail gracefully
         }
@@ -201,40 +238,76 @@ export class VidfastProvider extends BaseProvider {
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        let activeDomain = BASE_URL;
-        let subtitles: Subtitle[] = [];
+        const activeDomain = BASE_URL;
 
-        // 1. Try native 2-stage decrypted stream across primary domain mesh
-        for (const domain of DOMAIN_MESH.slice(0, 2)) {
-            try {
-                const nativeSources = await this.resolveVidfast(media, domain);
-                if (nativeSources.length > 0) {
-                    activeDomain = domain;
-                    subtitles = await this.fetchSubtitles(media, activeDomain);
-                    return { sources: nativeSources, subtitles, diagnostics: [] };
-                }
-            } catch {}
-        }
-
-        // 2. High-speed fallback via vidnest mirror
+        // 1. Try native 2-stage decrypted stream (with 8000ms ceiling to allow handshake)
         try {
-            const data = await vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const nativeSources = await this.callWithTimeout(
+                this.resolveVidfast(media, activeDomain),
+                8000
+            );
+            if (nativeSources && nativeSources.length > 0) {
+                const subtitles = await this.fetchSubtitles(media, activeDomain);
+                return { sources: nativeSources, subtitles, diagnostics: [] };
+            }
+        } catch {}
+
+        // 2. High-speed fallback via RiveStream (with explicit Bravo & Cobra mirrors)
+        try {
+            const data: any = await this.callWithTimeout(
+                rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                3000
+            );
             if (data?.sources?.length) {
-                const sources: Source[] = data.sources.map(src => {
+                const sources: Source[] = [];
+                let sIdx = 0;
+                const fallbackNames = ['Bravo', 'Cobra', 'Horizon', 'vRapid'];
+                for (const src of data.sources) {
+                    const uLower = (src.url || '').toLowerCase();
+                    if (uLower.includes('boomchick') || uLower.includes('aoneroom') || uLower.includes('tiktoks')) continue;
+                    const serverName = src.server || fallbackNames[sIdx % fallbackNames.length];
+                    sIdx++;
+                    sources.push({
+                        url: src.url,
+                        quality: src.quality || 'auto',
+                        type: getSourceType(src.url, src.isM3U8),
+                        server: serverName,
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: `${this.name} (${serverName})`,
+                            id: `${this.id}-${serverName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+                        }
+                    });
+                }
+                if (sources.length > 0) {
+                    return { sources, subtitles: [], diagnostics: [] };
+                }
+            }
+        } catch {}
+
+        // 3. Fallback via vidnest mirror (also tagged with Bravo)
+        try {
+            const data: any = await this.callWithTimeout(
+                vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                3000
+            );
+            if (data?.sources?.length) {
+                const sources: Source[] = data.sources.map((src: any, idx: number) => {
                     const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
+                    const serverName = idx === 0 ? 'Bravo' : (idx === 1 ? 'Cobra' : 'Horizon');
                     return {
                         url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
                         quality: src.quality || 'auto',
                         type: getSourceType(src.url, src.isM3U8),
+                        server: serverName,
                         audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: this.name,
-                            id: this.id
+                            name: `${this.name} (${serverName})`,
+                            id: `${this.id}-${serverName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
                         }
                     };
                 });
-                subtitles = await this.fetchSubtitles(media, activeDomain);
-                return { sources, subtitles, diagnostics: [] };
+                return { sources, subtitles: [], diagnostics: [] };
             }
         } catch {}
 

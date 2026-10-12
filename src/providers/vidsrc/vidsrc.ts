@@ -45,11 +45,17 @@ export class VidSrcProvider extends BaseProvider {
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) => setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500))
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) => setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500))
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
     
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
@@ -68,7 +74,7 @@ export class VidSrcProvider extends BaseProvider {
             try {
                 const res = await fetch(`https://new.vidnest.fun/${b.path}/${segment}`, {
                     headers: this.HEADERS,
-                    signal: AbortSignal.timeout(8000)
+                    signal: AbortSignal.timeout(3000)
                 });
                 if (!res.ok) return;
 
@@ -78,7 +84,6 @@ export class VidSrcProvider extends BaseProvider {
                 const raw = json.encrypted ? decodeVidnestBase64(json.data) : json.data;
                 const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
 
-                // Handle streams array
                 if (Array.isArray(data.streams)) {
                     for (const s of data.streams) {
                         if (s?.url) {
@@ -88,30 +93,11 @@ export class VidSrcProvider extends BaseProvider {
                                 url: s.url,
                                 quality: s.language || s.quality || 'Auto',
                                 type: getSourceType(s.url, s.type === 'hls' || s.url.includes('.m3u8')),
+                                server: b.name,
                                 audioTracks: [{ language: 'en', label: 'English' }],
                                 provider: {
-                                    name: this.name,
-                                    id: this.id
-                                }
-                            });
-                        }
-                    }
-                }
-
-                // Handle sources array
-                if (Array.isArray(data.sources)) {
-                    for (const s of data.sources) {
-                        if (s?.url) {
-                            const uLower = s.url.toLowerCase();
-                            if (uLower.includes('tiktoks') || uLower.includes('animanga') || uLower.includes('aoneroom') || uLower.includes('boomchick')) continue;
-                            sources.push({
-                                url: s.url,
-                                quality: s.quality || 'Auto',
-                                type: getSourceType(s.url, s.url.includes('.m3u8')),
-                                audioTracks: [{ language: 'en', label: 'English' }],
-                                provider: {
-                                    name: this.name,
-                                    id: this.id
+                                    name: `${this.name} (${b.name})`,
+                                    id: `${this.id}-${b.path}`
                                 }
                             });
                         }
@@ -120,7 +106,39 @@ export class VidSrcProvider extends BaseProvider {
             } catch {}
         }));
 
-        return { sources, subtitles: [], diagnostics: [] };
+        if (sources.length > 0) {
+            return { sources, subtitles: [], diagnostics: [] };
+        }
+
+        // Fallback: RiveStream mirror
+        try {
+            const { rivestream } = await import('kaizoku-core');
+            const data: any = await Promise.race([
+                rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
+            ]);
+            if (data?.sources?.length) {
+                for (const src of data.sources) {
+                    const uLower = (src.url || '').toLowerCase();
+                    if (uLower.includes('boomchick') || uLower.includes('streamflix') || uLower.includes('aoneroom')) continue;
+                    const sName = src.server ? `${src.server}` : 'Alpha';
+                    sources.push({
+                        url: src.url,
+                        quality: src.quality || '1080p',
+                        type: getSourceType(src.url, src.isM3U8),
+                        server: sName,
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: `${this.name} (${sName})`,
+                            id: `${this.id}-${sName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+                        }
+                    });
+                }
+                if (sources.length > 0) return { sources, subtitles: [], diagnostics: [] };
+            }
+        } catch {}
+
+        return { sources: [], subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

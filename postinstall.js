@@ -76,8 +76,38 @@ if (fs.existsSync(sourceServiceFile)) {
     
     // Fix error logging to prevent crashes if error is null
     code = code.replace(/catch \{(?:\s*)return null;(?:\s*)\}/g, "catch(err){ return null; }");
+    
+    // Increase provider timeout to 25s and resolve gracefully instead of throwing unhandled error
+    code = code.replace(
+        /const timeoutPromise = new Promise\(\(_, reject\) => \{\s*setTimeout\(\(\) => reject\(new Error\('Provider timeout exceeded \(12s\)'\)\), 12000\);\s*\}\);/g,
+        `const providerTimeoutMs = parseInt(process.env.PROVIDER_TIMEOUT || '25000', 10);
+                const timeoutPromise = new Promise((resolve) => {
+                    setTimeout(() => {
+                        console.warn(\`[SourceService] Provider '\${provider.name}' timed out after \${providerTimeoutMs}ms\`);
+                        resolve({ sources: [], subtitles: [], diagnostics: [] });
+                    }, providerTimeoutMs);
+                });`
+    );
     fs.writeFileSync(sourceServiceFile, code);
     console.log("Patched source.service.js successfully.");
+}
+
+// Patch kaizoku-core vidup timeouts to prevent hanging for 25s
+const vidupCoreFile = 'node_modules/kaizoku-core/dist/providers/movies/vidup.js';
+if (fs.existsSync(vidupCoreFile)) {
+    let code = fs.readFileSync(vidupCoreFile, 'utf8');
+    code = code.replace(/AbortSignal\.timeout\(25000\)/g, 'AbortSignal.timeout(4000)');
+    fs.writeFileSync(vidupCoreFile, code);
+    console.log("Patched kaizoku-core vidup timeout to 4000ms.");
+}
+
+// Patch kaizoku-core vidnest backend timeouts
+const vidnestCoreFile = 'node_modules/kaizoku-core/dist/providers/movies/vidnest.js';
+if (fs.existsSync(vidnestCoreFile)) {
+    let code = fs.readFileSync(vidnestCoreFile, 'utf8');
+    code = code.replace(/AbortSignal\.timeout\(25000\)/g, 'AbortSignal.timeout(4500)');
+    fs.writeFileSync(vidnestCoreFile, code);
+    console.log("Patched kaizoku-core vidnest timeout to 4500ms.");
 }
 
 // Patch kaizoku-core vidcore domain
@@ -226,13 +256,22 @@ function parseStreamData(data) {
 if (fs.existsSync(sourceServiceFile)) {
     let code = fs.readFileSync(sourceServiceFile, 'utf8');
     
-    // Replace any existing timeout with 12s
-    if (code.includes('Provider timeout exceeded')) {
-        code = code.replace(/setTimeout\(\(\) => reject\(new Error\('Provider timeout exceeded \([^)]+\)'\)\), \d+\);/g, "setTimeout(() => reject(new Error('Provider timeout exceeded (12s)')), 12000);");
+    // Replace any existing timeout with graceful 25s timeout
+    if (code.includes('Provider timeout exceeded') || code.includes('timed out after')) {
+        code = code.replace(
+            /(?:const providerTimeoutMs[\s\S]*?resolve\(\{ sources: \[\], subtitles: \[\], diagnostics: \[\] \}\);\s*\}, providerTimeoutMs\);\s*\}\);|const timeoutPromise = new Promise\(\(_, reject\) => \{\s*setTimeout\(\(\) => reject\(new Error\('Provider timeout exceeded \([^)]+\)'\)\), \d+\);\s*\}\);)/g,
+            `const providerTimeoutMs = parseInt(process.env.PROVIDER_TIMEOUT || '25000', 10);
+                const timeoutPromise = new Promise((resolve) => {
+                    setTimeout(() => {
+                        console.warn(\`[SourceService] Provider '\${provider.name}' timed out after \${providerTimeoutMs}ms\`);
+                        resolve({ sources: [], subtitles: [], diagnostics: [] });
+                    }, providerTimeoutMs);
+                });`
+        );
         code = code.replace(/const urlObj = new URL\(source\.url\);/g, "const urlObj = new URL(source.url, 'http://localhost:3000');");
         code = code.replace(/catch\(err\)\{\s*return null;\s*\}/g, "catch(err){ return source; }");
         fs.writeFileSync(sourceServiceFile, code);
-        console.log("Patched source.service.js to update provider timeout to 12s and handle relative proxy URLs.");
+        console.log("Patched source.service.js to update provider timeout to 25s (graceful) and handle relative proxy URLs.");
     } else {
         const targetStr = `const promises = supportedProviders.map(async (provider) => {
             try {
@@ -248,8 +287,12 @@ if (fs.existsSync(sourceServiceFile)) {
         const replacement = `const promises = supportedProviders.map(async (provider) => {
             try {
                 const startTime = Date.now();
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Provider timeout exceeded (12s)')), 12000);
+                const providerTimeoutMs = parseInt(process.env.PROVIDER_TIMEOUT || '25000', 10);
+                const timeoutPromise = new Promise((resolve) => {
+                    setTimeout(() => {
+                        console.warn(\`[SourceService] Provider '\${provider.name}' timed out after \${providerTimeoutMs}ms\`);
+                        resolve({ sources: [], subtitles: [], diagnostics: [] });
+                    }, providerTimeoutMs);
                 });
                 let result = await Promise.race([
                     type === 'movie' ? provider.getMovieSources(media) : provider.getTVSources(media),
@@ -258,7 +301,7 @@ if (fs.existsSync(sourceServiceFile)) {
 
         code = code.replace(targetStr, replacement);
         fs.writeFileSync(sourceServiceFile, code);
-        console.log("Patched source.service.js to add global 12-second provider timeout.");
+        console.log("Patched source.service.js to add global 25-second graceful provider timeout.");
     }
 }
 

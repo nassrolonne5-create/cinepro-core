@@ -5,7 +5,7 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { rivestream, vidnest } from 'kaizoku-core';
+import { rivestream, trendimovies } from 'kaizoku-core';
 import { getSourceType } from '../../utils/streamType.js';
 
 export class VideasyProvider extends BaseProvider {
@@ -20,20 +20,27 @@ export class VideasyProvider extends BaseProvider {
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) => setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500))
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) => setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500))
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         const timeout = (ms: number) => new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
 
+        // 1. Try RiveStream
         try {
             const data: any = await Promise.race([
                 rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e),
-                timeout(4500)
+                timeout(3500)
             ]);
             if (data?.sources?.length) {
                 const sources: Source[] = [];
@@ -42,12 +49,9 @@ export class VideasyProvider extends BaseProvider {
                     const qLower = (src.quality || '').toLowerCase();
                     const sLower = (src.server || '').toLowerCase();
 
-                    // Filter out dead, silent, and non-English dubs
+                    // Only filter true dead or foreign dubs
                     if (
-                        sLower.includes('citadel') || sLower.includes('apogee') || sLower.includes('vanguard') ||
-                        sLower.includes('primevids') || uLower.includes('boomchick') || uLower.includes('streamflix') ||
-                        uLower.includes('hbsxcn.com') || uLower.includes('hlnom.com') || uLower.includes('klnwm.com') ||
-                        uLower.includes('cheaptruckrepairs') || uLower.includes('rousav') ||
+                        uLower.includes('boomchick') || uLower.includes('streamflix') ||
                         uLower.includes('tiktoks') || uLower.includes('animanga') || uLower.includes('aoneroom') ||
                         qLower.includes('hindi') || qLower.includes('tamil') || qLower.includes('telugu') ||
                         sLower.includes('hindi') || sLower.includes('tamil')
@@ -59,14 +63,16 @@ export class VideasyProvider extends BaseProvider {
                         ? this.createProxyUrl(src.url, data.headers)
                         : src.url;
 
+                    const sName = src.server || 'Server 1';
                     sources.push({
                         url: streamUrl,
                         quality: src.quality || 'Auto',
                         type: getSourceType(src.url, src.isM3U8),
+                        server: sName,
                         audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: src.server ? `${this.name} (${src.server})` : this.name,
-                            id: this.id
+                            name: `${this.name} (${sName})`,
+                            id: `${this.id}-${sName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
                         }
                     });
                 }
@@ -76,27 +82,27 @@ export class VideasyProvider extends BaseProvider {
             }
         } catch {}
 
-        // Fallback upstream mirror via vidnest
+        // 2. Direct TrendiMovies mirror
         try {
-            const data: any = await Promise.race([
-                vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e),
-                timeout(4500)
+            const downloads: any = await Promise.race([
+                (trendimovies as any).getDownloads(media.tmdbId, media.type, media.s, media.e),
+                timeout(2500)
             ]);
-            if (data?.sources?.length) {
-                const sources: Source[] = data.sources.map((src: any) => {
-                    const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
-                    return {
-                        url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
-                        quality: src.quality || 'auto',
-                        type: getSourceType(src.url, src.isM3U8),
+            if (downloads && Array.isArray(downloads) && downloads.length > 0) {
+                const sources: Source[] = downloads
+                    .filter((l: any) => l?.url && l.active !== false)
+                    .map((l: any) => ({
+                        url: l.url,
+                        quality: l.quality || 'HD',
+                        type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
+                        server: `Direct ${l.quality || 'HD'}`,
                         audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: `${this.name} (Mirror)`,
-                            id: this.id
+                            name: `${this.name} (${l.quality || 'Direct'})`,
+                            id: `${this.id}-${(l.quality || 'direct').toLowerCase().replace(/[^a-z0-9]/g, '')}`
                         }
-                    };
-                });
-                return { sources, subtitles: [], diagnostics: [] };
+                    }));
+                if (sources.length > 0) return { sources, subtitles: [], diagnostics: [] };
             }
         } catch {}
 

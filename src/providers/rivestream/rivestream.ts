@@ -63,14 +63,16 @@ export class RivestreamProvider extends BaseProvider {
                         streamUrl = this.createProxyUrl(src.url, streamHeaders);
                     }
 
+                    const serverName = src.server ? `${this.name} (${src.server})` : `${this.name} (Apex)`;
                     sources.push({
                         url: streamUrl,
                         quality: src.quality || 'auto',
                         type: getSourceType(src.url, src.isM3U8),
+                        server: serverName,
                         audioTracks: [{ language: 'en', label: 'English' }],
                         provider: {
-                            name: src.server ? `${this.name} (${src.server})` : this.name,
-                            id: this.id
+                            name: serverName,
+                            id: `${this.id}-${serverName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
                         }
                     });
                 }
