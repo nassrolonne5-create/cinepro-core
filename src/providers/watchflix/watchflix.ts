@@ -36,9 +36,12 @@ export class WatchflixProvider extends BaseProvider {
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         const sources: Source[] = [];
+        const season = (media as any).s || (media as any).season || 1;
+        const episode = (media as any).e || (media as any).episode || 1;
+
         try {
             const pageUrl = media.type === 'tv'
-                ? `${BASE_URL}/tv/${media.tmdbId}/${media.s || 1}/${media.e || 1}`
+                ? `${BASE_URL}/tv/${media.tmdbId}/${season}/${episode}`
                 : `${BASE_URL}/movie/${media.tmdbId}`;
 
             // 1. Fetch token from VidCore using WatchFlix referer
@@ -46,14 +49,15 @@ export class WatchflixProvider extends BaseProvider {
                 headers: HEADERS,
                 signal: AbortSignal.timeout(8000)
             });
-            if (!pageRes.ok) return { sources: [], subtitles: [], diagnostics: [] };
+            if (!pageRes.ok) return this.fallbackVidVault(media, season, episode);
 
             const text = await pageRes.text();
-            const token = text.match(/\\\\\"en\\\\\":\\\\\"([a-zA-Z0-9_-]+)\\\\\"/)?.[1]
+            const token = text.match(/\\"?en\\"?\s*:\s*\\"?([a-zA-Z0-9_-]+)\\"?/)?.[1]
+                || text.match(/\\\\\"en\\\\\":\\\\\"([a-zA-Z0-9_-]+)\\\\\"/)?.[1]
                 || text.match(/\"en\":\"([a-zA-Z0-9_-]+)\"/)?.[1]
                 || text.match(/\\"en\\":\\"([a-zA-Z0-9_-]+)\\"/)?.[1];
 
-            if (!token) return { sources: [], subtitles: [], diagnostics: [] };
+            if (!token) return this.fallbackVidVault(media, season, episode);
 
             // 2. Stage 1 Handshake
             const s1Res = await fetch(`${ENC_API}/enc-vidcore?text=${encodeURIComponent(token)}&stage=1`, {
@@ -61,7 +65,7 @@ export class WatchflixProvider extends BaseProvider {
             });
             const s1Json = (await s1Res.json()) as any;
             if (s1Json.status !== 200 || !s1Json.result?.stage1) {
-                return { sources: [], subtitles: [], diagnostics: [] };
+                return this.fallbackVidVault(media, season, episode);
             }
 
             const { stage1: stage1Url, token: token1 } = s1Json.result;
@@ -78,7 +82,7 @@ export class WatchflixProvider extends BaseProvider {
                 signal: AbortSignal.timeout(8000)
             });
             const text1 = await p1Res.text();
-            if (!text1) return { sources: [], subtitles: [], diagnostics: [] };
+            if (!text1) return this.fallbackVidVault(media, season, episode);
 
             // 4. Stage 2 Handshake
             const s2Res = await fetch(`${ENC_API}/enc-vidcore?text=${encodeURIComponent(text1)}&stage=2`, {
@@ -86,7 +90,7 @@ export class WatchflixProvider extends BaseProvider {
             });
             const s2Json = (await s2Res.json()) as any;
             if (s2Json.status !== 200 || !s2Json.result?.servers) {
-                return { sources: [], subtitles: [], diagnostics: [] };
+                return this.fallbackVidVault(media, season, episode);
             }
 
             const { servers: serversUrl, stream: streamUrl, token: token2 } = s2Json.result;
@@ -114,8 +118,8 @@ export class WatchflixProvider extends BaseProvider {
             const decSrvJson = (await decSrvRes.json()) as any;
             const servers = Array.isArray(decSrvJson.result) ? decSrvJson.result : [];
 
-            // 7. Resolve top English servers in parallel (Supreme, Prime, Orbit/4K)
-            const targetServers = servers.slice(0, 3);
+            // 7. Resolve all active English servers in parallel (Supreme, Prime, Orbit, Premiere 4K, Horizon)
+            const targetServers = servers.filter((s: any) => s && s.data).slice(0, 5);
             const serverPromises = targetServers.map(async (srv: any) => {
                 if (!srv?.data) return null;
                 try {
@@ -141,26 +145,26 @@ export class WatchflixProvider extends BaseProvider {
                     const res = streamData?.result;
                     if (res?.url) {
                         const quality = res['4kAvailable'] || srv.name?.includes('4K') ? '4K' : '1080p';
-                        let streamUrl = res.url;
+                        const isM3U8 = !res.mp4 && !res.url.includes('.mp4');
+                        const ext = isM3U8 ? '.m3u8' : '.mp4';
 
-                        if (streamUrl.includes('zenoak.top') || streamUrl.includes('peakpine.top')) {
-                            const proxyHeaders = {
-                                'User-Agent': HEADERS['User-Agent'],
-                                'Referer': 'https://vidcore.io/',
-                                'Origin': 'https://vidcore.io'
-                            };
-                            const proxyData = JSON.stringify({ url: streamUrl, headers: proxyHeaders });
-                            streamUrl = `http://localhost:3000/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.m3u8`;
-                        }
+                        const proxyHeaders = {
+                            'User-Agent': HEADERS['User-Agent'],
+                            'Referer': 'https://vidcore.io/',
+                            'Origin': 'https://vidcore.io'
+                        };
+                        const proxyData = JSON.stringify({ url: res.url, headers: proxyHeaders });
+                        const proxiedUrl = `http://localhost:3000/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=${ext}`;
 
+                        const serverName = srv.name || 'Core';
                         const srcObj: any = {
-                            url: streamUrl,
+                            url: proxiedUrl,
                             quality,
-                            type: getSourceType(res.url, !res.mp4),
-                            server: srv.name || 'Core',
+                            type: isM3U8 ? 'hls' : 'mp4',
+                            server: serverName,
                             audioTracks: [{ language: 'en', label: 'English' }],
                             provider: {
-                                name: `${this.name} (${srv.name || 'Core'})`,
+                                name: `${this.name} (${serverName})`,
                                 id: this.id
                             }
                         };
@@ -186,10 +190,14 @@ export class WatchflixProvider extends BaseProvider {
             // Proceed to mirror fallback
         }
 
-        // Secondary Upstream Mirror: VidVault High-Speed HD Nodes
+        return this.fallbackVidVault(media, season, episode);
+    }
+
+    private async fallbackVidVault(media: ProviderMediaObject, season: number, episode: number): Promise<ProviderResult> {
+        const sources: Source[] = [];
         try {
             const bodyPayload = media.type === 'tv'
-                ? { type: 'tv', tmdbId: Number(media.tmdbId), season: Number(media.s || 1), episode: Number(media.e || 1) }
+                ? { type: 'tv', tmdbId: Number(media.tmdbId), season: Number(season), episode: Number(episode) }
                 : { type: 'movie', tmdbId: Number(media.tmdbId) };
 
             const tokenRes = await fetch('https://vidvault.to/api/get-token', {
