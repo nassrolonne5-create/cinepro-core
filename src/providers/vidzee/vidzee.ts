@@ -6,6 +6,7 @@ import type {
     Source
 } from '@omss/framework';
 import { vidzee, vidnest, rivestream, trendimovies } from 'kaizoku-core';
+import { unwrapAndBuildProxyUrl } from '../rivestream/rivestream.js';
 
 export class VidzeeProvider extends BaseProvider {
     readonly id = 'vidzee';
@@ -48,7 +49,11 @@ export class VidzeeProvider extends BaseProvider {
                 if (uLower.includes('boomchick') || sLower.includes('tcloud') || uLower.includes('streamflix')) {
                     continue;
                 }
-                const url = (headers && Object.keys(headers).length > 0) ? this.createProxyUrl(src.url, headers) : src.url;
+                const url = unwrapAndBuildProxyUrl(
+                    src.url,
+                    src.headers || headers,
+                    (u, h) => this.createProxyUrl(u, h)
+                );
                 const sName = src.server || 'Server 1';
                 sources.push({
                     url,
@@ -67,20 +72,33 @@ export class VidzeeProvider extends BaseProvider {
             }
         } catch (e) {}
 
-        // Fallback: RiveStream
+        // Fallback: RiveStream with proper header unwrapping
         try {
             const data: any = await Promise.race([
                 rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e),
                 timeout(3000)
             ]);
             if (data?.sources?.length) {
+                const defaultHeaders = data.headers || {};
                 const sources: Source[] = [];
                 for (const src of data.sources) {
                     const uLower = (src.url || '').toLowerCase();
-                    if (uLower.includes('boomchick') || uLower.includes('streamflix') || uLower.includes('aoneroom')) continue;
+                    const sLower = (src.server || '').toLowerCase();
+                    const qLower = (src.quality || '').toLowerCase();
+                    if (
+                        uLower.includes('boomchick') || uLower.includes('streamflix') || uLower.includes('aoneroom') ||
+                        sLower.includes('vanguard') || uLower.includes('cheaptruckrepairs') ||
+                        uLower.includes('onlinevisibilitysystem.site') || uLower.includes('highperformanceread.com') ||
+                        qLower.includes('tamil') || qLower.includes('hindi') || qLower.includes('telugu')
+                    ) continue;
                     const sName = src.server || 'Ultra';
+                    const url = unwrapAndBuildProxyUrl(
+                        src.url,
+                        src.headers || defaultHeaders,
+                        (u, h) => this.createProxyUrl(u, h)
+                    );
                     sources.push({
-                        url: src.url,
+                        url,
                         quality: src.quality || '1080p',
                         type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
                         server: sName,
@@ -120,9 +138,5 @@ export class VidzeeProvider extends BaseProvider {
         } catch {}
 
         return { sources: [], subtitles: [], diagnostics: [] };
-    }
-
-    async healthCheck(): Promise<boolean> {
-        return true;
     }
 }

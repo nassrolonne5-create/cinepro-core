@@ -10,8 +10,8 @@ for (const key of Object.keys(process.env)) {
 }
 
 // Force valid configurations for the dev server environment
-if (!process.env.TMDB_API_KEY || process.env.TMDB_API_KEY === 'your_tmdb_api_key_here') {
-    process.env.TMDB_API_KEY = 'fake_key';
+if (!process.env.TMDB_API_KEY || process.env.TMDB_API_KEY === 'your_tmdb_api_key_here' || process.env.TMDB_API_KEY === 'fake_key') {
+    process.env.TMDB_API_KEY = '5201b54eb0968700e693a30576d7d4dc';
 }
 
 import { fileURLToPath } from 'node:url';
@@ -20,7 +20,14 @@ import fs from 'node:fs';
 import { knownThirdPartyProxies } from './thirdPartyProxies.js';
 import { streamPatterns } from './streamPatterns.js';
 import { configure as configureKaizoku } from 'kaizoku-core';
-import { setupThreePillarArchitecture } from './threePillars.js';
+import { setupThreePillarArchitecture, subscribeToStreams } from './threePillars.js';
+import {
+    getLiveChannels,
+    getLiveSportEvents,
+    resolveChannelStreams,
+    generateSportsM3UPlaylist,
+    handleLiveHlsProxyRequest
+} from './iptv/liveSportsEngine.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,7 +39,7 @@ const getEnv = (key: string, def?: string): any => {
 };
 
 async function main() {
-    configureKaizoku({ tmdbApiKey: (getEnv('TMDB_API_KEY') && getEnv('TMDB_API_KEY') !== 'your_tmdb_api_key_here') ? getEnv('TMDB_API_KEY') : 'fake_key' });
+    configureKaizoku({ tmdbApiKey: (getEnv('TMDB_API_KEY') && getEnv('TMDB_API_KEY') !== 'your_tmdb_api_key_here' && getEnv('TMDB_API_KEY') !== 'fake_key') ? getEnv('TMDB_API_KEY') : '5201b54eb0968700e693a30576d7d4dc' });
     
     const server = new OMSSServer({
         name: 'CinePro',
@@ -59,9 +66,9 @@ async function main() {
         
         // TMDB
         tmdb: {
-            apiKey: (getEnv('TMDB_API_KEY') && getEnv('TMDB_API_KEY') !== 'your_tmdb_api_key_here') 
+            apiKey: (getEnv('TMDB_API_KEY') && getEnv('TMDB_API_KEY') !== 'your_tmdb_api_key_here' && getEnv('TMDB_API_KEY') !== 'fake_key') 
                 ? getEnv('TMDB_API_KEY') 
-                : 'fake_key',
+                : '5201b54eb0968700e693a30576d7d4dc',
             cacheTTL: 24 * 60 * 60 // 24h
         },
         
@@ -131,6 +138,9 @@ async function main() {
                             url.includes('bestx.stream') ||
                             url.includes('appnumber.top') ||
                             url.includes('steman.cyou') ||
+                            url.includes('onlinevisibilitysystem.site') ||
+                            url.includes('highperformanceread.com') ||
+                            url.includes('moon.zenoak.top/s/') ||
                             url.endsWith('.txt') ||
                             url.includes('.txt?')
                         ) return false;
@@ -140,6 +150,7 @@ async function main() {
                             url.includes('aoneroom.com') ||
                             url.includes('animanga.fun') ||
                             url.includes('tiktoks') ||
+                            url.includes('streamx.me/videos/netflix.mp4') ||
                             url.includes('/sample/') ||
                             url.includes('sample.mp4') ||
                             url.includes('trailer.mp4') ||
@@ -225,6 +236,35 @@ async function main() {
                             src.type = 'mp4';
                         }
 
+                        // Universal Mirage 4K (cine4k.mpddash.workers.dev) & ValhallaStream unwrapper
+                        if (src.url && src.url.includes('valhallastream.com')) {
+                            try {
+                                const parsed = new URL(src.url);
+                                const innerUrl = parsed.searchParams.get('url');
+                                const rawInnerHeaders = parsed.searchParams.get('headers');
+                                if (innerUrl) {
+                                    const headers = innerUrl.includes('cine4k.mpddash.workers.dev')
+                                        ? { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' }
+                                        : (rawInnerHeaders ? JSON.parse(rawInnerHeaders) : {});
+                                    src.url = `${publicBaseUrl}/v1/proxy?data=${encodeURIComponent(JSON.stringify({ url: innerUrl, headers }))}`;
+                                }
+                            } catch {}
+                        } else if (src.url && src.url.includes('cine4k.mpddash.workers.dev') && src.url.includes('/v1/proxy')) {
+                            try {
+                                const parsed = new URL(src.url, publicBaseUrl);
+                                const dataParam = parsed.searchParams.get('data');
+                                if (dataParam) {
+                                    const decoded = JSON.parse(decodeURIComponent(dataParam));
+                                    if (decoded?.url?.includes('cine4k.mpddash.workers.dev')) {
+                                        decoded.headers = {
+                                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+                                        };
+                                        src.url = `${publicBaseUrl}/v1/proxy?data=${encodeURIComponent(JSON.stringify(decoded))}`;
+                                    }
+                                }
+                            } catch {}
+                        }
+
                         // Fix proxy baseUrl so remote clients, mobile devices, and CinePro UI connect to the real server
                         if (src.url && src.url.includes('/v1/proxy')) {
                             src.url = src.url.replace(/^https?:\/\/[^/]+(?=\/v1\/proxy)/, publicBaseUrl);
@@ -233,6 +273,11 @@ async function main() {
                             }
                             // Rewrite proxy URL to have a .mp4 extension so Android DownloadManager doesn't fail
                             src.url = src.url.replace('/v1/proxy?', '/v1/proxy/video.mp4?');
+                        } else if (src.url && src.url.includes('/v1/live/proxy')) {
+                            src.url = src.url.replace(/^https?:\/\/[^/]+(?=\/v1\/live\/proxy)/, publicBaseUrl);
+                            if (src.url.startsWith('/v1/live/proxy')) {
+                                src.url = publicBaseUrl + src.url;
+                            }
                         }
                     }
 
@@ -256,10 +301,20 @@ async function main() {
                             const provName = (s.provider?.name || s.provider || '').toLowerCase();
                             const url = (s.url || '').toLowerCase();
 
-                            // Severe penalty for foreign/dubbed audio
-                            const hasOnlyNonEnglish = Array.isArray(s.audioTracks) && s.audioTracks.length > 0 && !s.audioTracks.some((t: any) => (typeof t === 'string' ? t === 'en' : t?.language === 'en'));
+                            // Severe penalty for foreign/dubbed audio (except multi-language IPTV Sports, StreamX & Anime Sub/Dub)
+                            const isAnimeProvider =
+                                provName.includes('animehub') ||
+                                provName.includes('2dhive') ||
+                                provName.includes('reanime') ||
+                                provName.includes('megaplay') ||
+                                provName.includes('anikoto') ||
+                                provName.includes('aniwave') ||
+                                provName.includes('animeparadise') ||
+                                provName.includes('animesogo');
+                            const isIntentionalMultiLang = provName.includes('iptv') || provName.includes('streamx') || isAnimeProvider;
+                            const hasOnlyNonEnglish = !isIntentionalMultiLang && Array.isArray(s.audioTracks) && s.audioTracks.length > 0 && !s.audioTracks.some((t: any) => (typeof t === 'string' ? t === 'en' : t?.language === 'en'));
                             if (
-                                quality.includes('hindi') || quality.includes('punjabi') || quality.includes('tamil') || quality.includes('telugu') || quality.includes('latino') || quality.includes('dub') ||
+                                quality.includes('hindi') || quality.includes('punjabi') || quality.includes('tamil') || quality.includes('telugu') || quality.includes('latino') || (!isAnimeProvider && quality.includes('dub')) ||
                                 server.includes('hindi') || server.includes('punjabi') || server.includes('tamil') || server.includes('telugu') || server.includes('klikxxi') || server.includes('movies4f') || server.includes('movies5f') || server.includes('latino') || server.includes('dublado') ||
                                 url.includes('klikxxi') || url.includes('indoxxi') || url.includes('layarkaca') || url.includes('vividdubbing') ||
                                 hasOnlyNonEnglish
@@ -269,12 +324,17 @@ async function main() {
 
                             let score = 50;
 
-                            // Highest priority boost (+120) for verified 100% English audio sources (4K HDR & 1080p FHD)
+                            // Highest priority boost (+120) for verified 100% English & Anime HD sources (4K HDR & 1080p FHD)
                             if (
                                 url.includes('cookiebakers') ||
                                 url.includes('bluevelvet.space') ||
                                 url.includes('zenoak.top') ||
                                 url.includes('vidrift.net') ||
+                                url.includes('cine4k.mpddash.workers.dev') ||
+                                url.includes('nexabloom.top') ||
+                                url.includes('flixcloud.cc') ||
+                                url.includes('echovideo.to') ||
+                                url.includes('animeparadise.moe') ||
                                 url.includes('remoteconsultinggroup.site') ||
                                 url.includes('sprintspeedlight.lol') ||
                                 url.includes('finepulfe.xyz') ||
@@ -286,11 +346,14 @@ async function main() {
                                 score += 120;
                             }
 
-                            // Verified English-first providers receive a solid priority boost (+40)
+                            // Verified English-first, Anime & Tier-1 providers receive a solid priority boost (+40)
                             if (
+                                isAnimeProvider ||
                                 provName.includes('cinemaarmy') ||
                                 provName.includes('watchflix') ||
                                 provName.includes('trendimovies') ||
+                                provName.includes('streamx') ||
+                                provName.includes('iptv') ||
                                 provName.includes('vidrift') ||
                                 provName.includes('vidsrcwin') ||
                                 provName.includes('vidvault') ||
@@ -346,6 +409,240 @@ async function main() {
         // Redirect to the actual proxy route, keeping the query string intact
         const query = new URLSearchParams(request.query as any).toString();
         return reply.redirect(`/v1/proxy?${query}`);
+    });
+
+    // Real-Time Server-Sent Events (SSE) Progressive Streaming for Movies
+    app.get('/v1/movies/:id/stream', async (request: any, reply: any) => {
+        const id = request.params.id;
+        const cacheKey = `movie:${id}`;
+
+        reply.raw.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*',
+            'X-Accel-Buffering': 'no'
+        });
+
+        // Push initial heartbeat/connected event
+        reply.raw.write(`event: connected\ndata: ${JSON.stringify({ status: 'connected', cacheKey })}\n\n`);
+
+        // Check cache first: if already resolved, stream immediately
+        const cached = await (server as any).sourceService.cache.get(cacheKey);
+        if (cached && Array.isArray(cached.sources) && cached.sources.length > 0) {
+            for (const s of cached.sources) {
+                reply.raw.write(`event: source\ndata: ${JSON.stringify(s)}\n\n`);
+            }
+            reply.raw.write(`event: done\ndata: ${JSON.stringify({ status: 'complete', count: cached.sources.length })}\n\n`);
+            reply.raw.end();
+            return;
+        }
+
+        // Subscribe to real-time provider source events as scrapers complete
+        const unsubscribe = subscribeToStreams(cacheKey, (event: any) => {
+            if (event.type === 'source') {
+                reply.raw.write(`event: source\ndata: ${JSON.stringify(event.data)}\n\n`);
+            } else if (event.type === 'done') {
+                reply.raw.write(`event: done\ndata: ${JSON.stringify(event.data)}\n\n`);
+                reply.raw.end();
+            }
+        });
+
+        request.raw.on('close', () => {
+            unsubscribe();
+        });
+
+        // Trigger Three-Pillars background scraping
+        (server as any).sourceService.getMovieSources(id).catch(() => {});
+    });
+
+    // Real-Time Server-Sent Events (SSE) Progressive Streaming for TV Episodes
+    app.get('/v1/tv/:id/seasons/:s/episodes/:e/stream', async (request: any, reply: any) => {
+        const id = request.params.id;
+        const s = Number(request.params.s || 1);
+        const e = Number(request.params.e || 1);
+        const cacheKey = `tv:${id}:s${s}:e${e}`;
+
+        reply.raw.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*',
+            'X-Accel-Buffering': 'no'
+        });
+
+        reply.raw.write(`event: connected\ndata: ${JSON.stringify({ status: 'connected', cacheKey })}\n\n`);
+
+        const cached = await (server as any).sourceService.cache.get(cacheKey);
+        if (cached && Array.isArray(cached.sources) && cached.sources.length > 0) {
+            for (const src of cached.sources) {
+                reply.raw.write(`event: source\ndata: ${JSON.stringify(src)}\n\n`);
+            }
+            reply.raw.write(`event: done\ndata: ${JSON.stringify({ status: 'complete', count: cached.sources.length })}\n\n`);
+            reply.raw.end();
+            return;
+        }
+
+        const unsubscribe = subscribeToStreams(cacheKey, (event: any) => {
+            if (event.type === 'source') {
+                reply.raw.write(`event: source\ndata: ${JSON.stringify(event.data)}\n\n`);
+            } else if (event.type === 'done') {
+                reply.raw.write(`event: done\ndata: ${JSON.stringify(event.data)}\n\n`);
+                reply.raw.end();
+            }
+        });
+
+        request.raw.on('close', () => {
+            unsubscribe();
+        });
+
+        (server as any).sourceService.getTVSources(id, s, e).catch(() => {});
+    });
+
+    // Helper to resolve public origin for Live IPTV URLs
+    const getRequestPublicBaseUrl = (request: any): string => {
+        if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL.replace(/\/$/, '');
+        if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '');
+        const proto = request.headers['x-forwarded-proto'] || (request.socket?.encrypted ? 'https' : 'http');
+        const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:3000';
+        return `${proto}://${host}`;
+    };
+
+    // 1. Live Sports Channels Directory API (beIN AR/EN/FR/TR/ES, Fox Sports, ESPN, Eurosport, etc.)
+    app.get('/v1/live/channels', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const query = (request.query || {}) as { lang?: string; category?: string; q?: string };
+        const channels = getLiveChannels(baseUrl, {
+            lang: query.lang,
+            category: query.category,
+            query: query.q
+        });
+        return reply.code(200).send({
+            status: 'ok',
+            count: channels.length,
+            filters: {
+                lang: query.lang || 'all',
+                category: query.category || 'all',
+                q: query.q || ''
+            },
+            channels
+        });
+    });
+
+    // 2. Live Sports Events & Match Scoreboard API (Champions League, EPL, LaLiga, Serie A, Ligue 1, NBA, NFL, UFC)
+    app.get('/v1/live/events', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const query = (request.query || {}) as { sport?: string; status?: string };
+        const events = await getLiveSportEvents(baseUrl, {
+            sport: query.sport,
+            status: query.status
+        });
+        return reply.code(200).send({
+            status: 'ok',
+            count: events.length,
+            events
+        });
+    });
+
+    // 3. Resolve & Verify Live Channel Streams (JSON)
+    app.get('/v1/live/stream/:channelId', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const channelId = String(request.params.channelId || '');
+        const resolved = await resolveChannelStreams(channelId, baseUrl);
+        if (!resolved.channel) {
+            return reply.code(404).send({
+                error: 'CHANNEL_NOT_FOUND',
+                message: `No live sports channel found matching '${channelId}'`
+            });
+        }
+        return reply.code(200).send({
+            status: 'ok',
+            channel: resolved.channel,
+            count: resolved.sources.length,
+            sources: resolved.sources
+        });
+    });
+
+    // 4. Progressive SSE Stream Resolver for Live Sports Channels
+    app.get('/v1/live/stream/:channelId/sse', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const channelId = String(request.params.channelId || '');
+
+        reply.raw.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*',
+            'X-Accel-Buffering': 'no'
+        });
+
+        reply.raw.write(`event: connected\ndata: ${JSON.stringify({ status: 'connected', channelId })}\n\n`);
+
+        let closed = false;
+        request.raw.on('close', () => {
+            closed = true;
+        });
+
+        try {
+            const resolved = await resolveChannelStreams(channelId, baseUrl, (verifiedSource) => {
+                if (!closed) {
+                    reply.raw.write(`event: source\ndata: ${JSON.stringify(verifiedSource)}\n\n`);
+                }
+            });
+
+            if (!closed) {
+                // If none passed the strict 2.5s probe, still emit fallback mirrors so player can attempt playback
+                if (resolved.sources.every((s) => !s.verified)) {
+                    for (const fallbackSrc of resolved.sources) {
+                        reply.raw.write(`event: source\ndata: ${JSON.stringify(fallbackSrc)}\n\n`);
+                    }
+                }
+                reply.raw.write(
+                    `event: done\ndata: ${JSON.stringify({
+                        status: 'complete',
+                        channelId,
+                        count: resolved.sources.length
+                    })}\n\n`
+                );
+                reply.raw.end();
+            }
+        } catch (err: any) {
+            if (!closed) {
+                reply.raw.write(`event: error\ndata: ${JSON.stringify({ message: err?.message || 'Error' })}\n\n`);
+                reply.raw.end();
+            }
+        }
+    });
+
+    // 5. M3U8 IPTV Playlist Generator for VLC / TiviMate / Web Players
+    app.get('/v1/live/playlist.m3u8', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const query = (request.query || {}) as { lang?: string; category?: string; proxy?: string };
+        const useProxy = query.proxy === 'true' || query.proxy === '1';
+        const m3u = generateSportsM3UPlaylist(baseUrl, {
+            lang: query.lang,
+            category: query.category,
+            useProxy
+        });
+        return reply
+            .code(200)
+            .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
+            .header('Content-Disposition', 'inline; filename="cinepro-live-sports.m3u8"')
+            .header('Access-Control-Allow-Origin', '*')
+            .send(m3u);
+    });
+
+    // 6. CORS-Free Live HLS Manifest & Segment Proxy
+    app.get('/v1/live/proxy/manifest.m3u8', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const encodedData = String((request.query as any)?.data || '');
+        return handleLiveHlsProxyRequest(encodedData, baseUrl, reply);
+    });
+
+    app.get('/v1/live/proxy/segment.ts', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const encodedData = String((request.query as any)?.data || '');
+        return handleLiveHlsProxyRequest(encodedData, baseUrl, reply);
     });
 
     await server.start();

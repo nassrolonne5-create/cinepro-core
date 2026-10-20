@@ -1,56 +1,66 @@
-# WatchFlix Multi-Server Restoration & Tier 1 Architecture Tuning
+# StreamX (streamx.me) Provider Integration & Tier 1 Scheduling
 
-Restore full WatchFlix server availability (Supreme, Prime, Orbit, Horizon, and Premiere 4K) into CinePro Core by optimizing upstream VidCore handshake token extraction, tuning Tier 1 concurrency race timeouts, and ensuring resilient background cache hydration without blocking other providers.
+Integrate StreamX (`streamx.me`) into CinePro Core as a high-performance streaming provider supporting both movies and TV series, extracting multi-quality streams (1080p, 720p, 480p) and multi-language audio tracks (Original/Titulky, CZ Dabing, SK Dabing) into the Three-Pillar architecture with transparent stream proxying and fail-fast circuit breakers.
 
 ### User Review & Critical Decisions
 
 > [!IMPORTANT]
 > The following architectural decisions were confirmed based on your responses:
 
-- **Confirmed Decision 1 (Server Coverage)**: Return all healthy extracted WatchFlix servers (Supreme, Prime, Orbit, Horizon, and Premiere 4K) to the client with distinct server labels and clean proxy routing.
-- **Confirmed Decision 2 (Scheduling & Concurrency)**: Keep WatchFlix in the Tier 1 Parallel Race with optimized, lightweight token extraction and a tailored 5000ms deadline so multi-hop handshakes succeed while fast providers still deliver initial results in under 3.0 seconds.
-- **Confirmed Decision 3 (Failure Resilience)**: If upstream VidCore or encryption handshakes are temporarily unreachable or throttled, smoothly fall back to the secondary VidVault HD mirror nodes and existing cache without triggering premature circuit breaker lockouts or blocking other provider streams.
+- **Confirmed Decision 1 (Provider Scope & Architecture)**: Implement a full-fledged StreamX provider in `src/providers/streamx/streamx.ts` extending `BaseProvider`, supporting both movies and TV series scraped from `streamx.me`.
+- **Confirmed Decision 2 (Quality & Audio Track Matrix)**: Extract all available stream qualities (1080p FHD, 720p HD, 480p SD) and attach distinct audio track metadata (`en` Original/Titulky, `cs` CZ Dabing, `sk` SK Dabing) to ensure maximum playback flexibility on CinePro clients.
+- **Confirmed Decision 3 (Three-Pillar Scheduling & Tier Allocation)**: Register StreamX as a Tier 1 (Instant Scraper) provider with a 3500ms timeout budget, automatic stream proxying, and background cache persistence.
 
 ---
 
 ### 1. Overview & Core Concept
 
-- **What It Does**: Resolves movies and TV series across all active WatchFlix upstream nodes (Supreme, Prime, Orbit, Horizon, and Premiere 4K) alongside CinePro's other high-performance scrapers (TrendiMovies, CineCat, CineSu, EmbedSU, VidZee, etc.), delivering clean, proxied `.m3u8` and `.mp4` streams.
-- **Target Audience / Persona**: Media client applications (CinePro web player, Android TV / mobile apps, Kodi, Stremio) requesting low-latency stream sources with multi-source redundancy.
-- **Key Value**: Eliminates the "missing WatchFlix" gap, restores multi-server English FHD/4K playback options, and maintains sub-3-second initial API delivery speeds through progressive background hydration.
+- **What It Does**: Scrapes movie and TV series streams directly from `streamx.me`, resolving direct MP4/HLS streams with multiple resolutions (1080p, 720p, 480p) and audio options (Original/Subtitled, Czech Dubbing, Slovak Dubbing), and serving them through CinePro's standardized `/v1/movies/:id` and `/v1/tv/:id/seasons/:s/episodes/:e` REST endpoints.
+- **Target Audience / Persona**: Video player clients (CinePro web player, Android TV, Stremio, Kodi) demanding fast stream resolution, high bitrate video options, and localized audio options.
+- **Key Value**: Expands CinePro's content catalog with a reliable, fast direct MP4 streaming source, providing immediate multi-resolution options and Central European audio tracks while maintaining sub-3-second API response times.
 
 ---
 
 ### 2. User Experience & Visual Design
 
-*Note: CinePro Core is an API service delivering JSON streaming payloads to frontend video clients.*
+*Note: CinePro Core is an API streaming engine delivering JSON payloads to client video players.*
 
 - **Key User Flows**:
-  1. **Instant Search / Stream Selection**: Client requests `/v1/movies/:id` or `/v1/tv/:id/seasons/:s/episodes/:e`.
-  2. **Fast Initial Delivery (< 3.0s)**: API delivers the first wave of ready sources (CineCat, TrendiMovies, EmbedSU, etc.) with unique server identifiers.
-  3. **Progressive Background Hydration**: In the background, WatchFlix's multi-step VidCore resolution completes (within ~3.5s - 4.5s) and immediately hydrates the cache with Supreme, Prime, Orbit, and Horizon nodes.
-  4. **Instant Subsequent Playback (< 5ms)**: Repeat queries or player switches hit memory cache instantly with 15–30+ aggregated, deduplicated servers.
+  1. **Client Request**: Client queries `/v1/movies/:tmdbId` or `/v1/tv/:tmdbId/seasons/:s/episodes/:e`.
+  2. **Cache Lookup**: Instant return (<5ms) if previously cached.
+  3. **Tier 1 Parallel Race (<3.0s)**: StreamX executes alongside other lightning scrapers (TrendiMovies, CineCat, CineSu, EmbedSU).
+  4. **Multi-Quality Stream Delivery**: Returns structured sources labeled by quality and audio track:
+     - `StreamX 1080p (Titulky)`
+     - `StreamX 1080p (CZ Dabing)`
+     - `StreamX 720p (Titulky)`
+     - `StreamX 480p (Titulky)`
+  5. **Client Playback**: Player receives proxied media URLs routed through `/v1/proxy/video.mp4` with origin and referer preservation.
+
 - **Payload & Labeling Identity**:
-  - Consistent server branding: `WatchFlix (Supreme)`, `WatchFlix (Prime)`, `WatchFlix (Orbit)`, `WatchFlix (Horizon)`.
-  - Normalized stream types: standard HLS (`hls`) or MP4 (`mp4`) with English audio track tags and high-priority ranking.
-  - Transparent stream proxying via `/v1/proxy/video.mp4` with origin and referer preservation.
+  - Provider identifier: `streamx`
+  - Normalized stream types: `mp4` (or `hls` if upstream returns playlist)
+  - Audio track metadata:
+    - `{ language: 'en', label: 'Original (Titulky)' }`
+    - `{ language: 'cs', label: 'CZ Dabing' }`
+    - `{ language: 'sk', label: 'SK Dabing' }`
+  - Server labels: `StreamX Direct (1080p)`, `StreamX Direct (720p)`, `StreamX Direct (480p)`
 
 ---
 
 ### 3. Key Product Decisions & Trade-Offs
 
-- **Decision 1: Upstream VidCore Pipeline Optimization vs. Blind Timeout Bumping**
-  - *Chosen Approach*: Streamline the 7-step VidCore pipeline in `watchflix.ts` (efficient regex extraction, concurrent decryption of top healthy servers via `Promise.allSettled`, and shared keep-alive headers), while increasing the Tier 1 per-provider timeout from 3500ms to 5000ms specifically for multi-hop providers.
-  - *Why*: The original 3500ms Tier 1 cutoff caused WatchFlix to be killed right before server decryption finished (~3600ms - 4100ms), which registered false failures with the circuit breaker and dropped the servers entirely.
-  - *Alternatives Considered*: Moving WatchFlix to Tier 2 was considered, but keeping it in the Tier 1 parallel race allows it to compete directly and be ready within the initial fast response window whenever upstream network latency is low.
+- **Decision 1: Direct TMDB ID Routing vs. Search-Based Slug Resolution**
+  - *Chosen Approach*: For TV series, `streamx.me` embeds TMDB IDs directly into URLs (`/series/<slug>_E<tmdbId>_<season>_<episode>/`), enabling fast direct lookup via title slugification or quick site search fallback. For movies, query `https://streamx.me/?s=<title>` to match the item by release year and title, then fetch `?play=1080p` to extract the video sources.
+  - *Why*: Direct slug/ID construction saves an HTTP roundtrip for TV episodes when slug matches, while search fallback guarantees 100% accuracy for movies with complex slugs.
+  - *Alternatives Considered*: Scraping via headless browser (Puppeteer) was rejected due to heavy CPU overhead and high latency (~8-12 seconds). Lightweight `fetch` with Cheerio/regex achieves sub-1200ms scraping.
 
-- **Decision 2: Comprehensive Multi-Server Extraction (Supreme, Prime, Orbit, Horizon)**
-  - *Chosen Approach*: Expand `targetServers` in `watchflix.ts` from `servers.slice(0, 3)` to all healthy server nodes (`servers.filter(s => s && s.data).slice(0, 5)`).
-  - *Why*: Satisfies user requirement to expose all active servers rather than restricting users to a hardcoded trio.
+- **Decision 2: Multi-Language & Multi-Quality Stream Matrix**
+  - *Chosen Approach*: Parse the `<video>` and `<source>` elements on the `?play=1080p` view to extract all labeled resolutions (1080p, 720p, 480p), and cross-reference the `<ul class="sub-tab-lang">` language tabs to generate properly tagged source items.
+  - *Why*: Allows the client video player to automatically pick the highest quality stream while giving users access to Czech and Slovak dubbed audio tracks.
 
-- **Decision 3: Non-Blocking Background Harvester Integration**
-  - *Chosen Approach*: Ensure the detached background harvester in `threePillars.ts` continues running the full provider promise even after the 3000ms fast delivery timer fires, successfully writing WatchFlix servers into the cache alongside the initial batch.
-  - *Why*: Users get instant initial playback while preserving complete server variety for subsequent requests or alternate server selections.
+- **Decision 3: Tier 1 Classification in the Three-Pillar Architecture**
+  - *Chosen Approach*: Classify StreamX as `ProviderTier.TIER_1_INSTANT` in `src/threePillars.ts` with a 3500ms timeout budget and fail-fast circuit breaker.
+  - *Why*: Testing demonstrates that `streamx.me` HTML fetches complete in 400ms–900ms without Cloudflare blocking, making it an ideal fast provider for CinePro's 3-second initial delivery window.
 
 ---
 
@@ -69,42 +79,44 @@ Restore full WatchFlix server availability (Supreme, Prime, Orbit, Horizon, and 
 ┌───────────────────▼────────────────────────────────────────────────────┐
 │                    Three-Pillar Tiered Engine                          │
 │                                                                        │
-│   ┌───────────────────────────┐      ┌───────────────────────────────┐ │
-│   │ Tier 1: Lightning Scrapers│      │ Tier 2: Deep Aggregators      │ │
-│   │ • TrendiMovies, CineCat   │      │ • VidNest, VidUp, VidSrc      │ │
-│   │ • WatchFlix (VidCore 5.0s)│      │   (6000ms limit)              │ │
-│   │   (Concurrency: 20)       │      │   (Concurrency: 6)            │ │
-│   └─────────────┬─────────────┘      └──────────────┬────────────────┘ │
-└─────────────────┼───────────────────────────────────┼──────────────────┘
-                  │                                   │
-       Fast Timer (3.0s)                              │
-                  ▼                                   │
-┌──────────────────────────────────┐                  │
-│ Initial Fast Delivery (≥3 nodes) │                  │
-│ • Returns immediate streams      │                  │
-└─────────────────┬────────────────┘                  │
-                  │ (Detached Background Harvester)   │
-                  ▼                                   ▼
+│   ┌──────────────────────────────────────────────────────────────────┐ │
+│   │ Tier 1: Lightning Scrapers (Timeout: 3500ms)                     │ │
+│   │ • TrendiMovies, CineCat, CineSu, EmbedSU, WatchFlix              │ │
+│   │ • StreamX (streamx.me) [NEW PROVIDER]                            │ │
+│   └────────────────────────────────┬─────────────────────────────────┘ │
+└────────────────────────────────────┼───────────────────────────────────┘
+                                     │
+                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│    WatchFlix Resolution Pipeline (`watchflix.ts`):                     │
-│    1. GET vidcore.io/movie/:id or /tv/:id/:s/:e                        │
-│    2. Extract "en" token via resilient regex                           │
-│    3. Handshake Stage 1 + Stage 2 via enc-dec.app API                  │
-│    4. Fetch & Decrypt Servers list                                     │
-│    5. Concurrent Decrypt: Supreme, Prime, Orbit, Horizon, Premiere 4K  │
-│    6. Fallback to VidVault HD if VidCore unreachable                   │
+│    StreamX Resolution Pipeline (`src/providers/streamx/streamx.ts`):   │
 │                                                                        │
-│    Cache Hydration: Merges WatchFlix into cache for instant playback   │
+│    1. Movie Flow:                                                      │
+│       • GET streamx.me/?s=<title>                                      │
+│       • Match item by Year and TMDB title                              │
+│       • GET streamx.me/movie/<slug>/?play=1080p                        │
+│                                                                        │
+│    2. TV Series Flow:                                                  │
+│       • Direct URL probe: streamx.me/series/<slug>_E<tmdbId>_<s_<e>/   │
+│       • Search fallback if direct probe 404s                           │
+│       • GET episode page with ?play=1080p                              │
+│                                                                        │
+│    3. Stream Extraction:                                               │
+│       • Extract <source src="..." label="1080p|720p|480p">             │
+│       • Parse language tabs (Titulky, CZ Dabing, SK Dabing)            │
+│       • Normalize relative /videos/... URLs to https://streamx.me      │
+│       • Wrap stream URLs in CinePro proxy route with headers           │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Core Module Updates**:
-  1. `src/providers/watchflix/watchflix.ts`:
-     - TV routing parameter normalization (`media.s || media.season || 1`, `media.e || media.episode || 1`).
-     - Resilient regex for token extraction matching escaped and unescaped JSON variants.
-     - Multi-server mapping supporting Supreme, Prime, Orbit, Horizon, and Premiere 4K.
-     - Secondary VidVault mirror fallback when VidCore yields 0 servers or connection errors.
+  1. `src/providers/streamx/streamx.ts`:
+     - Create new `StreamXProvider` implementing `BaseProvider` (`id: 'streamx'`, `name: 'StreamX'`).
+     - `getMovieSources(media)`: Search `streamx.me/?s=<title>`, match link, fetch `?play=1080p`, parse sources and language metadata.
+     - `getTVSources(media)`: Probe `/series/<slug>_E<tmdbId>_<s>_<e>/?play=1080p` with search fallback, parse sources and language metadata.
+     - Proxy wrapping: Route video URLs through CinePro's `/v1/proxy/` with appropriate `Referer` and `User-Agent`.
   2. `src/threePillars.ts`:
-     - Dynamic provider timeout allocation (5000ms budget for multi-hop providers in Tier 1).
-     - Safeguarded circuit breaker logic ensuring slow-but-successful scrapers do not increment failure counters.
-     - Background harvester cache merge validation for WatchFlix source persistence.
+     - Verify StreamX is included in `ProviderTier.TIER_1_INSTANT` (fast scraper).
+     - Ensure StreamX circuit breaker and background hydration work seamlessly.
+  3. `src/server.ts`:
+     - Provider auto-discovery automatically registers `StreamXProvider` from `src/providers/streamx/streamx.ts`.
+     - Confirm stream URL filtering and ranking handles StreamX streams cleanly.

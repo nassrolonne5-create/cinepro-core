@@ -23,7 +23,7 @@ export function getProviderTier(providerId: string, providerName: string): Provi
         return ProviderTier.TIER_2_DEEP;
     }
 
-    // Tier 1: Fast direct scrapers (trendimovies, videasy, rivestream, embedsu, vidlink, vidgod, cinesu, lmscript, icefy, cinemaarmy, purstream, sflix, superstream, vidfast, watchflix, vidvault, vidsrcwin, vixsrc, cinecat, vidrock, vidzee)
+    // Tier 1: Fast direct scrapers (trendimovies, videasy, rivestream, embedsu, vidlink, vidgod, cinesu, lmscript, icefy, cinemaarmy, purstream, sflix, superstream, vidfast, watchflix, vidvault, vidsrcwin, vixsrc, cinecat, vidrock, vidzee, streamx)
     return ProviderTier.TIER_1_INSTANT;
 }
 
@@ -137,6 +137,9 @@ export function formatAndNamespaceSources(sources: any[], publicBaseUrl: string 
             url.includes('bestx.stream') ||
             url.includes('appnumber.top') ||
             url.includes('steman.cyou') ||
+            url.includes('onlinevisibilitysystem.site') ||
+            url.includes('highperformanceread.com') ||
+            url.includes('moon.zenoak.top/s/') ||
             url.endsWith('.txt') ||
             url.includes('.txt?')
         ) return false;
@@ -146,6 +149,7 @@ export function formatAndNamespaceSources(sources: any[], publicBaseUrl: string 
             url.includes('aoneroom.com') ||
             url.includes('animanga.fun') ||
             url.includes('tiktoks') ||
+            url.includes('streamx.me/videos/netflix.mp4') ||
             url.includes('/sample/') ||
             url.includes('sample.mp4') ||
             url.includes('trailer.mp4') ||
@@ -224,6 +228,35 @@ export function formatAndNamespaceSources(sources: any[], publicBaseUrl: string 
             src.type = 'mp4';
         }
 
+        // Universal Mirage 4K (cine4k.mpddash.workers.dev) & ValhallaStream unwrapper
+        if (src.url && src.url.includes('valhallastream.com')) {
+            try {
+                const parsed = new URL(src.url);
+                const innerUrl = parsed.searchParams.get('url');
+                const rawInnerHeaders = parsed.searchParams.get('headers');
+                if (innerUrl) {
+                    const headers = innerUrl.includes('cine4k.mpddash.workers.dev')
+                        ? { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36' }
+                        : (rawInnerHeaders ? JSON.parse(rawInnerHeaders) : {});
+                    src.url = `${publicBaseUrl}/v1/proxy?data=${encodeURIComponent(JSON.stringify({ url: innerUrl, headers }))}`;
+                }
+            } catch {}
+        } else if (src.url && src.url.includes('cine4k.mpddash.workers.dev') && src.url.includes('/v1/proxy')) {
+            try {
+                const parsed = new URL(src.url, publicBaseUrl);
+                const dataParam = parsed.searchParams.get('data');
+                if (dataParam) {
+                    const decoded = JSON.parse(decodeURIComponent(dataParam));
+                    if (decoded?.url?.includes('cine4k.mpddash.workers.dev')) {
+                        decoded.headers = {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+                        };
+                        src.url = `${publicBaseUrl}/v1/proxy?data=${encodeURIComponent(JSON.stringify(decoded))}`;
+                    }
+                }
+            } catch {}
+        }
+
         if (src.url && src.url.includes('/v1/proxy')) {
             src.url = src.url.replace(/^https?:\/\/[^/]+(?=\/v1\/proxy)/, publicBaseUrl);
             if (src.url.startsWith('/v1/proxy')) {
@@ -268,6 +301,23 @@ export function mergeSubtitles(targetSubs: any[], newSubs: any[]): any[] {
 const inFlightRequests = new Map<string, Promise<any>>();
 // Background hydration tracker
 const activeHarvesters = new Set<string>();
+
+// SSE Progressive Stream Subscriptions
+const sseListeners = new Map<string, Set<(event: { type: 'source' | 'done', data: any }) => void>>();
+
+export function subscribeToStreams(cacheKey: string, callback: (event: { type: 'source' | 'done', data: any }) => void): () => void {
+    if (!sseListeners.has(cacheKey)) {
+        sseListeners.set(cacheKey, new Set());
+    }
+    sseListeners.get(cacheKey)!.add(callback);
+    return () => {
+        const set = sseListeners.get(cacheKey);
+        if (set) {
+            set.delete(callback);
+            if (set.size === 0) sseListeners.delete(cacheKey);
+        }
+    };
+}
 
 /**
  * Setup Three-Pillar Architecture onto OMSS SourceService
@@ -367,10 +417,38 @@ export function setupThreePillarArchitecture(server: any) {
 
         const scrapePromise = (async () => {
             console.log(`[ThreePillars] Cache MISS for ${cacheKey}. Executing Three-Pillar Tiered Strategy.`);
-            const media = type === 'movie'
-                ? await sourceService.tmdbService.getMediaObject('movie', id)
-                : await sourceService.tmdbService.getMediaObject('tv', id, season, episode);
-            media.imdbId = (await sourceService.tmdbService.getImdbId(id, type)) ?? '';
+            let media: any;
+            try {
+                media = type === 'movie'
+                    ? await sourceService.tmdbService.getMediaObject('movie', id)
+                    : await sourceService.tmdbService.getMediaObject('tv', id, season, episode);
+                media.imdbId = (await sourceService.tmdbService.getImdbId(id, type)) ?? '';
+                if (type === 'tv') {
+                    const tvShowCached = await sourceService.cache.get(`tmdb:tv:${id}`);
+                    if (tvShowCached?.title) {
+                        media.episodeTitle = media.title;
+                        media.title = tvShowCached.title;
+                    }
+                    if (tvShowCached?.releaseDate) {
+                        media.releaseYear = String(new Date(tvShowCached.releaseDate).getFullYear());
+                    }
+                    media.season = season || (media as any).s || 1;
+                    media.episode = episode || (media as any).e || 1;
+                }
+                if (media.releaseYear) {
+                    media.year = Number(media.releaseYear);
+                }
+            } catch {
+                media = {
+                    tmdbId: id,
+                    imdbId: '',
+                    title: id,
+                    type,
+                    year: new Date().getFullYear(),
+                    season: season || 1,
+                    episode: episode || 1
+                };
+            }
 
             const allProviders = sourceService.registry.getProviders()
                 .filter((p: any) => p.capabilities.supportedContentTypes.includes(type === 'movie' ? 'movies' : 'tv'))
@@ -386,11 +464,10 @@ export function setupThreePillarArchitecture(server: any) {
                 else tier2Providers.push(p);
             }
 
-            // Prioritize WatchFlix and top-tier direct scrapers first to avoid socket starvation
+            // Prioritize WatchFlix, AnimeHub, and top-tier direct scrapers first to avoid socket starvation
             tier1Providers.sort((a, b) => {
-                if (a.id === 'watchflix') return -1;
-                if (b.id === 'watchflix') return 1;
-                return 0;
+                const prio = (id: string) => (id === 'animehub' || id === 'watchflix' ? 0 : 1);
+                return prio(a.id) - prio(b.id);
             });
 
             console.log(`[ThreePillars] Partitioned ${allProviders.length} providers: Tier 1 (${tier1Providers.length} fast), Tier 2 (${tier2Providers.length} deep)`);
@@ -422,10 +499,22 @@ export function setupThreePillarArchitecture(server: any) {
                 } catch (err: any) {
                     console.error('[ThreePillars] Progressive hydration error:', err?.message);
                 }
+
+                // Notify active SSE stream listeners
+                const listeners = sseListeners.get(cacheKey);
+                if (listeners && listeners.size > 0) {
+                    sanitizeSharedResults([completedResult]);
+                    const namespaced = formatAndNamespaceSources(completedResult.sources, publicBaseUrl);
+                    for (const src of namespaced) {
+                        for (const l of listeners) {
+                            try { l({ type: 'source', data: src }); } catch {}
+                        }
+                    }
+                }
             };
 
             const getProviderTimeout = (p: any, tier: ProviderTier) => {
-                if (p.id === 'watchflix') return 6000;
+                if (p.id === 'watchflix' || p.id === 'streamx' || p.id === 'animehub') return 6000;
                 return tier === ProviderTier.TIER_1_INSTANT ? 3500 : 6000;
             };
 
@@ -589,6 +678,12 @@ export function setupThreePillarArchitecture(server: any) {
             return await scrapePromise;
         } finally {
             inFlightRequests.delete(cacheKey);
+            const listeners = sseListeners.get(cacheKey);
+            if (listeners && listeners.size > 0) {
+                for (const l of listeners) {
+                    try { l({ type: 'done', data: { status: 'complete' } }); } catch {}
+                }
+            }
         }
     }
 
