@@ -25,7 +25,18 @@ export interface LiveChannel {
     name: string;
     shortName: string;
     network: string;
-    category: 'bein' | 'fox' | 'espn' | 'sky' | 'europe' | 'mena' | 'usa' | 'combat' | 'motorsport';
+    category:
+        | 'bein'
+        | 'fox'
+        | 'espn'
+        | 'sky'
+        | 'europe'
+        | 'mena'
+        | 'usa'
+        | 'combat'
+        | 'motorsport'
+        | 'movies'
+        | 'entertainment';
     language: 'ar' | 'en' | 'fr' | 'es' | 'tr' | 'multi';
     languageLabel: string;
     country: string;
@@ -84,9 +95,12 @@ const DEMBED_HEADERS: Record<string, string> = {
 const TVNOW_HEADERS: Record<string, string> = {
     Referer: 'https://tvnow.st/'
 };
+const ROTANA_HEADERS: Record<string, string> = {
+    Referer: 'https://rotana.net/'
+};
 
 /**
- * Curated Core Sports & beIN Sports Channel Matrix (AR / EN / FR / ES / TR + MENA + Global Sports)
+ * Curated Core Sports, beIN Sports & Movies/Entertainment Channel Matrix (AR / EN / FR / ES / TR + MENA + Global)
  * Strictly 1-to-1 channel mapping: every stream belongs exclusively to the named channel.
  */
 export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
@@ -441,6 +455,86 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
             { label: 'beIN Sports MAX 4 France (1080p)', url: `${EDGE_CDN_BASE}/premium494/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
+    {
+        id: 'bein-sports-max-5-fr',
+        name: 'beIN Sports MAX 5 France HD (FR)',
+        shortName: 'beIN MAX 5 FR',
+        network: 'beIN Sports',
+        category: 'bein',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://i.imgur.com/2Rha5aY.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'beIN Sports MAX 5 France (1080p)', url: `${EDGE_CDN_BASE}/premium495/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-sports-max-6-fr',
+        name: 'beIN Sports MAX 6 France HD (FR)',
+        shortName: 'beIN MAX 6 FR',
+        network: 'beIN Sports',
+        category: 'bein',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://i.imgur.com/0wBdLYb.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'beIN Sports MAX 6 France (1080p)', url: `${EDGE_CDN_BASE}/premium496/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-sports-max-7-fr',
+        name: 'beIN Sports MAX 7 France HD (FR)',
+        shortName: 'beIN MAX 7 FR',
+        network: 'beIN Sports',
+        category: 'bein',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://i.imgur.com/iODFwZi.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'beIN Sports MAX 7 France (1080p)', url: `${EDGE_CDN_BASE}/premium497/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-sports-max-9-fr',
+        name: 'beIN Sports MAX 9 France HD (FR)',
+        shortName: 'beIN MAX 9 FR',
+        network: 'beIN Sports',
+        category: 'bein',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://assets.bein.com/mena/sites/3/2023/09/logos-_beINSPORTS9.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'beIN Sports MAX 9 France (1080p)', url: `${EDGE_CDN_BASE}/premium499/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-sports-max-10-fr',
+        name: 'beIN Sports MAX 10 France HD (FR)',
+        shortName: 'beIN MAX 10 FR',
+        network: 'beIN Sports',
+        category: 'bein',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'beIN Sports MAX 10 France (1080p)', url: `${EDGE_CDN_BASE}/premium500/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
 
     // =========================================================================
     // 4. beIN SPORTS — TURKISH & SPANISH (TR / ES)
@@ -561,11 +655,11 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     },
 
     // =========================================================================
-    // 5. MENA & ARABIC SPORTS NETWORKS (SSC, Abu Dhabi Sports, Dubai Sports, KTV, Arryadia)
+    // 5. MENA & ARABIC SPORTS NETWORKS (SSC Sports, Alkass, Abu Dhabi Sports, Dubai Sports, KTV, Arryadia)
     // =========================================================================
     {
         id: 'ssc-sport-1-ar',
-        name: 'SSC Sport 1 HD (Saudi Sports)',
+        name: 'SSC Sport 1 / Extra 1 HD (Saudi Sports)',
         shortName: 'SSC 1 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -576,12 +670,12 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SSC Sport 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium614/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Sport 1 / Extra 1 HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium619/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-sport-2-ar',
-        name: 'SSC Sport 2 HD (Saudi Sports)',
+        name: 'SSC Sport 2 / Extra 2 HD (Saudi Sports)',
         shortName: 'SSC 2 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -592,13 +686,61 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SSC Sport 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium615/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Sport 2 / Extra 2 HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium620/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-sport-3-ar',
-        name: 'SSC Sport 3 HD (Saudi Sports)',
+        name: 'SSC Sport 3 / Extra 3 HD (Saudi Sports)',
         shortName: 'SSC 3 AR',
+        network: 'SSC Sports',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'SSC Sport 3 / Extra 3 HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium621/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'ssc-extra-1-ar',
+        name: 'SSC Sport Extra 1 HD (Saudi Sports)',
+        shortName: 'SSC Extra 1 AR',
+        network: 'SSC Sports',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'SSC Sport Extra 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium619/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'ssc-extra-2-ar',
+        name: 'SSC Sport Extra 2 HD (Saudi Sports)',
+        shortName: 'SSC Extra 2 AR',
+        network: 'SSC Sports',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'SSC Sport Extra 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium620/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'ssc-extra-3-ar',
+        name: 'SSC Sport Extra 3 HD (Saudi Sports)',
+        shortName: 'SSC Extra 3 AR',
         network: 'SSC Sports',
         category: 'mena',
         language: 'ar',
@@ -608,44 +750,60 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Sport 3 HD (1080p)', url: `${EDGE_CDN_BASE}/premium616/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Sport Extra 3 HD (1080p)', url: `${EDGE_CDN_BASE}/premium621/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
-        id: 'ssc-sport-4-ar',
-        name: 'SSC Sport 4 HD (Saudi Sports)',
-        shortName: 'SSC 4 AR',
-        network: 'SSC Sports',
+        id: 'alkass-1-ar',
+        name: 'Alkass Sports HD 1 / 2 (Qatar)',
+        shortName: 'Alkass 1 AR',
+        network: 'Alkass Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
-        country: 'SA',
-        logo: 'https://i.imgur.com/vwAgJNi.png',
+        country: 'QA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
         quality: '1080p',
-        featured: false,
+        featured: true,
         streams: [
-            { label: 'SSC Sport 4 HD (1080p)', url: `${EDGE_CDN_BASE}/premium617/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Alkass Sports HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium782/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
-        id: 'ssc-sport-5-ar',
-        name: 'SSC Sport 5 HD (Saudi Sports)',
-        shortName: 'SSC 5 AR',
-        network: 'SSC Sports',
+        id: 'alkass-2-ar',
+        name: 'Alkass Sports HD 3 (Qatar)',
+        shortName: 'Alkass 3 AR',
+        network: 'Alkass Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
-        country: 'SA',
-        logo: 'https://i.imgur.com/2Rha5aY.png',
+        country: 'QA',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Sport 5 HD (1080p)', url: `${EDGE_CDN_BASE}/premium618/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Alkass Three HD (1080p)', url: `${EDGE_CDN_BASE}/premium783/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'alkass-3-ar',
+        name: 'Alkass Sports HD 4 (Qatar)',
+        shortName: 'Alkass 4 AR',
+        network: 'Alkass Sports',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'QA',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Alkass Four HD (1080p)', url: `${EDGE_CDN_BASE}/premium784/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ad-sports-1-ar',
-        name: 'Abu Dhabi Sports 1 HD (Arabic)',
+        name: 'Abu Dhabi Sports 1 & Premium 1 HD (Arabic)',
         shortName: 'AD Sports 1',
         network: 'Abu Dhabi Sports',
         category: 'mena',
@@ -656,12 +814,13 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Abu Dhabi Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Abu Dhabi Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Abu Dhabi Sports 1 Premium HD (1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ad-sports-2-ar',
-        name: 'Abu Dhabi Sports 2 HD (Arabic)',
+        name: 'Abu Dhabi Sports 2 Premium HD (Arabic)',
         shortName: 'AD Sports 2',
         network: 'Abu Dhabi Sports',
         category: 'mena',
@@ -670,9 +829,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         country: 'AE',
         logo: 'https://i.imgur.com/vUJZSvs.png',
         quality: '1080p',
-        featured: false,
+        featured: true,
         streams: [
-            { label: 'Abu Dhabi Sports 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium601/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Abu Dhabi Sports 2 Premium HD (1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -688,7 +847,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Dubai Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium604/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Dubai Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium604/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Dubai Racing HD (1080p)', url: `${EDGE_CDN_BASE}/premium608/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -722,6 +882,368 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         featured: false,
         streams: [
             { label: 'Arryadia HD (Direct Stream)', url: 'http://149.100.11.252:8000/play/a065/index.m3u8', quality: '720p', language: 'ar' }
+        ]
+    },
+
+    // =========================================================================
+    // 6. beIN / SHAHID / MENA MOVIES, SERIES & ENTERTAINMENT (AR / EN)
+    // =========================================================================
+    {
+        id: 'bein-movies-premiere-en',
+        name: 'beIN / Sky Cinema Premiere HD (Movies)',
+        shortName: 'Cinema Premiere',
+        network: 'beIN / Sky Cinema',
+        category: 'movies',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Cinema Premiere 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium671/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-movies-action-en',
+        name: 'beIN / Sky Cinema Action HD (Movies)',
+        shortName: 'Cinema Action',
+        network: 'beIN / Sky Cinema',
+        category: 'movies',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Cinema Action HD (1080p)', url: `${EDGE_CDN_BASE}/premium677/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-movies-hits-en',
+        name: 'beIN / Sky Cinema Hits HD (Movies)',
+        shortName: 'Cinema Hits',
+        network: 'beIN / Sky Cinema',
+        category: 'movies',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Cinema Hits HD (1080p)', url: `${EDGE_CDN_BASE}/premium673/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-movies-drama-en',
+        name: 'beIN / Sky Cinema Drama HD (Movies)',
+        shortName: 'Cinema Drama',
+        network: 'beIN / Sky Cinema',
+        category: 'movies',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://i.imgur.com/vwAgJNi.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Cinema Drama HD (1080p)', url: `${EDGE_CDN_BASE}/premium680/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'hbo-hd',
+        name: 'HBO Movies & Series HD',
+        shortName: 'HBO HD',
+        network: 'HBO',
+        category: 'movies',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'US',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'HBO East HD (1080p)', url: `${EDGE_CDN_BASE}/premium321/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'HBO 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium689/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'showtime-hd',
+        name: 'Showtime Movies & Series HD',
+        shortName: 'Showtime HD',
+        network: 'Showtime',
+        category: 'movies',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'US',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Showtime HD (1080p)', url: `${EDGE_CDN_BASE}/premium333/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'starz-hd',
+        name: 'Starz Movies HD',
+        shortName: 'Starz HD',
+        network: 'Starz',
+        category: 'movies',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'US',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Starz Movies HD (1080p)', url: `${EDGE_CDN_BASE}/premium335/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'cinemax-hd',
+        name: 'Cinemax Action Movies HD',
+        shortName: 'Cinemax HD',
+        network: 'Cinemax',
+        category: 'movies',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'US',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Cinemax HD (1080p)', url: `${EDGE_CDN_BASE}/premium374/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-movies-action-ar',
+        name: 'Shahid / MENA Movies Action HD (أفلام أكشن)',
+        shortName: 'Movies Action AR',
+        network: 'Shahid / MBC Movies',
+        category: 'movies',
+        language: 'ar',
+        languageLabel: 'العربية / مترجم (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Movies Action HD (1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx011/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'bein-movies-thriller-ar',
+        name: 'Shahid / MENA Movies Thriller HD (أفلام إثارة)',
+        shortName: 'Movies Thriller AR',
+        network: 'Shahid / MBC Movies',
+        category: 'movies',
+        language: 'ar',
+        languageLabel: 'العربية / مترجم (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Movies Thriller HD (1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx012/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'bein-aflam-ar',
+        name: 'Shahid Aflam HD (أفلام عربية)',
+        shortName: 'Aflam AR',
+        network: 'Shahid / MBC Movies',
+        category: 'movies',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Shahid Aflam HD (1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx001/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'rotana-cinema-ar',
+        name: 'Rotana Cinema HD (روتانا سينما)',
+        shortName: 'Rotana Cinema',
+        network: 'Rotana',
+        category: 'movies',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Rotana Cinema HD (1080p)', url: 'https://rotana.hibridcdn.net/rotananet/cinema_net-7Y83PP5adWixDF93/playlist.m3u8', quality: '1080p', language: 'ar', headers: ROTANA_HEADERS }
+        ]
+    },
+    {
+        id: 'rotana-drama-ar',
+        name: 'Rotana Drama HD (روتانا دراما)',
+        shortName: 'Rotana Drama',
+        network: 'Rotana',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Rotana Drama HD (1080p)', url: 'https://rotana.hibridcdn.net/rotananet/drama_net-7Y83PP5adWixDF93/playlist.m3u8', quality: '1080p', language: 'ar', headers: ROTANA_HEADERS }
+        ]
+    },
+    {
+        id: 'rotana-comedy-ar',
+        name: 'Rotana Comedy HD (روتانا كوميدي)',
+        shortName: 'Rotana Comedy',
+        network: 'Rotana',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Rotana Comedy HD (1080p)', url: 'https://rotana.hibridcdn.net/rotananet/comedy_net-7Y83PP5adWixDF93/playlist.m3u8', quality: '1080p', language: 'ar', headers: ROTANA_HEADERS }
+        ]
+    },
+    {
+        id: 'mbc-1-ar',
+        name: 'MBC 1 HD (إم بي سي 1)',
+        shortName: 'MBC 1 HD',
+        network: 'MBC',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'MBC 1 HD (Primary 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-1/15cf99af5de54063fdabfefe66adc075/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'MBC 1 MENA HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-1-na/eec141533c90dd34722c503a296dd0d8/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'mbc-4-ar',
+        name: 'MBC 4 Series & Entertainment HD (إم بي سي 4)',
+        shortName: 'MBC 4 HD',
+        network: 'MBC',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'MBC 4 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-4/24f134f1cd63db9346439e96b86ca6ed/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'mbc-5-ar',
+        name: 'MBC 5 Maghreb HD (إم بي سي 5)',
+        shortName: 'MBC 5 HD',
+        network: 'MBC',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'MA',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'MBC 5 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-5/ee6b000cee0629411b666ab26cb13e9b/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'mbc-drama-ar',
+        name: 'MBC Drama & MBC+ Drama HD (إم بي سي دراما)',
+        shortName: 'MBC Drama HD',
+        network: 'MBC',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/vwAgJNi.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'MBC Drama HD (Primary 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-drama/2c28a458e2f3253e678b07ac7d13fe71/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'MBC+ Drama HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-plus-drama/e37251ec2aac8f6c98f75cd0fa37cd28/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'mbc-masr-ar',
+        name: 'MBC Masr 1 & 2 HD (إم بي سي مصر)',
+        shortName: 'MBC Masr HD',
+        network: 'MBC',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'EG',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'MBC Masr 1 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr/956eac069c78a35d47245db6cdbb1575/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'MBC Masr 2 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr-2/754931856515075b0aabf0e583495c68/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'MBC Masr Drama HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr-drama/567b703c19ede6598222de81b0e4508b/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'mbc-iraq-ar',
+        name: 'MBC Iraq HD (إم بي سي العراق)',
+        shortName: 'MBC Iraq HD',
+        network: 'MBC',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'IQ',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'MBC Iraq HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-iraq/e38c44b1b43474e1c39cb5b90203691e/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'bab-al-hara-ar',
+        name: 'Bab Al Hara Series 24/7 HD (باب الحارة)',
+        shortName: 'Bab Al Hara',
+        network: 'Shahid Series',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Bab Al Hara 24/7 HD (1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx010/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Maraya Comedy 24/7 HD (1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx008/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'spacetoon-ar',
+        name: 'Spacetoon Arabic HD (سبيستون)',
+        shortName: 'Spacetoon AR',
+        network: 'Spacetoon',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'AE',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '720p',
+        featured: false,
+        streams: [
+            { label: 'Spacetoon Arabic Live', url: 'https://live-uae-next.spacetoongo.com/ST_MENA_NEXT/hls/r9p2hjipmw2kl.m3u8', quality: '720p', language: 'ar' }
         ]
     },
 
@@ -1661,7 +2183,14 @@ export async function harvestDynamicSportsM3U(): Promise<void> {
                         j++;
                     }
                     const streamUrl = (lines[j] || '').trim();
-                    if (!streamUrl.startsWith('http') || streamUrl.endsWith('.mpd')) continue;
+                    if (
+                        !streamUrl.startsWith('http') ||
+                        streamUrl.endsWith('.mpd') ||
+                        streamUrl.includes('primetv.cc.cd') ||
+                        streamUrl.includes('andro.')
+                    ) {
+                        continue;
+                    }
 
                     const tvgId = (line.match(/tvg-id="([^"]+)"/i) || [])[1] || '';
                     const title = (line.match(/,(.+)$/) || [])[1]?.trim() || tvgId;
