@@ -655,11 +655,11 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     },
 
     // =========================================================================
-    // 5. MENA & ARABIC SPORTS NETWORKS (SSC Sports, Alkass, Abu Dhabi Sports, Dubai Sports, KTV, Arryadia)
+    // 5. MENA & ARABIC SPORTS NETWORKS (SSC / Saudi & Gulf Sports, Alkass, Abu Dhabi Sports, Dubai Sports, OnTime, KTV, Arryadia)
     // =========================================================================
     {
         id: 'ssc-sport-1-ar',
-        name: 'SSC Sport 1 / Extra 1 HD (Saudi Sports)',
+        name: 'SSC Sport 1 / Starzplay Saudi & AFC HD (Arabic)',
         shortName: 'SSC 1 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -670,12 +670,14 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SSC Sport 1 / Extra 1 HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium619/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC / Starzplay Sports 1 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SSC / Gulf Sports 1 Backup HD (1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SSC Sport 1 Direct (Upstream)', url: `${EDGE_CDN_BASE}/premium614/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-sport-2-ar',
-        name: 'SSC Sport 2 / Extra 2 HD (Saudi Sports)',
+        name: 'SSC Sport 2 / Starzplay Saudi & AFC HD (Arabic)',
         shortName: 'SSC 2 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -686,12 +688,14 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SSC Sport 2 / Extra 2 HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium620/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC / Starzplay Sports 2 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SSC / Gulf Sports 2 Backup HD (1080p)', url: `${EDGE_CDN_BASE}/premium601/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SSC Sport 2 Direct (Upstream)', url: `${EDGE_CDN_BASE}/premium615/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-sport-3-ar',
-        name: 'SSC Sport 3 / Extra 3 HD (Saudi Sports)',
+        name: 'SSC Sport 3 / Gulf Football HD (Arabic)',
         shortName: 'SSC 3 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -702,12 +706,14 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SSC Sport 3 / Extra 3 HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium621/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC / Gulf Sports 3 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium782/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SSC / Starzplay Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SSC Sport 3 Direct (Upstream)', url: `${EDGE_CDN_BASE}/premium616/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-extra-1-ar',
-        name: 'SSC Sport Extra 1 HD (Saudi Sports)',
+        name: 'SSC Sport Extra 1 HD (Saudi & Gulf Sports)',
         shortName: 'SSC Extra 1 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -718,12 +724,13 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Sport Extra 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium619/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Extra 1 / Gulf Sports HD (1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SSC Extra 1 / Alkass Three HD (1080p)', url: `${EDGE_CDN_BASE}/premium783/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-extra-2-ar',
-        name: 'SSC Sport Extra 2 HD (Saudi Sports)',
+        name: 'SSC Sport Extra 2 HD (Saudi & Gulf Sports)',
         shortName: 'SSC Extra 2 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -734,12 +741,13 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Sport Extra 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium620/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Extra 2 / Gulf Sports HD (1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SSC Extra 2 / Alkass Four HD (1080p)', url: `${EDGE_CDN_BASE}/premium784/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-extra-3-ar',
-        name: 'SSC Sport Extra 3 HD (Saudi Sports)',
+        name: 'SSC Sport Extra 3 HD (Saudi & Gulf Sports)',
         shortName: 'SSC Extra 3 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -750,7 +758,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Sport Extra 3 HD (1080p)', url: `${EDGE_CDN_BASE}/premium621/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Extra 3 / Gulf Sports HD (1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'SSC Extra 3 / Bahrain Sports HD (720p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8', quality: '720p', language: 'ar' }
         ]
     },
     {
@@ -820,7 +829,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     },
     {
         id: 'ad-sports-2-ar',
-        name: 'Abu Dhabi Sports 2 Premium HD (Arabic)',
+        name: 'Abu Dhabi Sports 2 & Premium 2 HD (Arabic)',
         shortName: 'AD Sports 2',
         network: 'Abu Dhabi Sports',
         category: 'mena',
@@ -831,7 +840,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Abu Dhabi Sports 2 Premium HD (1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Abu Dhabi Sports 2 Premium HD (1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Abu Dhabi Sports 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium601/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -849,6 +859,23 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         streams: [
             { label: 'Dubai Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium604/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
             { label: 'Dubai Racing HD (1080p)', url: `${EDGE_CDN_BASE}/premium608/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'ontime-sports-1-ar',
+        name: 'OnTime Sports 1 & 2 HD (Egypt Arabic)',
+        shortName: 'OnTime Sports AR',
+        network: 'OnTime Sports',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'EG',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'OnTime Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium611/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'OnTime Sports 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium612/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -2335,14 +2362,22 @@ export function buildLiveProxyUrl(rawUrl: string, publicBaseUrl: string, headers
 }
 
 /**
- * Fast liveness check for an M3U8 stream (supports Edge dynamic token injection)
+ * Fast liveness check for an M3U8 stream (supports Edge dynamic token injection & manifest pre-warming)
  */
 async function probeStreamLiveness(
     url: string,
     headers?: Record<string, string>,
-    timeoutMs = 5500
+    timeoutMs = 5500,
+    publicBaseUrl?: string
 ): Promise<{ ok: boolean; latencyMs: number }> {
     const t0 = Date.now();
+    const cacheKey = publicBaseUrl ? `${publicBaseUrl}::${url}` : '';
+    if (cacheKey) {
+        const cached = lastGoodManifestCache.get(cacheKey);
+        if (cached && Date.now() - cached.updatedAt < 4500) {
+            return { ok: true, latencyMs: 5 };
+        }
+    }
     try {
         const resolved = await resolveDynamicManifestUrl(url, headers);
         const res = await fetch(resolved.url, {
@@ -2354,7 +2389,25 @@ async function probeStreamLiveness(
             return { ok: false, latencyMs: Date.now() - t0 };
         }
         const chunk = await res.text();
-        const isM3U = chunk.includes('#EXTM3U') || chunk.includes('#EXT-X-');
+        const hasExtM3U = chunk.includes('#EXTM3U') || chunk.includes('#EXT-X-');
+        // Ensure manifest actually contains at least one segment or variant line
+        const hasMediaLine = chunk.split(/\r?\n/).some((l) => {
+            const t = l.trim();
+            return t.length > 0 && !t.startsWith('#');
+        });
+        const isM3U = hasExtM3U && hasMediaLine;
+        if (isM3U && publicBaseUrl && cacheKey) {
+            const rewritten = rewriteLiveHlsManifest(
+                chunk,
+                res.url || resolved.url,
+                publicBaseUrl,
+                headers
+            );
+            lastGoodManifestCache.set(cacheKey, {
+                content: rewritten,
+                updatedAt: Date.now()
+            });
+        }
         return { ok: isM3U, latencyMs: Date.now() - t0 };
     } catch {
         return { ok: false, latencyMs: Date.now() - t0 };
@@ -2429,6 +2482,7 @@ export async function resolveChannelStreams(
 
     // Merge curated streams + dynamically harvested M3U backups strictly for this exact channel ID
     const dynamicBackups = dynamicChannelCache.get(channel.id) || [];
+    const curatedCount = channel.streams.length;
     const candidateStreams = [...channel.streams];
     for (const dyn of dynamicBackups) {
         if (!candidateStreams.some((s) => s.url === dyn.url)) {
@@ -2445,7 +2499,7 @@ export async function resolveChannelStreams(
     // Probe all candidate streams for this channel
     const probed = await Promise.all(
         candidateStreams.map(async (item, index) => {
-            const probe = await probeStreamLiveness(item.url, item.headers, 5500);
+            const probe = await probeStreamLiveness(item.url, item.headers, 5500, publicBaseUrl);
             const proxiedUrl = buildLiveProxyUrl(item.url, publicBaseUrl, item.headers);
 
             const langMap: Record<string, string> = {
@@ -2480,13 +2534,24 @@ export async function resolveChannelStreams(
                 onStreamVerified(sourceObj);
             }
 
-            return sourceObj;
+            return { sourceObj, index };
         })
     );
 
-    // Prioritize verified working streams sorted by fastest response latency
-    const verifiedStreams = probed.filter((s) => s.verified).sort((a, b) => (a.latencyMs || 9999) - (b.latencyMs || 9999));
-    const finalSources = verifiedStreams.length > 0 ? [...verifiedStreams] : [...probed];
+    // Prioritize verified working streams: keep curated streams in their exact priority order, then dynamic backups by latency
+    const verifiedStreams = probed
+        .filter((item) => item.sourceObj.verified)
+        .sort((a, b) => {
+            const aCurated = a.index < curatedCount;
+            const bCurated = b.index < curatedCount;
+            if (aCurated && bCurated) return a.index - b.index;
+            if (aCurated) return -1;
+            if (bCurated) return 1;
+            return (a.sourceObj.latencyMs || 9999) - (b.sourceObj.latencyMs || 9999);
+        })
+        .map((item) => item.sourceObj);
+
+    const finalSources = verifiedStreams.length > 0 ? [...verifiedStreams] : probed.map((item) => item.sourceObj);
 
     // Ensure every channel provides a Secondary High-Stability Relay backup option for player failover UI
     if (finalSources.length === 1) {
@@ -2762,7 +2827,7 @@ export function rewriteLiveHlsManifest(
 const lastGoodManifestCache = new Map<string, { content: string; updatedAt: number }>();
 const unwrappedSegmentCache = new Map<string, { buffer: Buffer; contentType: string; expiresAt: number }>();
 const segmentInFlight = new Map<string, Promise<{ buffer: Buffer; contentType: string }>>();
-const MAX_CACHED_SEGMENTS = 36;
+const MAX_CACHED_SEGMENTS = 80;
 
 function setCachedSegment(url: string, buffer: Buffer, contentType: string): void {
     if (unwrappedSegmentCache.size >= MAX_CACHED_SEGMENTS) {
@@ -2772,7 +2837,7 @@ function setCachedSegment(url: string, buffer: Buffer, contentType: string): voi
     unwrappedSegmentCache.set(url, {
         buffer,
         contentType,
-        expiresAt: Date.now() + 55 * 1000
+        expiresAt: Date.now() + 60 * 1000
     });
 }
 
@@ -2807,10 +2872,10 @@ export async function handleLiveHlsProxyRequest(
     const isM3U8Url = /\.m3u8(\?|$)/i.test(parsed.url);
     const manifestCacheKey = `${publicBaseUrl}::${parsed.url}`;
 
-    // 1. Fast micro-cache (900ms) for rapid concurrent manifest polls
+    // 1. Fast micro-cache (3200ms) for rapid concurrent manifest polls to prevent Edge CDN rate limiting & glitching
     if (isM3U8Url) {
         const recentManifest = lastGoodManifestCache.get(manifestCacheKey);
-        if (recentManifest && Date.now() - recentManifest.updatedAt < 900) {
+        if (recentManifest && Date.now() - recentManifest.updatedAt < 3200) {
             return reply
                 .code(200)
                 .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
