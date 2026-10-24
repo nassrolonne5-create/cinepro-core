@@ -50,6 +50,62 @@ export interface LiveChannel {
         language: 'ar' | 'en' | 'fr' | 'es' | 'tr' | 'multi';
         headers?: Record<string, string>;
     }>;
+    epg?: {
+        nowPlaying: EPGProgram;
+        nextUp: EPGProgram;
+        upcoming: EPGProgram[];
+    };
+}
+
+export interface EPGProgram {
+    id: string;
+    channelId: string;
+    title: string;
+    subtitle: string;
+    description: string;
+    category: string;
+    sport?: string;
+    league?: string;
+    startTime: string;
+    endTime: string;
+    durationMinutes: number;
+    progressPct: number;
+    isLive: boolean;
+    status: 'LIVE' | 'UPCOMING' | 'FINISHED';
+    language: string;
+    eventId?: string;
+    matchInfo?: {
+        homeTeam: {
+            name: string;
+            shortName: string;
+            logo: string;
+            score?: string;
+        };
+        awayTeam: {
+            name: string;
+            shortName: string;
+            logo: string;
+            score?: string;
+        };
+        statusDetail: string;
+    };
+}
+
+export interface ChannelEPG {
+    channelId: string;
+    channelName: string;
+    shortName: string;
+    network: string;
+    category: string;
+    language: string;
+    languageLabel: string;
+    logo: string;
+    streamEndpoint: string;
+    updatedAt: string;
+    nowPlaying: EPGProgram;
+    nextUp: EPGProgram;
+    upcoming: EPGProgram[];
+    schedule: EPGProgram[];
 }
 
 export interface LiveSportEvent {
@@ -61,6 +117,7 @@ export interface LiveSportEvent {
     leagueSlug: string;
     leagueLogo?: string;
     startTime: string;
+    endTime?: string;
     status: 'LIVE' | 'UPCOMING' | 'FINISHED';
     statusDetail: string;
     homeTeam: {
@@ -1275,44 +1332,66 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     },
 
     // =========================================================================
-    // 6. UK & EUROPEAN PREMIUM SPORTS (Sky Sports, TNT Sports, Eurosport, Canal+, RMC, DAZN)
+    // 6. UK & ENGLISH PREMIER LEAGUE SPORTS (Sky Sports 1-12, TNT Sports 1-4, SuperSport EPL, Premier Sports, USA Network)
     // =========================================================================
     {
         id: 'sky-sports-main-event',
-        name: 'Sky Sports Main Event UK HD',
+        name: 'Sky Sports Main Event UK HD (Premier League & EFL)',
         shortName: 'Sky Main Event',
         network: 'Sky Sports',
         category: 'sky',
         language: 'en',
         languageLabel: 'English',
         country: 'UK',
-        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        logo: 'https://raw.githubusercontent.com/tv-logo/tv-logos/refs/heads/main/countries/united-kingdom/sky-sports-main-event-icon-uk.png',
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Sky Sports Main Event (1080p)', url: `${EDGE_CDN_BASE}/premium38/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'Sky Sports Main Event UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium38/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'SuperSport Grandstand EPL Live (1080p)', url: `${EDGE_CDN_BASE}/premium412/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Sky Sports Premier League Feed (1080p)', url: `${EDGE_CDN_BASE}/premium130/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'sky-sports-premier-league',
-        name: 'Sky Sports Premier League UK HD',
+        name: 'Sky Sports Premier League UK HD (24/7 EPL)',
         shortName: 'Sky Premier League',
         network: 'Sky Sports',
         category: 'sky',
         language: 'en',
         languageLabel: 'English',
         country: 'UK',
-        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        logo: 'https://raw.githubusercontent.com/tv-logo/tv-logos/refs/heads/main/countries/united-kingdom/sky-sports-premier-league-icon-uk.png',
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Sky Sports Premier League (1080p)', url: `${EDGE_CDN_BASE}/premium130/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'Sky Sports Premier League UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium130/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Premier League 24/7 Live Match Feed (SuperSport EPL 1080p)', url: `${EDGE_CDN_BASE}/premium414/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Sky Sports Premier League UK (Mirror HD)', url: 'http://stream.bottledesk.net/p/AAxBRQEBc2c/index.m3u8', quality: '1080p', language: 'en' },
+            { label: 'Premier League Early Kickoff Feed (TNT Sports 1 UK 1080p)', url: `${EDGE_CDN_BASE}/premium31/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'sky-sports-football',
-        name: 'Sky Sports Football UK HD',
+        name: 'Sky Sports Football UK HD (EFL, Carabao Cup, SPFL & Bundesliga)',
         shortName: 'Sky Football',
+        network: 'Sky Sports',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://raw.githubusercontent.com/tv-logo/tv-logos/refs/heads/main/countries/united-kingdom/sky-sports-football-icon-uk.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Sky Sports Football UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium35/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Sky Sports+ Football Stream (1080p)', url: `${EDGE_CDN_BASE}/premium36/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sports-plus',
+        name: 'Sky Sports+ / Arena UK HD (Live EFL & Match Choice)',
+        shortName: 'Sky Sports+',
         network: 'Sky Sports',
         category: 'sky',
         language: 'en',
@@ -1322,16 +1401,33 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Sky Sports Football UK (1080p)', url: `${EDGE_CDN_BASE}/premium35/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'Sky Sports Action UK (1080p)', url: 'http://stream.bottledesk.net/p/AQNASgYGemc/index.m3u8', quality: '1080p', language: 'en' }
+            { label: 'Sky Sports+ / Arena UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium36/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Sky Sports Football Backup (1080p)', url: `${EDGE_CDN_BASE}/premium35/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sports-action',
+        name: 'Sky Sports Action / NFL UK HD',
+        shortName: 'Sky Action',
+        network: 'Sky Sports',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Sky Sports Action UK (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium37/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Sky Sports Action UK (Direct 1080p)', url: 'http://stream.bottledesk.net/p/AQNASgYGemc/index.m3u8', quality: '1080p', language: 'en' }
         ]
     },
     {
         id: 'sky-sports-f1',
-        name: 'Sky Sports F1 UK HD',
+        name: 'Sky Sports F1 UK HD (Formula 1)',
         shortName: 'Sky Sports F1',
         network: 'Sky Sports',
-        category: 'motorsport',
+        category: 'sky',
         language: 'en',
         languageLabel: 'English',
         country: 'UK',
@@ -1339,32 +1435,181 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Sky Sports F1 UK (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium60/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Sky Sports F1 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium60/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
             { label: 'Sky Sports F1 UK (Mirror 1080p)', url: 'http://stream.bottledesk.net/p/AwZGQwwEZA/index.m3u8', quality: '1080p', language: 'en' }
         ]
     },
     {
-        id: 'tnt-sports-1',
-        name: 'TNT Sports 1 UK HD',
-        shortName: 'TNT Sports 1',
-        network: 'TNT Sports',
-        category: 'europe',
+        id: 'sky-sports-cricket',
+        name: 'Sky Sports Cricket UK HD',
+        shortName: 'Sky Cricket',
+        network: 'Sky Sports',
+        category: 'sky',
         language: 'en',
         languageLabel: 'English',
         country: 'UK',
         logo: 'https://i.imgur.com/Vtk2cGI.png',
         quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Sky Sports Cricket UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium65/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sports-golf',
+        name: 'Sky Sports Golf UK HD (PGA & DP World Tour)',
+        shortName: 'Sky Golf',
+        network: 'Sky Sports',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://raw.githubusercontent.com/tv-logo/tv-logos/refs/heads/main/countries/united-kingdom/sky-sports-golf-icon-uk.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Sky Sports Golf UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium70/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sports-tennis',
+        name: 'Sky Sports Tennis UK HD (ATP & WTA Tour)',
+        shortName: 'Sky Tennis',
+        network: 'Sky Sports',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://raw.githubusercontent.com/tv-logo/tv-logos/refs/heads/main/countries/united-kingdom/sky-sports-tennis-icon-uk.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Sky Sports Tennis UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium576/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sports-mix',
+        name: 'Sky Sports Mix UK HD',
+        shortName: 'Sky Mix',
+        network: 'Sky Sports',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://raw.githubusercontent.com/tv-logo/tv-logos/refs/heads/main/countries/united-kingdom/sky-sports-mix-icon-uk.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Sky Sports Mix UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium449/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sports-news',
+        name: 'Sky Sports News UK HD (Soccer Saturday & Transfer Centre)',
+        shortName: 'Sky Sports News',
+        network: 'Sky Sports',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://raw.githubusercontent.com/tv-logo/tv-logos/refs/heads/main/countries/united-kingdom/sky-sports-news-icon-uk.png',
+        quality: '1080p',
         featured: true,
         streams: [
-            { label: 'TNT Sports 1 UK (1080p)', url: `${EDGE_CDN_BASE}/premium31/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'Sky Sports News UK (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium575/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Sky Sports News UK (Mirror 1080p)', url: `${EDGE_CDN_BASE}/premium577/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sports-racing',
+        name: 'Sky Sports Racing UK HD',
+        shortName: 'Sky Racing',
+        network: 'Sky Sports',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://raw.githubusercontent.com/tv-logo/tv-logos/refs/heads/main/countries/united-kingdom/sky-sports-racing-icon-uk.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Sky Sports Racing UK (1080p)', url: `${EDGE_CDN_BASE}/premium554/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'tnt-sports-1',
+        name: 'TNT Sports 1 UK HD (Premier League & UEFA Champions League)',
+        shortName: 'TNT Sports 1',
+        network: 'TNT Sports',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://schedulesdirect-api20141201-logos.s3.dualstack.us-east-1.amazonaws.com/stationLogos/s97542_dark_360w_270h.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'TNT Sports 1 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium31/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'TNT Sports 2 UK Backup (1080p)', url: `${EDGE_CDN_BASE}/premium32/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'tnt-sports-2',
-        name: 'TNT Sports 2 UK HD',
+        name: 'TNT Sports 2 UK HD (UEFA Champions League, Europa & Serie A)',
         shortName: 'TNT Sports 2',
         network: 'TNT Sports',
-        category: 'europe',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://schedulesdirect-api20141201-logos.s3.dualstack.us-east-1.amazonaws.com/stationLogos/s82449_dark_360w_270h.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'TNT Sports 2 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium32/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'TNT Sports 1 UK Backup (1080p)', url: `${EDGE_CDN_BASE}/premium31/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'tnt-sports-3',
+        name: 'TNT Sports 3 UK HD (Serie A, Ligue 1 & European Football)',
+        shortName: 'TNT Sports 3',
+        network: 'TNT Sports',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://schedulesdirect-api20141201-logos.s3.dualstack.us-east-1.amazonaws.com/stationLogos/s117230_dark_360w_270h.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'TNT Sports 3 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium33/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'TNT Sports 4 UK Backup (1080p)', url: `${EDGE_CDN_BASE}/premium34/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'tnt-sports-4',
+        name: 'TNT Sports 4 UK HD (European Football, UFC & Boxing)',
+        shortName: 'TNT Sports 4',
+        network: 'TNT Sports',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://schedulesdirect-api20141201-logos.s3.dualstack.us-east-1.amazonaws.com/stationLogos/s46594_dark_360w_270h.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'TNT Sports 4 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium34/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'TNT Sports 3 UK Backup (1080p)', url: `${EDGE_CDN_BASE}/premium33/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'supersport-premier-league',
+        name: 'SuperSport Premier League HD (24/7 All EPL Matches English)',
+        shortName: 'SuperSport EPL',
+        network: 'SuperSport / Sky EPL',
+        category: 'sky',
         language: 'en',
         languageLabel: 'English',
         country: 'UK',
@@ -1372,15 +1617,68 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'TNT Sports 2 UK (1080p)', url: `${EDGE_CDN_BASE}/premium32/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'SuperSport Premier League (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium414/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'SuperSport Grandstand EPL (1080p)', url: `${EDGE_CDN_BASE}/premium412/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Sky Sports Premier League UK (1080p)', url: `${EDGE_CDN_BASE}/premium130/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
-        id: 'tnt-sports-3',
-        name: 'TNT Sports 3 UK HD',
-        shortName: 'TNT Sports 3',
-        network: 'TNT Sports',
-        category: 'europe',
+        id: 'supersport-grandstand',
+        name: 'SuperSport Grandstand HD (Main Event EPL & UCL English)',
+        shortName: 'SuperSport Grandstand',
+        network: 'SuperSport / Sky EPL',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'SuperSport Grandstand HD (1080p)', url: `${EDGE_CDN_BASE}/premium412/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'SuperSport Premier League HD (1080p)', url: `${EDGE_CDN_BASE}/premium414/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'supersport-football',
+        name: 'SuperSport Football HD (UCL, FA Cup & Serie A English)',
+        shortName: 'SuperSport Football',
+        network: 'SuperSport / Sky EPL',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'SuperSport Football HD (1080p)', url: `${EDGE_CDN_BASE}/premium413/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'SuperSport Variety 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium420/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'supersport-laliga',
+        name: 'SuperSport LaLiga HD (Spanish LaLiga in English)',
+        shortName: 'SuperSport LaLiga',
+        network: 'SuperSport / Sky EPL',
+        category: 'sky',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'UK',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'SuperSport LaLiga English (1080p)', url: `${EDGE_CDN_BASE}/premium415/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Premier Sports 1 LaLiga UK (1080p)', url: `${EDGE_CDN_BASE}/premium451/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'supersport-variety-1',
+        name: 'SuperSport Variety 1 HD (EPL 3pm Goal Rush & Serie A English)',
+        shortName: 'SuperSport Variety 1',
+        network: 'SuperSport / Sky EPL',
+        category: 'sky',
         language: 'en',
         languageLabel: 'English',
         country: 'UK',
@@ -1388,23 +1686,25 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'TNT Sports 3 UK (1080p)', url: `${EDGE_CDN_BASE}/premium33/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'SuperSport Variety 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium420/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'SuperSport Variety 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium421/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
-        id: 'tnt-sports-4',
-        name: 'TNT Sports 4 UK HD',
-        shortName: 'TNT Sports 4',
-        network: 'TNT Sports',
-        category: 'europe',
+        id: 'usa-network-hd',
+        name: 'USA Network Sports HD (Live Premier League English)',
+        shortName: 'USA Network EPL',
+        network: 'NBC / USA Sports',
+        category: 'sky',
         language: 'en',
         languageLabel: 'English',
-        country: 'UK',
-        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        country: 'US',
+        logo: 'https://schedulesdirect-api20141201-logos.s3.dualstack.us-east-1.amazonaws.com/stationLogos/s11207_dark_360w_270h.png',
         quality: '1080p',
-        featured: false,
+        featured: true,
         streams: [
-            { label: 'TNT Sports 4 UK (1080p)', url: `${EDGE_CDN_BASE}/premium34/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'USA Network EPL Live (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium343/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'USA Network EPL Live (Direct CDN)', url: 'https://tvsen3.aynaott.com/dbbcY6NG/index.m3u8', quality: '1080p', language: 'en' }
         ]
     },
 
@@ -1742,10 +2042,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     },
     {
         id: 'premier-sports-1',
-        name: 'Premier Sports 1 UK (1080p)',
+        name: 'Premier Sports 1 UK HD (LaLiga, Scottish Cup & URC)',
         shortName: 'Premier Sports 1',
         network: 'Premier Sports',
-        category: 'europe',
+        category: 'sky',
         language: 'en',
         languageLabel: 'English',
         country: 'UK',
@@ -1753,16 +2053,17 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Premier Sports 1 (Amagi 1080p)', url: 'https://amg19223-amg19223c3-amgplt0351.playout.now3.amagi.tv/playlist/amg19223-amg19223c3-amgplt0351/playlist.m3u8', quality: '1080p', language: 'en' },
-            { label: 'Premier Sports 1 (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium771/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'Premier Sports 1 UK (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium451/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Premier Sports 1 UK (Mirror 1080p)', url: `${EDGE_CDN_BASE}/premium771/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Premier Sports 1 (Amagi 1080p)', url: 'https://amg19223-amg19223c3-amgplt0351.playout.now3.amagi.tv/playlist/amg19223-amg19223c3-amgplt0351/playlist.m3u8', quality: '1080p', language: 'en' }
         ]
     },
     {
         id: 'premier-sports-2',
-        name: 'Premier Sports 2 UK (1080p)',
+        name: 'Premier Sports 2 UK HD (LaLiga & European Football)',
         shortName: 'Premier Sports 2',
         network: 'Premier Sports',
-        category: 'europe',
+        category: 'sky',
         language: 'en',
         languageLabel: 'English',
         country: 'UK',
@@ -1770,8 +2071,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Premier Sports 2 (Amagi 1080p)', url: 'https://amg19223-amg19223c4-amgplt0351.playout.now3.amagi.tv/playlist/amg19223-amg19223c4-amgplt0351/playlist.m3u8', quality: '1080p', language: 'en' },
-            { label: 'Premier Sports 2 (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium799/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'Premier Sports 2 UK (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium799/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Premier Sports 2 (Amagi 1080p)', url: 'https://amg19223-amg19223c4-amgplt0351.playout.now3.amagi.tv/playlist/amg19223-amg19223c4-amgplt0351/playlist.m3u8', quality: '1080p', language: 'en' }
         ]
     },
     {
@@ -2415,15 +2716,31 @@ async function probeStreamLiveness(
 }
 
 /**
- * Returns filtered list of Live Sports Channels
+ * Returns filtered list of Live Sports Channels with real-time EPG (Now Playing & Upcoming)
  */
 export function getLiveChannels(
     publicBaseUrl: string,
     filters?: { lang?: string; category?: string; query?: string }
 ): Array<LiveChannel & { streamEndpoint: string; defaultProxyUrl: string }> {
     harvestDynamicSportsM3U().catch(() => {});
+    // Trigger background refresh of live sports scoreboard if stale
+    if (Date.now() - lastEventsFetchTime >= EVENTS_TTL_MS) {
+        getLiveSportEvents(publicBaseUrl).catch(() => {});
+    }
 
-    let list = [...CORE_SPORTS_CHANNELS];
+    let list = CORE_SPORTS_CHANNELS.map((ch) => {
+        const channelEpg = getChannelEPG(ch.id, publicBaseUrl);
+        return {
+            ...ch,
+            epg: channelEpg
+                ? {
+                      nowPlaying: channelEpg.nowPlaying,
+                      nextUp: channelEpg.nextUp,
+                      upcoming: channelEpg.upcoming
+                  }
+                : undefined
+        };
+    });
 
     if (filters?.lang && filters.lang !== 'all') {
         const langLower = filters.lang.toLowerCase();
@@ -2432,7 +2749,14 @@ export function getLiveChannels(
 
     if (filters?.category && filters.category !== 'all') {
         const catLower = filters.category.toLowerCase();
-        list = list.filter((c) => c.category === catLower || c.network.toLowerCase().includes(catLower));
+        list = list.filter(
+            (c) =>
+                c.category === catLower ||
+                (catLower !== 'sky' && c.network.toLowerCase().includes(catLower)) ||
+                c.id.toLowerCase().includes(catLower) ||
+                (catLower === 'europe' && (c.id.startsWith('tnt-sports') || c.id.startsWith('premier-sports'))) ||
+                (catLower === 'motorsport' && c.id === 'sky-sports-f1')
+        );
     }
 
     if (filters?.query) {
@@ -2443,7 +2767,10 @@ export function getLiveChannels(
                 c.shortName.toLowerCase().includes(q) ||
                 c.network.toLowerCase().includes(q) ||
                 c.languageLabel.toLowerCase().includes(q) ||
-                c.id.toLowerCase().includes(q)
+                c.id.toLowerCase().includes(q) ||
+                (c.epg?.nowPlaying.title.toLowerCase().includes(q) ?? false) ||
+                (c.epg?.nowPlaying.subtitle.toLowerCase().includes(q) ?? false) ||
+                (c.epg?.nextUp.title.toLowerCase().includes(q) ?? false)
         );
     }
 
@@ -2466,19 +2793,35 @@ export async function resolveChannelStreams(
     onStreamVerified?: (source: LiveStreamSource) => void
 ): Promise<{
     channel: LiveChannel | null;
+    epg: ChannelEPG | null;
     sources: LiveStreamSource[];
 }> {
-    await harvestDynamicSportsM3U().catch(() => {});
+    await Promise.allSettled([
+        harvestDynamicSportsM3U(),
+        Date.now() - lastEventsFetchTime >= EVENTS_TTL_MS ? getLiveSportEvents(publicBaseUrl) : Promise.resolve([])
+    ]);
 
     const normalizedId = channelId.toLowerCase().trim();
-    const channel =
+    const baseChannel =
         CORE_SPORTS_CHANNELS.find((c) => c.id === normalizedId) ||
         CORE_SPORTS_CHANNELS.find((c) => c.shortName.toLowerCase().replace(/\s+/g, '-') === normalizedId) ||
         null;
 
-    if (!channel) {
-        return { channel: null, sources: [] };
+    if (!baseChannel) {
+        return { channel: null, epg: null, sources: [] };
     }
+
+    const channelEpg = getChannelEPG(baseChannel.id, publicBaseUrl);
+    const channel: LiveChannel = {
+        ...baseChannel,
+        epg: channelEpg
+            ? {
+                  nowPlaying: channelEpg.nowPlaying,
+                  nextUp: channelEpg.nextUp,
+                  upcoming: channelEpg.upcoming
+              }
+            : undefined
+    };
 
     // Merge curated streams + dynamically harvested M3U backups strictly for this exact channel ID
     const dynamicBackups = dynamicChannelCache.get(channel.id) || [];
@@ -2511,9 +2854,13 @@ export async function resolveChannelStreams(
                 multi: 'Multi-Audio'
             };
 
+            const nowPlayingSuffix = channelEpg?.nowPlaying?.isLive
+                ? ` • LIVE: ${channelEpg.nowPlaying.title}`
+                : '';
+
             const sourceObj: LiveStreamSource = {
                 id: `${channel.id}-s${index + 1}`,
-                server: item.label,
+                server: `${item.label}${nowPlayingSuffix}`,
                 url: proxiedUrl,
                 rawUrl: item.url,
                 quality: item.quality,
@@ -2526,7 +2873,7 @@ export async function resolveChannelStreams(
                 audioTracks: [{ language: item.language, label: langMap[item.language] || 'English' }],
                 provider: {
                     id: `iptv-${channel.id}-${index + 1}`,
-                    name: `${item.label} [${item.quality}]`
+                    name: `${item.label} [${item.quality}]${nowPlayingSuffix}`
                 }
             };
 
@@ -2575,16 +2922,193 @@ export async function resolveChannelStreams(
 
     return {
         channel,
+        epg: channelEpg,
         sources: finalSources
     };
 }
 
 /**
- * Live Sports Events Scraper (ESPN Scoreboard API + Smart beIN/Fox/ESPN/Sky/TNT Channel Mapper)
+ * Live Sports Events Scraper (ESPN Scoreboard API + Smart Multi-Channel EPG Mapper)
  */
 let cachedEvents: LiveSportEvent[] = [];
 let lastEventsFetchTime = 0;
+let eventsFetchPromise: Promise<LiveSportEvent[]> | null = null;
 const EVENTS_TTL_MS = 90 * 1000; // 90 seconds cache for live scores
+
+const LEAGUE_DEFINITIONS: Array<{
+    sport: string;
+    slug: string;
+    label: string;
+    labelAr: string;
+    durationMinutes: number;
+    channelPool: string[];
+}> = [
+    {
+        sport: 'soccer',
+        slug: 'uefa.champions',
+        label: 'UEFA Champions League',
+        labelAr: 'دوري أبطال أوروبا',
+        durationMinutes: 125,
+        channelPool: ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4', 'supersport-grandstand', 'supersport-football', 'premier-sports-1', 'bein-sports-1-ar', 'bein-sports-2-ar', 'bein-sports-en-1', 'bein-sports-fr-1', 'canal-plus-foot-fr']
+    },
+    {
+        sport: 'soccer',
+        slug: 'uefa.europa',
+        label: 'UEFA Europa League',
+        labelAr: 'الدوري الأوروبي',
+        durationMinutes: 125,
+        channelPool: ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4', 'supersport-football', 'bein-sports-2-ar', 'bein-sports-3-ar', 'bein-sports-en-2', 'bein-sports-fr-2']
+    },
+    {
+        sport: 'soccer',
+        slug: 'eng.1',
+        label: 'English Premier League',
+        labelAr: 'الدوري الإنجليزي الممتاز',
+        durationMinutes: 120,
+        channelPool: [
+            'sky-sports-premier-league',
+            'sky-sports-main-event',
+            'tnt-sports-1',
+            'supersport-premier-league',
+            'supersport-grandstand',
+            'supersport-variety-1',
+            'usa-network-hd',
+            'premier-sports-1',
+            'bein-sports-1-ar',
+            'bein-sports-2-ar',
+            'bein-sports-en-1',
+            'canal-plus-foot-fr'
+        ]
+    },
+    {
+        sport: 'soccer',
+        slug: 'eng.2',
+        label: 'EFL Sky Bet Championship',
+        labelAr: 'دوري البطولة الإنجليزية (تشامبيونشيب)',
+        durationMinutes: 120,
+        channelPool: ['sky-sports-football', 'sky-sports-plus', 'sky-sports-action', 'sky-sports-main-event', 'bein-sports-en-2']
+    },
+    {
+        sport: 'soccer',
+        slug: 'esp.1',
+        label: 'Spanish LaLiga',
+        labelAr: 'الدوري الإسباني (لاليغا)',
+        durationMinutes: 120,
+        channelPool: ['premier-sports-1', 'premier-sports-2', 'supersport-laliga', 'bein-sports-3-ar', 'bein-sports-en-1', 'bein-sports-fr-1', 'espn-hd']
+    },
+    {
+        sport: 'soccer',
+        slug: 'ita.1',
+        label: 'Italian Serie A',
+        labelAr: 'الدوري الإيطالي (سيري آ)',
+        durationMinutes: 120,
+        channelPool: ['tnt-sports-2', 'tnt-sports-3', 'supersport-football', 'supersport-variety-1', 'ad-sports-1-ar', 'ad-sports-2-ar', 'bein-sports-4-ar', 'bein-sports-fr-2']
+    },
+    {
+        sport: 'soccer',
+        slug: 'ger.1',
+        label: 'German Bundesliga',
+        labelAr: 'الدوري الألماني (بوندسليغا)',
+        durationMinutes: 120,
+        channelPool: ['sky-sports-football', 'sky-sports-mix', 'bein-sports-5-ar', 'bein-sports-fr-2', 'espn-2-hd']
+    },
+    {
+        sport: 'soccer',
+        slug: 'fra.1',
+        label: 'French Ligue 1',
+        labelAr: 'الدوري الفرنسي (ليغ 1)',
+        durationMinutes: 120,
+        channelPool: ['tnt-sports-4', 'bein-sports-6-ar', 'bein-sports-fr-1', 'canal-plus-foot-fr', 'bein-sports-en-2']
+    },
+    {
+        sport: 'soccer',
+        slug: 'ksa.1',
+        label: 'Roshn Saudi League',
+        labelAr: 'دوري روشن السعودي للمحترفين',
+        durationMinutes: 120,
+        channelPool: ['ssc-sport-1-ar', 'ssc-sport-2-ar', 'ssc-sport-3-ar', 'ssc-extra-1-ar', 'ssc-extra-2-ar', 'ssc-extra-3-ar', 'fox-sports-2']
+    },
+    {
+        sport: 'soccer',
+        slug: 'afc.champions',
+        label: 'AFC Champions League Elite',
+        labelAr: 'دوري أبطال آسيا للنخبة',
+        durationMinutes: 125,
+        channelPool: ['ssc-sport-1-ar', 'bein-sports-afc-ar', 'alkass-1-ar', 'alkass-2-ar', 'ad-sports-1-ar', 'dubai-sports-1-ar']
+    },
+    {
+        sport: 'soccer',
+        slug: 'eng.fa',
+        label: 'English FA Cup',
+        labelAr: 'كأس الاتحاد الإنجليزي',
+        durationMinutes: 125,
+        channelPool: ['tnt-sports-1', 'tnt-sports-2', 'supersport-premier-league', 'bein-sports-1-ar', 'bein-sports-en-1', 'espn-hd']
+    },
+    {
+        sport: 'soccer',
+        slug: 'usa.1',
+        label: 'Major League Soccer (MLS)',
+        labelAr: 'الدوري الأمريكي لكرة القدم',
+        durationMinutes: 120,
+        channelPool: ['sky-sports-football', 'fox-sports-1', 'espn-hd', 'dubai-sports-1-ar']
+    },
+    {
+        sport: 'basketball',
+        slug: 'nba',
+        label: 'NBA Basketball',
+        labelAr: 'دوري كرة السلة الأمريكي NBA',
+        durationMinutes: 150,
+        channelPool: ['sky-sports-action', 'sky-sports-mix', 'tnt-sports-3', 'bein-sports-en-1', 'bein-sports-fr-3', 'nba-tv', 'espn-hd', 'espn-2-hd']
+    },
+    {
+        sport: 'football',
+        slug: 'nfl',
+        label: 'NFL Football',
+        labelAr: 'دوري كرة القدم الأمريكية NFL',
+        durationMinutes: 180,
+        channelPool: ['sky-sports-action', 'sky-sports-main-event', 'fox-sports-1', 'nfl-network', 'espn-hd', 'nbc-sports-now']
+    },
+    {
+        sport: 'hockey',
+        slug: 'nhl',
+        label: 'NHL Ice Hockey',
+        labelAr: 'دوري الهوكي الأمريكي NHL',
+        durationMinutes: 150,
+        channelPool: ['premier-sports-1', 'premier-sports-2', 'nhl-network', 'espn-2-hd']
+    },
+    {
+        sport: 'baseball',
+        slug: 'mlb',
+        label: 'MLB Baseball',
+        labelAr: 'دوري البيسبول الأمريكي MLB',
+        durationMinutes: 165,
+        channelPool: ['tnt-sports-4', 'mlb-network', 'fox-sports-1', 'fox-sports-2', 'espn-hd']
+    },
+    {
+        sport: 'racing',
+        slug: 'f1',
+        label: 'Formula 1 World Championship',
+        labelAr: 'بطولة العالم للفورمولا 1',
+        durationMinutes: 120,
+        channelPool: ['sky-sports-f1', 'sky-sports-main-event', 'bein-sports-8-ar', 'ssc-sport-3-ar', 'espn-2-hd']
+    },
+    {
+        sport: 'mma',
+        slug: 'ufc',
+        label: 'UFC Fight Night / PPV',
+        labelAr: 'بطولة UFC للفنون القتالية المختلطة',
+        durationMinutes: 180,
+        channelPool: ['tnt-sports-1', 'tnt-sports-2', 'ad-sports-2-ar', 'rmc-sport-1-fr', 'espn-hd', 'dazn-combat']
+    },
+    {
+        sport: 'tennis',
+        slug: 'atp',
+        label: 'ATP World Tour Tennis',
+        labelAr: 'بطولة رابطة محترفي التنس ATP',
+        durationMinutes: 140,
+        channelPool: ['sky-sports-tennis', 'bein-sports-7-ar', 'tennis-channel', 'eurosport-1', 'eurosport-2']
+    }
+];
 
 export async function getLiveSportEvents(
     publicBaseUrl: string,
@@ -2594,123 +3118,165 @@ export async function getLiveSportEvents(
         return filterEvents(cachedEvents, filters);
     }
 
-    const leagues = [
-        { sport: 'soccer', slug: 'uefa.champions', label: 'UEFA Champions League', defaultChannels: ['bein-sports-1-ar', 'bein-sports-en-1', 'bein-sports-fr-1', 'tnt-sports-1'] },
-        { sport: 'soccer', slug: 'uefa.europa', label: 'UEFA Europa League', defaultChannels: ['bein-sports-2-ar', 'bein-sports-en-2', 'bein-sports-fr-2', 'tnt-sports-2'] },
-        { sport: 'soccer', slug: 'eng.1', label: 'English Premier League', defaultChannels: ['bein-sports-1-ar', 'bein-sports-2-ar', 'sky-sports-premier-league', 'tnt-sports-1'] },
-        { sport: 'soccer', slug: 'esp.1', label: 'Spanish LaLiga', defaultChannels: ['bein-sports-3-ar', 'bein-sports-en-1', 'bein-sports-fr-1', 'espn-hd'] },
-        { sport: 'soccer', slug: 'ita.1', label: 'Italian Serie A', defaultChannels: ['bein-sports-4-ar', 'tnt-sports-2', 'bein-sports-fr-2'] },
-        { sport: 'soccer', slug: 'ger.1', label: 'German Bundesliga', defaultChannels: ['bein-sports-5-ar', 'bein-sports-fr-2', 'espn-2-hd'] },
-        { sport: 'soccer', slug: 'fra.1', label: 'French Ligue 1', defaultChannels: ['bein-sports-6-ar', 'bein-sports-fr-1', 'canal-plus-foot-fr', 'bein-sports-en-2'] },
-        { sport: 'basketball', slug: 'nba', label: 'NBA Basketball', defaultChannels: ['bein-sports-en-1', 'bein-sports-fr-3', 'nba-tv', 'espn-hd'] },
-        { sport: 'football', slug: 'nfl', label: 'NFL Football', defaultChannels: ['fox-sports-1', 'nfl-network', 'espn-hd', 'sky-sports-main-event'] },
-        { sport: 'mma', slug: 'ufc', label: 'UFC / MMA', defaultChannels: ['espn-hd', 'tnt-sports-1', 'rmc-sport-1-fr', 'dazn-combat'] }
-    ];
-
-    const events: LiveSportEvent[] = [];
-
-    await Promise.allSettled(
-        leagues.map(async (lg) => {
-            try {
-                const res = await fetch(
-                    `https://site.api.espn.com/apis/site/v2/sports/${lg.sport}/${lg.slug}/scoreboard`,
-                    {
-                        headers: { 'User-Agent': DEFAULT_UA },
-                        signal: AbortSignal.timeout(4000)
-                    }
-                );
-                if (!res.ok) return;
-                const data = (await res.json()) as any;
-                const rawEvents = Array.isArray(data.events) ? data.events : [];
-                const leagueLogo = data.leagues?.[0]?.logos?.[0]?.href || '';
-
-                for (const ev of rawEvents) {
-                    const comp = ev.competitions?.[0];
-                    const competitors = Array.isArray(comp?.competitors) ? comp.competitors : [];
-                    const home = competitors.find((c: any) => c.homeAway === 'home') || competitors[0] || {};
-                    const away = competitors.find((c: any) => c.homeAway === 'away') || competitors[1] || {};
-
-                    const state = ev.status?.type?.state || 'pre';
-                    const status: 'LIVE' | 'UPCOMING' | 'FINISHED' =
-                        state === 'in' ? 'LIVE' : state === 'post' ? 'FINISHED' : 'UPCOMING';
-
-                    const broadcasts: string[] = [];
-                    if (Array.isArray(comp?.broadcasts)) {
-                        for (const b of comp.broadcasts) {
-                            if (Array.isArray(b.names)) {
-                                broadcasts.push(...b.names);
-                            }
-                        }
-                    }
-
-                    const recIds = new Set<string>(lg.defaultChannels);
-                    const bText = broadcasts.join(' ').toLowerCase();
-                    if (bText.includes('fox') || bText.includes('fs1')) recIds.add('fox-sports-1');
-                    if (bText.includes('espn')) recIds.add('espn-hd');
-                    if (bText.includes('sky')) recIds.add('sky-sports-main-event');
-                    if (bText.includes('tnt')) recIds.add('tnt-sports-1');
-                    if (bText.includes('cbs') || bText.includes('paramount')) recIds.add('cbs-sports-golazo');
-                    if (bText.includes('nbc') || bText.includes('peacock')) recIds.add('nbc-sports-now');
-
-                    const recommendedChannels = Array.from(recIds)
-                        .map((cid) => CORE_SPORTS_CHANNELS.find((ch) => ch.id === cid))
-                        .filter((ch): ch is LiveChannel => Boolean(ch))
-                        .map((ch) => ({
-                            channelId: ch.id,
-                            name: ch.name,
-                            language: ch.language,
-                            languageLabel: ch.languageLabel,
-                            logo: ch.logo,
-                            streamEndpoint: `${publicBaseUrl}/v1/live/stream/${ch.id}`
-                        }));
-
-                    events.push({
-                        id: String(ev.id || `${lg.slug}-${Date.now()}`),
-                        title: ev.name || `${away.team?.displayName || 'Away'} vs ${home.team?.displayName || 'Home'}`,
-                        shortTitle: ev.shortName || ev.name || '',
-                        sport: lg.sport,
-                        league: lg.label,
-                        leagueSlug: lg.slug,
-                        leagueLogo,
-                        startTime: ev.date || new Date().toISOString(),
-                        status,
-                        statusDetail: ev.status?.type?.shortDetail || ev.status?.type?.description || status,
-                        homeTeam: {
-                            name: home.team?.displayName || home.team?.name || 'Home',
-                            shortName: home.team?.abbreviation || home.team?.shortDisplayName || 'HOM',
-                            logo: home.team?.logo || '',
-                            score: home.score
-                        },
-                        awayTeam: {
-                            name: away.team?.displayName || away.team?.name || 'Away',
-                            shortName: away.team?.abbreviation || away.team?.shortDisplayName || 'AWY',
-                            logo: away.team?.logo || '',
-                            score: away.score
-                        },
-                        broadcasts: broadcasts.length > 0 ? broadcasts : ['beIN Sports HD', 'International Feed'],
-                        recommendedChannels
-                    });
-                }
-            } catch {
-                // Ignore individual league error
-            }
-        })
-    );
-
-    events.sort((a, b) => {
-        const order = { LIVE: 0, UPCOMING: 1, FINISHED: 2 };
-        if (order[a.status] !== order[b.status]) {
-            return order[a.status] - order[b.status];
-        }
-        return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
-    });
-
-    if (events.length > 0) {
-        cachedEvents = events;
-        lastEventsFetchTime = Date.now();
+    if (eventsFetchPromise) {
+        const res = await eventsFetchPromise;
+        return filterEvents(res, filters);
     }
 
-    return filterEvents(events, filters);
+    eventsFetchPromise = (async () => {
+        const events: LiveSportEvent[] = [];
+
+        await Promise.allSettled(
+            LEAGUE_DEFINITIONS.map(async (lg) => {
+                try {
+                    const res = await fetch(
+                        `https://site.api.espn.com/apis/site/v2/sports/${lg.sport}/${lg.slug}/scoreboard`,
+                        {
+                            headers: { 'User-Agent': DEFAULT_UA },
+                            signal: AbortSignal.timeout(4200)
+                        }
+                    );
+                    if (!res.ok) return;
+                    const data = (await res.json()) as any;
+                    const rawEvents = Array.isArray(data.events) ? data.events : [];
+                    const leagueLogo = data.leagues?.[0]?.logos?.[0]?.href || '';
+
+                    rawEvents.forEach((ev: any, evIdx: number) => {
+                        const comp = ev.competitions?.[0];
+                        const competitors = Array.isArray(comp?.competitors) ? comp.competitors : [];
+                        const home = competitors.find((c: any) => c.homeAway === 'home') || competitors[0] || {};
+                        const away = competitors.find((c: any) => c.homeAway === 'away') || competitors[1] || {};
+
+                        const state = ev.status?.type?.state || 'pre';
+                        const status: 'LIVE' | 'UPCOMING' | 'FINISHED' =
+                            state === 'in' ? 'LIVE' : state === 'post' ? 'FINISHED' : 'UPCOMING';
+
+                        const broadcasts: string[] = [];
+                        if (Array.isArray(comp?.broadcasts)) {
+                            for (const b of comp.broadcasts) {
+                                if (Array.isArray(b.names)) {
+                                    broadcasts.push(...b.names);
+                                }
+                            }
+                        }
+
+                        const recIds = new Set<string>(lg.channelPool);
+
+                        // Smart channel rotation so simultaneous matches in the same league distribute across numbered channels
+                        if (lg.slug === 'ksa.1') {
+                            const sscChannels = ['ssc-sport-1-ar', 'ssc-sport-2-ar', 'ssc-sport-3-ar', 'ssc-extra-1-ar', 'ssc-extra-2-ar', 'ssc-extra-3-ar'];
+                            recIds.clear();
+                            recIds.add(sscChannels[evIdx % sscChannels.length]);
+                            recIds.add('ssc-sport-1-ar');
+                            recIds.add('fox-sports-2');
+                        } else if (lg.slug === 'eng.2') {
+                            const eflSkyChannels = ['sky-sports-football', 'sky-sports-plus', 'sky-sports-action', 'sky-sports-mix'];
+                            recIds.clear();
+                            recIds.add(eflSkyChannels[evIdx % eflSkyChannels.length]);
+                            recIds.add('bein-sports-en-2');
+                        } else if (lg.slug === 'eng.1') {
+                            const beinAr = ['bein-sports-1-ar', 'bein-sports-2-ar'];
+                            const ukEpl = ['sky-sports-premier-league', 'sky-sports-main-event', 'tnt-sports-1', 'supersport-premier-league', 'supersport-grandstand', 'supersport-variety-1', 'usa-network-hd'];
+                            recIds.clear();
+                            recIds.add('sky-sports-premier-league');
+                            recIds.add('sky-sports-main-event');
+                            recIds.add('supersport-premier-league');
+                            recIds.add('supersport-grandstand');
+                            recIds.add('tnt-sports-1');
+                            recIds.add(ukEpl[evIdx % ukEpl.length]);
+                            recIds.add(beinAr[evIdx % beinAr.length]);
+                            recIds.add('bein-sports-en-1');
+                            recIds.add('usa-network-hd');
+                            recIds.add('canal-plus-foot-fr');
+                        } else if (lg.slug === 'uefa.champions' || lg.slug === 'uefa.europa') {
+                            const tntPool = ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4'];
+                            const beinAr = ['bein-sports-1-ar', 'bein-sports-2-ar', 'bein-sports-3-ar', 'bein-sports-4-ar'];
+                            recIds.clear();
+                            recIds.add(tntPool[evIdx % tntPool.length]);
+                            recIds.add(beinAr[evIdx % beinAr.length]);
+                            recIds.add('supersport-football');
+                            recIds.add('bein-sports-en-1');
+                            recIds.add('bein-sports-fr-1');
+                        }
+
+                        const bText = broadcasts.join(' ').toLowerCase();
+                        if (bText.includes('fox') || bText.includes('fs1')) recIds.add('fox-sports-1');
+                        if (bText.includes('fs2')) recIds.add('fox-sports-2');
+                        if (bText.includes('espn2')) recIds.add('espn-2-hd');
+                        else if (bText.includes('espn')) recIds.add('espn-hd');
+                        if (bText.includes('sky')) recIds.add('sky-sports-main-event');
+                        if (bText.includes('tnt')) recIds.add('tnt-sports-1');
+                        if (bText.includes('cbs') || bText.includes('paramount')) recIds.add('cbs-sports-golazo');
+                        if (bText.includes('nbc') || bText.includes('peacock')) recIds.add('nbc-sports-now');
+                        if (bText.includes('usa')) recIds.add('usa-network-hd');
+
+                        const recommendedChannels = Array.from(recIds)
+                            .map((cid) => CORE_SPORTS_CHANNELS.find((ch) => ch.id === cid))
+                            .filter((ch): ch is LiveChannel => Boolean(ch))
+                            .map((ch) => ({
+                                channelId: ch.id,
+                                name: ch.name,
+                                language: ch.language,
+                                languageLabel: ch.languageLabel,
+                                logo: ch.logo,
+                                streamEndpoint: `${publicBaseUrl}/v1/live/stream/${ch.id}`
+                            }));
+
+                        const startIso = ev.date ? new Date(ev.date).toISOString() : new Date().toISOString();
+                        const endIso = new Date(new Date(startIso).getTime() + lg.durationMinutes * 60 * 1000).toISOString();
+
+                        events.push({
+                            id: String(ev.id || `${lg.slug}-${evIdx}`),
+                            title: ev.name || `${away.team?.displayName || 'Away'} vs ${home.team?.displayName || 'Home'}`,
+                            shortTitle: ev.shortName || ev.name || '',
+                            sport: lg.sport,
+                            league: lg.label,
+                            leagueSlug: lg.slug,
+                            leagueLogo,
+                            startTime: startIso,
+                            endTime: endIso,
+                            status,
+                            statusDetail: ev.status?.type?.shortDetail || ev.status?.type?.description || status,
+                            homeTeam: {
+                                name: home.team?.displayName || home.team?.name || 'Home',
+                                shortName: home.team?.abbreviation || home.team?.shortDisplayName || 'HOM',
+                                logo: home.team?.logo || '',
+                                score: home.score
+                            },
+                            awayTeam: {
+                                name: away.team?.displayName || away.team?.name || 'Away',
+                                shortName: away.team?.abbreviation || away.team?.shortDisplayName || 'AWY',
+                                logo: away.team?.logo || '',
+                                score: away.score
+                            },
+                            broadcasts: broadcasts.length > 0 ? broadcasts : [lg.label, 'International HD Feed'],
+                            recommendedChannels
+                        });
+                    });
+                } catch {
+                    // Ignore individual league error
+                }
+            })
+        );
+
+        events.sort((a, b) => {
+            const order = { LIVE: 0, UPCOMING: 1, FINISHED: 2 };
+            if (order[a.status] !== order[b.status]) {
+                return order[a.status] - order[b.status];
+            }
+            return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+        });
+
+        if (events.length > 0) {
+            cachedEvents = events;
+            lastEventsFetchTime = Date.now();
+        }
+        eventsFetchPromise = null;
+        return events;
+    })();
+
+    const allEvents = await eventsFetchPromise;
+    return filterEvents(allEvents, filters);
 }
 
 function filterEvents(events: LiveSportEvent[], filters?: { sport?: string; status?: string }): LiveSportEvent[] {
@@ -2727,7 +3293,685 @@ function filterEvents(events: LiveSportEvent[], filters?: { sport?: string; stat
 }
 
 /**
- * Generates an M3U8 Playlist string for all (or filtered) Live Sports Channels
+ * Network-Accurate Program Templates for Continuous 24-Hour Channel EPG Generation
+ * Used between live match broadcasts so every channel always exposes its exact current & upcoming programs
+ */
+interface EPGTemplateSlot {
+    title: string;
+    subtitle: string;
+    description: string;
+    category: string;
+    sport?: string;
+    league?: string;
+}
+
+function getNetworkEPGTemplates(ch: LiveChannel): EPGTemplateSlot[] {
+    const id = ch.id;
+    const net = ch.network.toLowerCase();
+
+    // 1. SSC Sports (Saudi Pro League, King's Cup, AFC Champions League Elite)
+    if (id.startsWith('ssc-sport')) {
+        return [
+            {
+                title: 'استوديو دوري روشن السعودي المباشر (Roshn Saudi League Live Studio)',
+                subtitle: 'تغطية مباشرة وتحليل فني لمباريات الجولة • SSC Sports HD',
+                description: 'تغطية شاملة لمباريات دوري روشن السعودي للمحترفين مع نخبة المحللين والربط المباشر من الملاعب السعودية.',
+                category: 'Football Studio',
+                sport: 'soccer',
+                league: 'Roshn Saudi League'
+            },
+            {
+                title: 'برنامج برا الـ 18 (Barra Al-18 Daily Talk Show)',
+                subtitle: 'حوارات حصرية وكواليس الكرة السعودية والآسيوية',
+                description: 'نقاشات تحليلية معمقة حول أبرز قضايا الأندية السعودية، سوق الانتقالات، ومنافسات دوري روشن.',
+                category: 'Sports Talk Show',
+                sport: 'soccer',
+                league: 'Roshn Saudi League'
+            },
+            {
+                title: 'دوري أبطال آسيا للنخبة - قمة الجولة (AFC Champions League Elite)',
+                subtitle: 'مواجهة الأندية السعودية في البطولة القارية • بث عالي الجودة',
+                description: 'عرض كامل وأهداف ومباريات الأندية السعودية في دوري أبطال آسيا للنخبة.',
+                category: 'Live Football / Replay',
+                sport: 'soccer',
+                league: 'AFC Champions League Elite'
+            },
+            {
+                title: 'ملخصات وأهداف دوري روشن السعودي (Saudi League Matchday Highlights)',
+                subtitle: 'جميع أهداف الجولة وأبرز اللقطات التحكيمية والفنية',
+                description: 'استعراض شامل لكافة أهداف وملخصات مباريات دوري روشن السعودي وكأس خادم الحرمين الشريفين.',
+                category: 'Highlights',
+                sport: 'soccer',
+                league: 'Roshn Saudi League'
+            }
+        ];
+    }
+
+    // 2. beIN Sports Arabic (Champions League, EPL, LaLiga, Serie A, Bundesliga, Ligue 1, AFC)
+    if (id.startsWith('bein-sports-') && ch.language === 'ar') {
+        if (id.includes('news')) {
+            return [
+                {
+                    title: 'نشرة أخبار beIN الساعة (beIN Sports Hourly News)',
+                    subtitle: 'آخر المستجدات الرياضية العالمية والعربية على مدار الساعة',
+                    description: 'تغطية إخبارية مباشرة لأهم الأحداث الرياضية، المؤتمرات الصحفية، وانتقالات اللاعبين.',
+                    category: 'Sports News',
+                    sport: 'soccer'
+                },
+                {
+                    title: 'حصاد اليوم الرياضي (Daily Sports Roundup)',
+                    subtitle: 'تقارير المراسلين من العواصم الأوروبية والعربية',
+                    description: 'تحليل شامل لنتائج المباريات الأوروبية والعربية مع شبكة مراسلي beIN Sports.',
+                    category: 'Sports News',
+                    sport: 'soccer'
+                }
+            ];
+        }
+        const focusLeague =
+            id === 'bein-sports-1-ar' || id === 'bein-sports-2-ar'
+                ? 'الدوري الإنجليزي الممتاز ودوري أبطال أوروبا (Premier League & UCL)'
+                : id === 'bein-sports-3-ar'
+                ? 'الدوري الإسباني - لاليغا (Spanish LaLiga)'
+                : id === 'bein-sports-4-ar'
+                ? 'الدوري الإيطالي - سيري آ (Italian Serie A)'
+                : id === 'bein-sports-5-ar'
+                ? 'الدوري الألماني - بوندسليغا (German Bundesliga)'
+                : id === 'bein-sports-6-ar'
+                ? 'الدوري الفرنسي - ليغ 1 (French Ligue 1)'
+                : id === 'bein-sports-afc-ar'
+                ? 'دوري أبطال آسيا للنخبة (AFC Champions League)'
+                : 'البطولات العالمية والقارية الكبرى';
+
+        return [
+            {
+                title: `الأستوديو التحليلي المباشر - ${ch.shortName}`,
+                subtitle: focusLeague,
+                description: `تغطية مباشرة وتحليل فني شامل لمباريات ${focusLeague} عبر استوديوهات beIN Sports في الدوحة.`,
+                category: 'Live Football Studio',
+                sport: 'soccer',
+                league: focusLeague
+            },
+            {
+                title: `مباراة القمة الأوروبية - ${focusLeague}`,
+                subtitle: 'تغطية خاصة وأبرز المواجهات الكلاسيكية والأهداف',
+                description: `إعادة وتحليل لأقوى مواجهات الجولة في ${focusLeague} بتعليق عربي.`,
+                category: 'Football Match',
+                sport: 'soccer',
+                league: focusLeague
+            },
+            {
+                title: 'برنامج هذا المساء الرياضي (beIN Evening Show)',
+                subtitle: 'تحليل تكتيكي شامل لأهم مباريات الدوريات الخمسة الكبرى',
+                description: 'قراءة فنية وأرقام وإحصائيات مع نجوم التحليل في قنوات beIN Sports.',
+                category: 'Sports Magazine',
+                sport: 'soccer'
+            },
+            {
+                title: 'مجلة دوري أبطال أوروبا (UEFA Champions League Magazine)',
+                subtitle: 'كواليس الأندية الأوروبية وحوارات خاصة مع النجوم',
+                description: 'تقرير أسبوعي خاص عن نجوم دوري أبطال أوروبا وأجمل أهداف البطولة.',
+                category: 'Sports Documentary',
+                sport: 'soccer',
+                league: 'UEFA Champions League'
+            }
+        ];
+    }
+
+    // 3. Gulf & Arab Sports Channels (Alkass, AD Sports, Dubai Sports, OnTime Sports, Kuwait, Bahrain, Arryadia)
+    if (ch.category === 'mena' && ch.language === 'ar') {
+        if (id.startsWith('alkass')) {
+            return [
+                {
+                    title: 'برنامج المجلس - قنوات الكأس (Al Majlis Live Show)',
+                    subtitle: 'نقاشات الكرة الخليجية والآسيوية ودوري نجوم قطر',
+                    description: 'البرنامج الرياضي الأشهر في الخليج لمناقشة منافسات دوري نجوم أريدُ والبطولات الآسيوية.',
+                    category: 'Sports Talk Show',
+                    sport: 'soccer'
+                },
+                {
+                    title: 'استوديو دوري نجوم قطر ودوري أبطال آسيا (Qatar Stars League & AFC)',
+                    subtitle: 'بث مباشر وتحليل فني من الدوحة • Alkass HD',
+                    description: 'تغطية حية لمباريات الأندية القطرية والآسيوية عبر قنوات الكأس الرياضية.',
+                    category: 'Live Football',
+                    sport: 'soccer'
+                },
+                {
+                    title: 'برنامج جرايد وتقارير الملاعب (Alkass Press & Reports)',
+                    subtitle: 'جولة في الصحافة الرياضية العربية والعالمية',
+                    description: 'قراءة يومية في أبرز عناوين الصحف الرياضية وتغطية تدريبات الأندية.',
+                    category: 'Sports Magazine',
+                    sport: 'soccer'
+                }
+            ];
+        }
+        if (id.startsWith('ad-sports')) {
+            return [
+                {
+                    title: 'استوديو دوري أدنوك للمحترفين والكرة الإيطالية (ADNOC Pro League & Serie A)',
+                    subtitle: 'تغطية مباشرة من أبوظبي الرياضية HD',
+                    description: 'تحليل شامل لمنافسات الكرة الإماراتية والعربية والبطولات القارية.',
+                    category: 'Live Football Studio',
+                    sport: 'soccer'
+                },
+                {
+                    title: 'برنامج جيم أوفر والحدث الرياضي (AD Sports Live Analysis)',
+                    subtitle: 'حوارات فنية وتغطية حصرية لأبرز البطولات العالمية',
+                    description: 'تغطية يومية مباشرة من استوديوهات أبوظبي للإعلام.',
+                    category: 'Sports Show',
+                    sport: 'soccer'
+                }
+            ];
+        }
+        if (id.startsWith('ontime-sports')) {
+            return [
+                {
+                    title: 'استوديو الدوري المصري الممتاز (Egyptian Premier League Studio)',
+                    subtitle: 'تغطية مباريات الأهلي والزمالك وأندية الدوري المصري',
+                    description: 'الأستوديو التحليلي لمباريات دوري نايل المصري وكأس مصر مع نجوم التحليل.',
+                    category: 'Live Football Studio',
+                    sport: 'soccer'
+                },
+                {
+                    title: 'برنامج ملعب أون تايم (Malab OnTime Live)',
+                    subtitle: 'أخبار الكرة المصرية والأفريقية وحوارات حصرية',
+                    description: 'تغطية شاملة لأخبار المنتخبات الوطنية والأندية المصرية في البطولات الأفريقية.',
+                    category: 'Sports Talk Show',
+                    sport: 'soccer'
+                }
+            ];
+        }
+        return [
+            {
+                title: `الأستوديو التحليلي المباشر - ${ch.name}`,
+                subtitle: 'تغطية البطولات المحلية والعربية والآسيوية',
+                description: `بث مباشر للبرامج التحليلية والمباريات عبر ${ch.name}.`,
+                category: 'Live Sports',
+                sport: 'soccer'
+            },
+            {
+                title: `الحصاد الرياضي اليومي - ${ch.shortName}`,
+                subtitle: 'أبرز الأخبار والتقارير الميدانية من الملاعب',
+                description: 'متابعة يومية شاملة لمنافسات كرة القدم والرياضات المختلفة.',
+                category: 'Sports News',
+                sport: 'soccer'
+            }
+        ];
+    }
+
+    // 4. Arabic Movies, Series & News (MBC, Shahid, Rotana, OSN, Al Jazeera, Al Arabiya)
+    if ((ch.category === 'movies' || ch.category === 'entertainment') && ch.language === 'ar') {
+        if (net.includes('news')) {
+            return [
+                {
+                    title: 'نشرة الأخبار الرئيسية والتغطية المباشرة (Live Breaking News)',
+                    subtitle: `${ch.name} • تغطية إخبارية حية على مدار الساعة`,
+                    description: 'متابعة مستمرة لأهم الأحداث السياسية والاقتصادية والدولية مع شبكة المراسلين حول العالم.',
+                    category: 'Live News'
+                },
+                {
+                    title: 'برنامج ما وراء الخبر والتحليل السياسي (In-Depth News Analysis)',
+                    subtitle: 'نقاشات مع الخبراء والمحللين حول قضايا المنطقة والعالم',
+                    description: 'تحليل معمق لملفات الساعة السياسية والاقتصادية.',
+                    category: 'News Documentary'
+                }
+            ];
+        }
+        if (id.includes('action') || id.includes('movies') || id.includes('cinema') || id.includes('aflam')) {
+            return [
+                {
+                    title: `سهرة السينما الحصرية - ${ch.shortName} (Blockbuster Movie Night)`,
+                    subtitle: 'عرض سينمائي عالي الجودة 1080p Full HD',
+                    description: `مشاهدة أقوى الأفلام السينمائية المختارة على ${ch.name} بجودة عالية.`,
+                    category: 'Cinema / Movies'
+                },
+                {
+                    title: `فيلم السهرة المختار - ${ch.shortName} (Featured Premiere Film)`,
+                    subtitle: 'إثارة وتشويق ودراما سينمائية متواصلة',
+                    description: 'عرض متواصل لأحدث الأفلام العربية والعالمية المترجمة.',
+                    category: 'Cinema / Movies'
+                }
+            ];
+        }
+        return [
+            {
+                title: `المسلسل الدرامي الحصري - ${ch.shortName} (Exclusive Drama Series)`,
+                subtitle: 'حلقات متواصلة من أقوى المسلسلات العربية والتركية',
+                description: `عرض حصري لأحدث الإنتاجات الدرامية والترفيهية عبر ${ch.name}.`,
+                category: 'Drama & Series'
+            },
+            {
+                title: `البرنامج الترفيهي المسائي - ${ch.shortName} (Prime Time Entertainment)`,
+                subtitle: 'سهرة فنية وترفيهية للعائلة العربية',
+                description: 'برامج ترفيهية وحوارية مع أبرز نجوم الفن والدراما في العالم العربي.',
+                category: 'Entertainment'
+            }
+        ];
+    }
+
+    // 5. Sky Sports / TNT Sports / UK Channels
+    if (ch.category === 'sky') {
+        if (id.includes('f1')) {
+            return [
+                {
+                    title: 'Formula 1 Grand Prix Live Paddock & Race Special',
+                    subtitle: 'Sky Sports F1 Ultra HD • Pit Lane & Telemetry Analysis',
+                    description: 'Complete Formula 1 weekend coverage, qualifying sessions, race replays, and technical analysis from the paddock.',
+                    category: 'Motorsport',
+                    sport: 'racing',
+                    league: 'Formula 1'
+                },
+                {
+                    title: "Ted's Notebook & F1 Drivers Press Conference",
+                    subtitle: 'Inside the F1 Paddock with Sky Sports F1 team',
+                    description: 'Behind-the-scenes technical updates and exclusive interviews with Formula 1 team principals and drivers.',
+                    category: 'Motorsport Magazine',
+                    sport: 'racing',
+                    league: 'Formula 1'
+                }
+            ];
+        }
+        if (id.includes('news')) {
+            return [
+                {
+                    title: 'Sky Sports News Live: Transfer Centre & Breaking Sports',
+                    subtitle: 'Live rolling sports news, scores, and Premier League updates',
+                    description: '24/7 live sports news coverage, press conferences, and instant score updates across the UK and Europe.',
+                    category: 'Sports News',
+                    sport: 'soccer'
+                },
+                {
+                    title: 'Good Morning Sports Fans / The Transfer Show',
+                    subtitle: 'Sky Sports News HD Studio',
+                    description: 'Round-the-clock headlines from the Premier League, EFL, Champions League, Cricket, F1, and Boxing.',
+                    category: 'Sports News',
+                    sport: 'soccer'
+                }
+            ];
+        }
+        return [
+            {
+                title: `${ch.shortName} Live Matchday Studio & Tactical Analysis`,
+                subtitle: 'Premier League, UEFA Champions League & Top-Flight Coverage',
+                description: `Live studio coverage, match build-up, and expert punditry on ${ch.name}.`,
+                category: 'Live Sports Studio',
+                sport: 'soccer',
+                league: 'English Premier League'
+            },
+            {
+                title: `${ch.shortName} Premier League & European Classics`,
+                subtitle: 'Extended Match Highlights & Iconic Fixtures',
+                description: 'Full match replays and extended highlights from the biggest fixtures of the season.',
+                category: 'Football Highlights',
+                sport: 'soccer'
+            }
+        ];
+    }
+
+    // 6. ESPN / Fox Sports / US League Networks (NBA TV, NFL Network, MLB, NHL)
+    if (ch.category === 'espn' || ch.category === 'fox' || ch.category === 'usa') {
+        if (id.includes('nba')) {
+            return [
+                {
+                    title: 'NBA Gametime Live & Hardwood Classics',
+                    subtitle: 'NBA TV HD • Live Scores, Highlights & Studio Breakdown',
+                    description: 'Live look-ins around the association, post-game press conferences, and classic NBA playoff performances.',
+                    category: 'Basketball',
+                    sport: 'basketball',
+                    league: 'NBA Basketball'
+                },
+                {
+                    title: 'NBA Action & Inside the Association',
+                    subtitle: 'Top plays, Western & Eastern Conference standings analysis',
+                    description: 'Comprehensive coverage of every NBA team with studio analysts.',
+                    category: 'Basketball Studio',
+                    sport: 'basketball',
+                    league: 'NBA Basketball'
+                }
+            ];
+        }
+        if (id.includes('nfl')) {
+            return [
+                {
+                    title: 'NFL Total Access & Good Morning Football',
+                    subtitle: 'NFL Network HD • 32 Teams News, Film Room & Gameday Breakdown',
+                    description: 'Inside coverage of the National Football League with injury reports, depth chart analysis, and game previews.',
+                    category: 'American Football',
+                    sport: 'football',
+                    league: 'NFL Football'
+                }
+            ];
+        }
+        return [
+            {
+                title: ch.category === 'espn' ? 'SportsCenter Live & Top Plays' : `${ch.shortName} Live Studio & Game Day`,
+                subtitle: `${ch.name} • Live Scores, Highlights & Breaking Sports News`,
+                description: `Flagship daily sports coverage featuring live event analysis, interviews, and highlights on ${ch.name}.`,
+                category: 'Sports Studio'
+            },
+            {
+                title: ch.category === 'espn' ? 'First Take / ESPN Featured Matchup' : 'The Herd & Prime Time Sports Special',
+                subtitle: 'Debate, Championship Previews & Live Action',
+                description: 'High-energy sports commentary and live event coverage.',
+                category: 'Sports Talk'
+            }
+        ];
+    }
+
+    // 7. Combat / Motorsport / Default International
+    if (ch.category === 'combat' || ch.category === 'motorsport') {
+        return [
+            {
+                title: `${ch.shortName} Main Event Spotlight & Championship Fights`,
+                subtitle: `${ch.name} • Full Fight Replays & Pre-Fight Countdown`,
+                description: `Uninterrupted combat sports and motorsport action on ${ch.name}.`,
+                category: ch.category === 'combat' ? 'Combat Sports' : 'Motorsport'
+            },
+            {
+                title: `${ch.shortName} Embedded & Weigh-In Special`,
+                subtitle: 'Exclusive behind-the-scenes access and fighter interviews',
+                description: 'All-access coverage leading up to the next championship card.',
+                category: ch.category === 'combat' ? 'MMA / Boxing' : 'Racing'
+            }
+        ];
+    }
+
+    return [
+        {
+            title: `${ch.shortName} Prime Time Live Broadcast`,
+            subtitle: `${ch.name} • High Definition Feed`,
+            description: `Continuous live programming and featured broadcasts on ${ch.name}.`,
+            category: ch.category.toUpperCase()
+        },
+        {
+            title: `${ch.shortName} Featured Event & Studio Special`,
+            subtitle: `${ch.network} Official Schedule`,
+            description: `Scheduled programming and special coverage on ${ch.name}.`,
+            category: ch.category.toUpperCase()
+        }
+    ];
+}
+
+/**
+ * Computes the complete EPG (Now Playing, Next Up, Upcoming & 24h Schedule) for a single channel
+ * Combines real-time ESPN live/upcoming fixtures mapped to this channel with continuous network programming.
+ */
+export function getChannelEPG(channelId: string, publicBaseUrl: string): ChannelEPG | null {
+    const normalizedId = channelId.toLowerCase().trim();
+    const ch =
+        CORE_SPORTS_CHANNELS.find((c) => c.id === normalizedId) ||
+        CORE_SPORTS_CHANNELS.find((c) => c.shortName.toLowerCase().replace(/\s+/g, '-') === normalizedId);
+
+    if (!ch) return null;
+
+    const nowMs = Date.now();
+    const templates = getNetworkEPGTemplates(ch);
+
+    // Find all real sports events assigned to this channel
+    const channelEvents = cachedEvents.filter((ev) =>
+        ev.recommendedChannels.some((rc) => rc.channelId === ch.id)
+    );
+
+    // Build 2-hour base slots from -2h to +22h (12 slots = 24 hours)
+    const baseHourMs = Math.floor(nowMs / (2 * 3600 * 1000)) * (2 * 3600 * 1000);
+    const scheduleMap = new Map<number, EPGProgram>();
+
+    // Deterministic hash for channel so different channels on the same network stagger templates
+    let chHash = 0;
+    for (let i = 0; i < ch.id.length; i++) {
+        chHash = (chHash * 31 + ch.id.charCodeAt(i)) >>> 0;
+    }
+
+    for (let slotIdx = -1; slotIdx < 11; slotIdx++) {
+        const slotStartMs = baseHourMs + slotIdx * 2 * 3600 * 1000;
+        const slotEndMs = slotStartMs + 2 * 3600 * 1000;
+        const tpl = templates[Math.abs(slotIdx + chHash) % templates.length];
+
+        const isCurrentSlot = nowMs >= slotStartMs && nowMs < slotEndMs;
+        const isPastSlot = nowMs >= slotEndMs;
+        const progressPct = isCurrentSlot
+            ? Math.min(100, Math.max(1, Math.round(((nowMs - slotStartMs) / (slotEndMs - slotStartMs)) * 100)))
+            : isPastSlot
+            ? 100
+            : 0;
+
+        scheduleMap.set(slotStartMs, {
+            id: `epg-${ch.id}-${slotStartMs}`,
+            channelId: ch.id,
+            title: tpl.title,
+            subtitle: tpl.subtitle,
+            description: tpl.description,
+            category: tpl.category,
+            sport: tpl.sport,
+            league: tpl.league,
+            startTime: new Date(slotStartMs).toISOString(),
+            endTime: new Date(slotEndMs).toISOString(),
+            durationMinutes: 120,
+            progressPct,
+            isLive: isCurrentSlot,
+            status: isCurrentSlot ? 'LIVE' : isPastSlot ? 'FINISHED' : 'UPCOMING',
+            language: ch.language
+        });
+    }
+
+    // Overlay real LIVE and UPCOMING sports events onto the channel's EPG schedule
+    for (const ev of channelEvents) {
+        const evStartMs = new Date(ev.startTime).getTime();
+        const evEndMs = ev.endTime ? new Date(ev.endTime).getTime() : evStartMs + 120 * 60 * 1000;
+        const durationMin = Math.max(60, Math.round((evEndMs - evStartMs) / 60000));
+
+        const inBroadcastWindow = nowMs >= evStartMs && nowMs < evEndMs;
+        const isLiveNow = ev.status === 'LIVE' || inBroadcastWindow;
+        const isFinished = !isLiveNow && (ev.status === 'FINISHED' || nowMs >= evEndMs);
+
+        // Only include events within [-4h, +36h] window
+        if (evEndMs < nowMs - 4 * 3600 * 1000 || evStartMs > nowMs + 36 * 3600 * 1000) {
+            continue;
+        }
+
+        const hasScore =
+            ev.homeTeam.score !== undefined &&
+            ev.awayTeam.score !== undefined &&
+            (ev.status === 'LIVE' || ev.status === 'FINISHED');
+
+        const scoreText = hasScore
+            ? `${ev.homeTeam.name} ${ev.homeTeam.score} - ${ev.awayTeam.score} ${ev.awayTeam.name}`
+            : `${ev.homeTeam.name} vs ${ev.awayTeam.name}`;
+
+        const isPostMatchStudio = inBroadcastWindow && ev.status === 'FINISHED';
+        const livePrefix = isPostMatchStudio
+            ? ch.language === 'ar'
+                ? 'الأستوديو التحليلي بعد المباراة: '
+                : 'Post-Match Studio: '
+            : isLiveNow
+            ? ch.language === 'ar'
+                ? 'مباشر: '
+                : 'LIVE: '
+            : '';
+
+        const progressPct = isLiveNow
+            ? Math.min(99, Math.max(5, Math.round(((nowMs - evStartMs) / Math.max(1, evEndMs - evStartMs)) * 100)))
+            : isFinished
+            ? 100
+            : 0;
+
+        const prog: EPGProgram = {
+            id: `epg-ev-${ch.id}-${ev.id}`,
+            channelId: ch.id,
+            title: `${livePrefix}${scoreText}`,
+            subtitle: `${ev.league} • ${ev.statusDetail}`,
+            description:
+                ch.language === 'ar'
+                    ? `نقل حي ومباشر لمباراة ${ev.homeTeam.name} ضد ${ev.awayTeam.name} ضمن منافسات ${ev.league} عبر ${ch.name}.`
+                    : `Live broadcast of ${ev.homeTeam.name} vs ${ev.awayTeam.name} in the ${ev.league} on ${ch.name}.`,
+            category: ev.league,
+            sport: ev.sport,
+            league: ev.league,
+            startTime: new Date(evStartMs).toISOString(),
+            endTime: new Date(evEndMs).toISOString(),
+            durationMinutes: durationMin,
+            progressPct,
+            isLive: isLiveNow,
+            status: isLiveNow ? 'LIVE' : isFinished ? 'FINISHED' : 'UPCOMING',
+            language: ch.language,
+            eventId: ev.id,
+            matchInfo: {
+                homeTeam: ev.homeTeam,
+                awayTeam: ev.awayTeam,
+                statusDetail: ev.statusDetail
+            }
+        };
+
+        // Remove any synthetic template slot that overlaps with this real match fixture
+        for (const [slotKey, existing] of Array.from(scheduleMap.entries())) {
+            const existingStart = new Date(existing.startTime).getTime();
+            const existingEnd = new Date(existing.endTime).getTime();
+            if (!existing.eventId && existingStart < evEndMs && existingEnd > evStartMs) {
+                scheduleMap.delete(slotKey);
+            }
+        }
+
+        // Avoid map key collision when multiple matches on this channel kick off at the exact same timestamp
+        let mapKey = evStartMs;
+        while (scheduleMap.has(mapKey)) {
+            mapKey += 1;
+        }
+        scheduleMap.set(mapKey, prog);
+    }
+
+    const schedule = Array.from(scheduleMap.values()).sort((a, b) => {
+        const diff = new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+        if (diff !== 0) return diff;
+        if (a.isLive !== b.isLive) return a.isLive ? -1 : 1;
+        return 0;
+    });
+
+    // Determine nowPlaying (prioritize real LIVE match, picking deterministically by channel if multiple are simultaneous)
+    const liveRealMatches = schedule.filter((p) => p.eventId && p.isLive);
+    let nowPlaying =
+        (liveRealMatches.length > 0 ? liveRealMatches[chHash % liveRealMatches.length] : undefined) ||
+        schedule.find((p) => {
+            const s = new Date(p.startTime).getTime();
+            const e = new Date(p.endTime).getTime();
+            return nowMs >= s && nowMs < e;
+        }) ||
+        schedule.find((p) => p.isLive) ||
+        schedule[0];
+
+    const upcoming = schedule.filter((p) => new Date(p.startTime).getTime() > nowMs && p.id !== nowPlaying?.id);
+    const nextUp =
+        upcoming[0] ||
+        schedule[schedule.indexOf(nowPlaying) + 1] ||
+        nowPlaying;
+
+    return {
+        channelId: ch.id,
+        channelName: ch.name,
+        shortName: ch.shortName,
+        network: ch.network,
+        category: ch.category,
+        language: ch.language,
+        languageLabel: ch.languageLabel,
+        logo: ch.logo,
+        streamEndpoint: `${publicBaseUrl}/v1/live/stream/${ch.id}`,
+        updatedAt: new Date(nowMs).toISOString(),
+        nowPlaying,
+        nextUp,
+        upcoming: upcoming.slice(0, 8),
+        schedule
+    };
+}
+
+/**
+ * Returns the full EPG guide across all (or filtered) live channels
+ */
+export async function getAllChannelsEPG(
+    publicBaseUrl: string,
+    filters?: { lang?: string; category?: string; channelId?: string; query?: string }
+): Promise<ChannelEPG[]> {
+    await getLiveSportEvents(publicBaseUrl).catch(() => {});
+
+    if (filters?.channelId) {
+        const single = getChannelEPG(filters.channelId, publicBaseUrl);
+        return single ? [single] : [];
+    }
+
+    const channels = getLiveChannels(publicBaseUrl, {
+        lang: filters?.lang,
+        category: filters?.category,
+        query: filters?.query
+    });
+
+    return channels
+        .map((ch) => getChannelEPG(ch.id, publicBaseUrl))
+        .filter((epg): epg is ChannelEPG => Boolean(epg));
+}
+
+/**
+ * Generates an XMLTV-compliant EPG document (/v1/live/epg.xml) for TiviMate, VLC, Kodi, OTT Navigator
+ */
+export async function generateXMLTVEPG(
+    publicBaseUrl: string,
+    filters?: { lang?: string; category?: string }
+): Promise<string> {
+    const epgList = await getAllChannelsEPG(publicBaseUrl, filters);
+
+    const escapeXml = (str: string): string =>
+        String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;');
+
+    const formatXmltvDate = (iso: string): string => {
+        const d = new Date(iso);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return (
+            `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}` +
+            `${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())} +0000`
+        );
+    };
+
+    const lines: string[] = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<tv generator-info-name="CinePro-Live-EPG-Engine" generator-info-url="' + escapeXml(publicBaseUrl) + '">'
+    ];
+
+    for (const chEpg of epgList) {
+        lines.push(`  <channel id="${escapeXml(chEpg.channelId)}">`);
+        lines.push(`    <display-name lang="${escapeXml(chEpg.language)}">${escapeXml(chEpg.channelName)}</display-name>`);
+        lines.push(`    <display-name>${escapeXml(chEpg.shortName)}</display-name>`);
+        if (chEpg.logo) {
+            lines.push(`    <icon src="${escapeXml(chEpg.logo)}" />`);
+        }
+        lines.push('  </channel>');
+    }
+
+    for (const chEpg of epgList) {
+        for (const prog of chEpg.schedule) {
+            lines.push(
+                `  <programme start="${formatXmltvDate(prog.startTime)}" stop="${formatXmltvDate(prog.endTime)}" channel="${escapeXml(chEpg.channelId)}">`
+            );
+            lines.push(`    <title lang="${escapeXml(prog.language)}">${escapeXml(prog.title)}</title>`);
+            if (prog.subtitle) {
+                lines.push(`    <sub-title lang="${escapeXml(prog.language)}">${escapeXml(prog.subtitle)}</sub-title>`);
+            }
+            if (prog.description) {
+                lines.push(`    <desc lang="${escapeXml(prog.language)}">${escapeXml(prog.description)}</desc>`);
+            }
+            if (prog.category) {
+                lines.push(`    <category lang="en">${escapeXml(prog.category)}</category>`);
+            }
+            lines.push('  </programme>');
+        }
+    }
+
+    lines.push('</tv>');
+    return lines.join('\n') + '\n';
+}
+
+/**
+ * Generates an M3U8 Playlist string for all (or filtered) Live Sports Channels with XMLTV EPG URL
  */
 export function generateSportsM3UPlaylist(
     publicBaseUrl: string,
@@ -2738,14 +3982,16 @@ export function generateSportsM3UPlaylist(
         category: options?.category
     });
 
-    const lines: string[] = ['#EXTM3U'];
+    const epgXmlUrl = `${publicBaseUrl}/v1/live/epg.xml`;
+    const lines: string[] = [`#EXTM3U url-tvg="${epgXmlUrl}" x-tvg-url="${epgXmlUrl}"`];
     for (const ch of channels) {
+        const nowTitle = ch.epg?.nowPlaying?.title ? ` — ${ch.epg.nowPlaying.title}` : '';
         for (const st of ch.streams) {
             const targetUrl = options?.useProxy
                 ? buildLiveProxyUrl(st.url, publicBaseUrl, st.headers)
                 : st.url;
             lines.push(
-                `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${ch.name}" tvg-logo="${ch.logo}" tvg-language="${ch.languageLabel}" group-title="${ch.network} (${ch.language.toUpperCase()})",${st.label} [${st.quality}]`
+                `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${ch.name}" tvg-logo="${ch.logo}" tvg-language="${ch.languageLabel}" group-title="${ch.network} (${ch.language.toUpperCase()})",${st.label} [${st.quality}]${nowTitle}`
             );
             lines.push(targetUrl);
         }

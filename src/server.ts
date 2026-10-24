@@ -25,6 +25,9 @@ import {
     getLiveChannels,
     getLiveSportEvents,
     resolveChannelStreams,
+    getChannelEPG,
+    getAllChannelsEPG,
+    generateXMLTVEPG,
     generateSportsM3UPlaylist,
     handleLiveHlsProxyRequest
 } from './iptv/liveSportsEngine.js';
@@ -508,10 +511,11 @@ async function main() {
         return `${proto}://${host}`;
     };
 
-    // 1. Live Sports Channels Directory API (beIN AR/EN/FR/TR/ES, Fox Sports, ESPN, Eurosport, etc.)
+    // 1. Live Sports Channels Directory API (beIN AR/EN/FR/TR/ES, SSC Sports, Fox Sports, ESPN, Eurosport, etc. + Real-Time EPG)
     app.get('/v1/live/channels', async (request: any, reply: any) => {
         const baseUrl = getRequestPublicBaseUrl(request);
         const query = (request.query || {}) as { lang?: string; category?: string; q?: string };
+        await getLiveSportEvents(baseUrl).catch(() => {});
         const channels = getLiveChannels(baseUrl, {
             lang: query.lang,
             category: query.category,
@@ -520,6 +524,8 @@ async function main() {
         return reply.code(200).send({
             status: 'ok',
             count: channels.length,
+            epgXmlEndpoint: `${baseUrl}/v1/live/epg.xml`,
+            epgJsonEndpoint: `${baseUrl}/v1/live/epg`,
             filters: {
                 lang: query.lang || 'all',
                 category: query.category || 'all',
@@ -529,7 +535,7 @@ async function main() {
         });
     });
 
-    // 2. Live Sports Events & Match Scoreboard API (Champions League, EPL, LaLiga, Serie A, Ligue 1, NBA, NFL, UFC)
+    // 2. Live Sports Events & Match Scoreboard API (Champions League, EPL, LaLiga, Serie A, Roshn Saudi League, AFC, NBA, NFL, UFC)
     app.get('/v1/live/events', async (request: any, reply: any) => {
         const baseUrl = getRequestPublicBaseUrl(request);
         const query = (request.query || {}) as { sport?: string; status?: string };
@@ -544,7 +550,59 @@ async function main() {
         });
     });
 
-    // 3. Resolve & Verify Live Channel Streams (JSON)
+    // 2b. Full Electronic Program Guide (EPG) API across all or filtered channels (Now Playing, Next Up, Upcoming & 24h Schedule)
+    app.get('/v1/live/epg', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const query = (request.query || {}) as { lang?: string; category?: string; channelId?: string; q?: string };
+        const epg = await getAllChannelsEPG(baseUrl, {
+            lang: query.lang,
+            category: query.category,
+            channelId: query.channelId,
+            query: query.q
+        });
+        return reply.code(200).send({
+            status: 'ok',
+            updatedAt: new Date().toISOString(),
+            count: epg.length,
+            xmltvUrl: `${baseUrl}/v1/live/epg.xml`,
+            epg
+        });
+    });
+
+    // 2c. XMLTV Standard EPG Feed for IPTV Players (TiviMate, VLC, Kodi, OTT Navigator)
+    app.get('/v1/live/epg.xml', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const query = (request.query || {}) as { lang?: string; category?: string };
+        const xml = await generateXMLTVEPG(baseUrl, {
+            lang: query.lang,
+            category: query.category
+        });
+        return reply
+            .code(200)
+            .header('Content-Type', 'application/xml; charset=utf-8')
+            .header('Access-Control-Allow-Origin', '*')
+            .send(xml);
+    });
+
+    // 2d. Single Channel Detailed EPG Schedule API (Now Playing, Next Up, Upcoming, 24h Timeline)
+    app.get('/v1/live/epg/:channelId', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const channelId = String(request.params.channelId || '');
+        await getLiveSportEvents(baseUrl).catch(() => {});
+        const channelEpg = getChannelEPG(channelId, baseUrl);
+        if (!channelEpg) {
+            return reply.code(404).send({
+                error: 'CHANNEL_NOT_FOUND',
+                message: `No EPG schedule found for channel '${channelId}'`
+            });
+        }
+        return reply.code(200).send({
+            status: 'ok',
+            ...channelEpg
+        });
+    });
+
+    // 3. Resolve & Verify Live Channel Streams (JSON) + Channel EPG
     app.get('/v1/live/stream/:channelId', async (request: any, reply: any) => {
         const baseUrl = getRequestPublicBaseUrl(request);
         const channelId = String(request.params.channelId || '');
@@ -558,12 +616,13 @@ async function main() {
         return reply.code(200).send({
             status: 'ok',
             channel: resolved.channel,
+            epg: resolved.epg,
             count: resolved.sources.length,
             sources: resolved.sources
         });
     });
 
-    // 4. Progressive SSE Stream Resolver for Live Sports Channels
+    // 4. Progressive SSE Stream Resolver for Live Sports Channels + Real-time EPG emission
     app.get('/v1/live/stream/:channelId/sse', async (request: any, reply: any) => {
         const baseUrl = getRequestPublicBaseUrl(request);
         const channelId = String(request.params.channelId || '');
@@ -576,7 +635,20 @@ async function main() {
             'X-Accel-Buffering': 'no'
         });
 
-        reply.raw.write(`event: connected\ndata: ${JSON.stringify({ status: 'connected', channelId })}\n\n`);
+        const initialEpg = getChannelEPG(channelId, baseUrl);
+        reply.raw.write(
+            `event: connected\ndata: ${JSON.stringify({
+                status: 'connected',
+                channelId,
+                epg: initialEpg
+                    ? {
+                          nowPlaying: initialEpg.nowPlaying,
+                          nextUp: initialEpg.nextUp,
+                          upcoming: initialEpg.upcoming
+                      }
+                    : null
+            })}\n\n`
+        );
 
         let closed = false;
         request.raw.on('close', () => {
@@ -591,7 +663,10 @@ async function main() {
             });
 
             if (!closed) {
-                // If none passed the strict 2.5s probe, still emit fallback mirrors so player can attempt playback
+                if (resolved.epg) {
+                    reply.raw.write(`event: epg\ndata: ${JSON.stringify(resolved.epg)}\n\n`);
+                }
+                // If none passed the strict probe, still emit fallback mirrors so player can attempt playback
                 if (resolved.sources.every((s) => !s.verified)) {
                     for (const fallbackSrc of resolved.sources) {
                         reply.raw.write(`event: source\ndata: ${JSON.stringify(fallbackSrc)}\n\n`);
@@ -601,6 +676,12 @@ async function main() {
                     `event: done\ndata: ${JSON.stringify({
                         status: 'complete',
                         channelId,
+                        epg: resolved.epg
+                            ? {
+                                  nowPlaying: resolved.epg.nowPlaying,
+                                  nextUp: resolved.epg.nextUp
+                              }
+                            : null,
                         count: resolved.sources.length
                     })}\n\n`
                 );
@@ -619,6 +700,7 @@ async function main() {
         const baseUrl = getRequestPublicBaseUrl(request);
         const query = (request.query || {}) as { lang?: string; category?: string; proxy?: string };
         const useProxy = query.proxy === 'true' || query.proxy === '1';
+        await getLiveSportEvents(baseUrl).catch(() => {});
         const m3u = generateSportsM3UPlaylist(baseUrl, {
             lang: query.lang,
             category: query.category,
