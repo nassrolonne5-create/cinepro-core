@@ -25,11 +25,16 @@ import {
     getLiveChannels,
     getLiveSportEvents,
     resolveChannelStreams,
+    generateChannelMasterPlaylist,
+    resolveMatchStreams,
+    generateMatchMasterPlaylist,
     getChannelEPG,
     getAllChannelsEPG,
     generateXMLTVEPG,
     generateSportsM3UPlaylist,
-    handleLiveHlsProxyRequest
+    handleLiveHlsProxyRequest,
+    startBackgroundStreamHealthMonitor,
+    getLiveEngineHealthStats
 } from './iptv/liveSportsEngine.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -602,7 +607,7 @@ async function main() {
         });
     });
 
-    // 3. Resolve & Verify Live Channel Streams (JSON) + Channel EPG
+    // 3. Resolve & Verify Live Channel Streams (JSON) + Channel EPG + Multi-Quality Variants
     app.get('/v1/live/stream/:channelId', async (request: any, reply: any) => {
         const baseUrl = getRequestPublicBaseUrl(request);
         const channelId = String(request.params.channelId || '');
@@ -617,9 +622,72 @@ async function main() {
             status: 'ok',
             channel: resolved.channel,
             epg: resolved.epg,
+            masterPlaylistUrl: resolved.masterPlaylistUrl,
             count: resolved.sources.length,
             sources: resolved.sources
         });
+    });
+
+    // 3b. Virtual Multi-Quality & Multi-Server Master HLS Playlist (/v1/live/master/:channelId.m3u8)
+    const handleMasterPlaylist = async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const rawParam = String(request.params.channelId || '').replace(/\.m3u8$/i, '');
+        const masterM3U = await generateChannelMasterPlaylist(rawParam, baseUrl);
+        if (!masterM3U) {
+            return reply.code(404).send({
+                error: 'CHANNEL_NOT_FOUND',
+                message: `No master playlist available for channel '${rawParam}'`
+            });
+        }
+        return reply
+            .code(200)
+            .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
+            .header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            .header('Access-Control-Allow-Origin', '*')
+            .send(masterM3U);
+    };
+    app.get('/v1/live/master/:channelId.m3u8', handleMasterPlaylist);
+    app.get('/v1/live/master/:channelId', handleMasterPlaylist);
+
+    // 3c. Live Match-to-Channel Auto-Router (/v1/live/match/:eventId)
+    app.get('/v1/live/match/:eventId', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const eventId = String(request.params.eventId || '').replace(/\.m3u8$/i, '');
+        const resolved = await resolveMatchStreams(eventId, baseUrl);
+        if (!resolved.event) {
+            return reply.code(404).send({
+                error: 'MATCH_NOT_FOUND',
+                message: `No live or upcoming match found matching '${eventId}'`
+            });
+        }
+        return reply.code(200).send({
+            status: 'ok',
+            ...resolved
+        });
+    });
+
+    // 3d. Virtual Match Master HLS Playlist (/v1/live/match/:eventId/master.m3u8)
+    app.get('/v1/live/match/:eventId/master.m3u8', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const eventId = String(request.params.eventId || '');
+        const masterM3U = await generateMatchMasterPlaylist(eventId, baseUrl);
+        if (!masterM3U) {
+            return reply.code(404).send({
+                error: 'MATCH_NOT_FOUND',
+                message: `No match master playlist available for '${eventId}'`
+            });
+        }
+        return reply
+            .code(200)
+            .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
+            .header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            .header('Access-Control-Allow-Origin', '*')
+            .send(masterM3U);
+    });
+
+    // 3e. Live Engine Stability, Segment Cache & MPEG-TS Inspection Telemetry (/v1/live/health)
+    app.get('/v1/live/health', async (_request: any, reply: any) => {
+        return reply.code(200).send(getLiveEngineHealthStats());
     });
 
     // 4. Progressive SSE Stream Resolver for Live Sports Channels + Real-time EPG emission
@@ -640,6 +708,7 @@ async function main() {
             `event: connected\ndata: ${JSON.stringify({
                 status: 'connected',
                 channelId,
+                masterPlaylistUrl: `${baseUrl}/v1/live/master/${channelId}.m3u8`,
                 epg: initialEpg
                     ? {
                           nowPlaying: initialEpg.nowPlaying,
@@ -676,6 +745,7 @@ async function main() {
                     `event: done\ndata: ${JSON.stringify({
                         status: 'complete',
                         channelId,
+                        masterPlaylistUrl: resolved.masterPlaylistUrl,
                         epg: resolved.epg
                             ? {
                                   nowPlaying: resolved.epg.nowPlaying,
@@ -730,6 +800,7 @@ async function main() {
     await server.start();
     
     const publicUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
+    startBackgroundStreamHealthMonitor(publicUrl);
     
     // Anti-Sleep Heartbeat for Render's free tier
     // Sends a ping to itself every 14 minutes to prevent the container from sleeping

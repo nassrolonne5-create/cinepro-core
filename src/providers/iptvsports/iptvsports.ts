@@ -74,9 +74,18 @@ export class IptvSportsProvider extends BaseProvider {
 
         const sources: Source[] = resolved.sources.map((s) => ({
             url: s.url,
+            masterUrl: s.masterUrl,
             type: 'hls',
             quality: s.quality,
+            qualities: s.qualities,
             server: s.server,
+            healthScore: s.healthScore,
+            circuitState: s.circuitState,
+            backupRole: s.backupRole,
+            streamInfo: s.streamInfo,
+            programTitle: s.programTitle,
+            programSubtitle: s.programSubtitle,
+            isLiveEvent: s.isLiveEvent,
             audioTracks: s.audioTracks,
             provider: {
                 id: this.id,
