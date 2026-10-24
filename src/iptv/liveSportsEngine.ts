@@ -209,8 +209,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 1 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium91/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 1 AR (Backup Server 2 1080p)', url: `${EDGE_CDN_BASE}/premium578/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 1 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium91/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -226,8 +225,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 2 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium92/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 1 AR Simulcast Backup (1080p)', url: `${EDGE_CDN_BASE}/premium91/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 2 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium92/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -243,8 +241,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 3 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium93/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 4 AR Backup (1080p)', url: `${EDGE_CDN_BASE}/premium94/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 3 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium93/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -260,8 +257,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 4 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium94/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 5 AR Backup (1080p)', url: `${EDGE_CDN_BASE}/premium95/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 4 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium94/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -277,8 +273,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 5 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium95/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 6 AR Backup (1080p)', url: `${EDGE_CDN_BASE}/premium96/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 5 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium95/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -446,8 +441,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         featured: true,
         streams: [
             { label: 'beIN Sports USA English (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium425/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 1 English (Intl 1080p)', url: `${EDGE_CDN_BASE}/premium712/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports English XTRA (Amagi Multi-Quality)', url: 'https://bein-xtra-bein.amagi.tv/playlist.m3u8', quality: '1080p', language: 'en' }
+            { label: 'beIN Sports 1 English (Intl 1080p)', url: `${EDGE_CDN_BASE}/premium712/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -463,8 +457,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 2 English (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium713/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 1 English Backup (1080p)', url: `${EDGE_CDN_BASE}/premium712/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 2 English (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium713/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -480,8 +473,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports 3 English (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium714/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 2 English Backup (1080p)', url: `${EDGE_CDN_BASE}/premium713/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 3 English (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium714/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
 
@@ -501,8 +493,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 1 France (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium116/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 2 France Backup (1080p)', url: `${EDGE_CDN_BASE}/premium117/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 1 France (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium116/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -518,8 +509,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 2 France (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium117/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 1 France Backup (1080p)', url: `${EDGE_CDN_BASE}/premium116/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 2 France (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium117/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -535,8 +525,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 3 France (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium118/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports MAX 4 France Backup (1080p)', url: `${EDGE_CDN_BASE}/premium494/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 3 France (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium118/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -807,7 +796,6 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         featured: true,
         streams: [
             { label: 'SSC / Gulf Sports 3 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium782/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC / Starzplay Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
             { label: 'SSC Sport 3 Direct (Upstream)', url: `${EDGE_CDN_BASE}/premium616/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
@@ -824,8 +812,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Extra 1 / Gulf Sports HD (1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC Extra 1 / Alkass Three HD (1080p)', url: `${EDGE_CDN_BASE}/premium783/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Extra 1 / Gulf Sports HD (1080p)', url: `${EDGE_CDN_BASE}/premium783/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -841,8 +828,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Extra 2 / Gulf Sports HD (1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC Extra 2 / Alkass Four HD (1080p)', url: `${EDGE_CDN_BASE}/premium784/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Extra 2 / Gulf Sports HD (1080p)', url: `${EDGE_CDN_BASE}/premium784/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -957,13 +943,12 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Dubai Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium604/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'Dubai Racing HD (1080p)', url: `${EDGE_CDN_BASE}/premium608/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Dubai Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium604/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ontime-sports-1-ar',
-        name: 'OnTime Sports 1 & 2 HD (Egypt Arabic)',
+        name: 'OnTime Sports 1 HD (Egypt Arabic)',
         shortName: 'OnTime Sports AR',
         network: 'OnTime Sports',
         category: 'mena',
@@ -974,8 +959,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'OnTime Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium611/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'OnTime Sports 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium612/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'OnTime Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium611/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -991,8 +975,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'KTV Sport HD (Official 1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'KTV Sport Plus HD (1080p)', url: 'https://kwtsplta.cdn.mangomolo.com/spl/smil:spl.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'KTV Sport HD (Official 1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1390,9 +1373,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Sky Sports Main Event UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium38/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'SuperSport Grandstand EPL Live (1080p)', url: `${EDGE_CDN_BASE}/premium412/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'Sky Sports Premier League Feed (1080p)', url: `${EDGE_CDN_BASE}/premium130/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'Sky Sports Main Event UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium38/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1409,9 +1390,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         featured: true,
         streams: [
             { label: 'Sky Sports Premier League UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium130/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'Premier League 24/7 Live Match Feed (SuperSport EPL 1080p)', url: `${EDGE_CDN_BASE}/premium414/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'Sky Sports Premier League UK (Mirror HD)', url: 'http://stream.bottledesk.net/p/AAxBRQEBc2c/index.m3u8', quality: '1080p', language: 'en' },
-            { label: 'Premier League Early Kickoff Feed (TNT Sports 1 UK 1080p)', url: `${EDGE_CDN_BASE}/premium31/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'Sky Sports Premier League UK (Mirror HD)', url: 'http://stream.bottledesk.net/p/AAxBRQEBc2c/index.m3u8', quality: '1080p', language: 'en' }
         ]
     },
     {
@@ -1427,8 +1406,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Sky Sports Football UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium35/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'Sky Sports+ Football Stream (1080p)', url: `${EDGE_CDN_BASE}/premium36/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'Sky Sports Football UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium35/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1444,8 +1422,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Sky Sports+ / Arena UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium36/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'Sky Sports Football Backup (1080p)', url: `${EDGE_CDN_BASE}/premium35/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'Sky Sports+ / Arena UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium36/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1592,8 +1569,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'TNT Sports 1 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium31/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'TNT Sports 2 UK Backup (1080p)', url: `${EDGE_CDN_BASE}/premium32/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'TNT Sports 1 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium31/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1609,8 +1585,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'TNT Sports 2 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium32/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'TNT Sports 1 UK Backup (1080p)', url: `${EDGE_CDN_BASE}/premium31/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'TNT Sports 2 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium32/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1626,8 +1601,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'TNT Sports 3 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium33/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'TNT Sports 4 UK Backup (1080p)', url: `${EDGE_CDN_BASE}/premium34/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'TNT Sports 3 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium33/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1643,8 +1617,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'TNT Sports 4 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium34/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'TNT Sports 3 UK Backup (1080p)', url: `${EDGE_CDN_BASE}/premium33/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'TNT Sports 4 UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium34/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1660,9 +1633,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SuperSport Premier League (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium414/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'SuperSport Grandstand EPL (1080p)', url: `${EDGE_CDN_BASE}/premium412/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'Sky Sports Premier League UK (1080p)', url: `${EDGE_CDN_BASE}/premium130/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'SuperSport Premier League (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium414/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1678,8 +1649,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SuperSport Grandstand HD (1080p)', url: `${EDGE_CDN_BASE}/premium412/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'SuperSport Premier League HD (1080p)', url: `${EDGE_CDN_BASE}/premium414/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'SuperSport Grandstand HD (1080p)', url: `${EDGE_CDN_BASE}/premium412/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1695,8 +1665,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SuperSport Football HD (1080p)', url: `${EDGE_CDN_BASE}/premium413/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'SuperSport Variety 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium420/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'SuperSport Football HD (1080p)', url: `${EDGE_CDN_BASE}/premium413/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1712,8 +1681,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SuperSport LaLiga English (1080p)', url: `${EDGE_CDN_BASE}/premium415/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'Premier Sports 1 LaLiga UK (1080p)', url: `${EDGE_CDN_BASE}/premium451/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'SuperSport LaLiga English (1080p)', url: `${EDGE_CDN_BASE}/premium415/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1729,8 +1697,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SuperSport Variety 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium420/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'SuperSport Variety 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium421/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'SuperSport Variety 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium420/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1920,7 +1887,6 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         featured: true,
         streams: [
             { label: 'NFL Network (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium405/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'NFL RedZone (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium667/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
             { label: 'NFL Channel (Pluto HD)', url: 'https://jmp2.uk/plu-5ced7d5df64be98e07ed47b6.m3u8', quality: '720p', language: 'en' }
         ]
     },
@@ -2002,7 +1968,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     },
     {
         id: 'canal-plus-foot-fr',
-        name: 'Canal+ Foot / Sport France HD',
+        name: 'Canal+ Foot France HD',
         shortName: 'Canal+ Foot FR',
         network: 'Canal+',
         category: 'europe',
@@ -2013,8 +1979,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Canal+ Foot France (1080p)', url: `${EDGE_CDN_BASE}/premium463/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
-            { label: 'Canal+ Sport France (1080p)', url: `${EDGE_CDN_BASE}/premium122/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'Canal+ Foot France (1080p)', url: `${EDGE_CDN_BASE}/premium463/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -2030,8 +1995,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'RMC Sport 1 France (1080p)', url: `${EDGE_CDN_BASE}/premium119/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
-            { label: 'RMC Sport 2 France (1080p)', url: `${EDGE_CDN_BASE}/premium120/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'RMC Sport 1 France (1080p)', url: `${EDGE_CDN_BASE}/premium119/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -3409,24 +3373,50 @@ export async function resolveChannelStreams(
 
     const finalSources = verifiedStreams.length > 0 ? [...verifiedStreams] : probed.map((item) => item.sourceObj);
 
-    // Ensure every channel provides a Secondary High-Stability Anti-Freeze Relay backup option
-    if (finalSources.length === 1) {
+    // Ensure every channel provides same-channel Backup Anti-Freeze Relay and ABR Master servers (zero cross-channel conflict)
+    if (finalSources.length >= 1) {
         const primary = finalSources[0];
-        const relayUrl = `${primary.url}&relay=2`;
-        const backupRelay: LiveStreamSource = {
+        const nowPlayingSuffix = channelEpg?.nowPlaying?.isLive
+            ? ` • LIVE: ${channelEpg.nowPlaying.title}`
+            : '';
+
+        if (finalSources.length === 1) {
+            const relayUrl = `${primary.url}&relay=2`;
+            const relayQualities = (primary.qualities || []).map((q) =>
+                q.label.startsWith('Auto') ? q : { ...q, url: `${q.url}&relay=2` }
+            );
+            const backupRelay: LiveStreamSource = {
+                ...primary,
+                id: `${channel.id}-s2-relay`,
+                server: `${channel.shortName} (Server 2 Anti-Freeze Relay 1080p)${nowPlayingSuffix}`,
+                url: relayUrl,
+                qualities: relayQualities,
+                backupRole: 'relay',
+                provider: {
+                    id: `iptv-${channel.id}-relay-2`,
+                    name: `${channel.shortName} Backup Relay [${primary.quality}]${nowPlayingSuffix}`
+                }
+            };
+            finalSources.push(backupRelay);
+            if (primary.verified && onStreamVerified) {
+                onStreamVerified(backupRelay);
+            }
+        }
+
+        const abrServer: LiveStreamSource = {
             ...primary,
-            id: `${channel.id}-s2-relay`,
-            server: `${channel.shortName} (Backup Anti-Freeze Relay 1080p)`,
-            url: relayUrl,
-            backupRole: 'relay',
+            id: `${channel.id}-s${finalSources.length + 1}-abr`,
+            server: `${channel.shortName} (Server ${finalSources.length + 1} Adaptive Multi-Quality ABR)${nowPlayingSuffix}`,
+            url: masterPlaylistUrl,
+            backupRole: 'backup-2',
             provider: {
-                id: `iptv-${channel.id}-relay-2`,
-                name: `${channel.shortName} Backup Relay [${primary.quality}]`
+                id: `iptv-${channel.id}-abr-master`,
+                name: `${channel.shortName} Multi-Quality ABR [Auto 1080p/720p/480p]${nowPlayingSuffix}`
             }
         };
-        finalSources.push(backupRelay);
+        finalSources.push(abrServer);
         if (primary.verified && onStreamVerified) {
-            onStreamVerified(backupRelay);
+            onStreamVerified(abrServer);
         }
     }
 
@@ -3452,37 +3442,39 @@ export async function generateChannelMasterPlaylist(
     }
 
     const lines: string[] = ['#EXTM3U', '#EXT-X-VERSION:3', '#EXT-X-INDEPENDENT-SEGMENTS'];
-    const seenUrls = new Set<string>();
+    const seenUrls = new Set<string>([resolved.masterPlaylistUrl]);
 
     // Emit native multi-bitrate variants from the primary verified server + backup servers as redundant #EXT-X-STREAM-INF rungs
-    resolved.sources.forEach((src, sIdx) => {
-        const serverTag = sIdx === 0 ? 'Primary' : `Backup-${sIdx}`;
-        const variants = (src.qualities || []).filter((q) => !q.label.startsWith('Auto'));
+    resolved.sources
+        .filter((src) => src.url !== resolved.masterPlaylistUrl && !src.id.endsWith('-abr'))
+        .forEach((src, sIdx) => {
+            const serverTag = sIdx === 0 ? 'Primary' : `Backup-${sIdx}`;
+            const variants = (src.qualities || []).filter((q) => !q.label.startsWith('Auto'));
 
-        if (variants.length > 0) {
-            for (const v of variants) {
-                if (seenUrls.has(v.url)) continue;
-                seenUrls.add(v.url);
-                // Slightly stagger bandwidth across backup servers so HLS players prioritize Primary, then fail over cleanly to Backup-1, Backup-2
-                const adjustedBw = Math.max(800000, v.bandwidth - sIdx * 150000);
-                const fpsAttr = v.fps ? `,FRAME-RATE=${v.fps}.000` : '';
-                const codecsAttr = v.codecs ? `,CODECS="${v.codecs}"` : ',CODECS="avc1.64002a,mp4a.40.2"';
+            if (variants.length > 0) {
+                for (const v of variants) {
+                    if (seenUrls.has(v.url)) continue;
+                    seenUrls.add(v.url);
+                    // Slightly stagger bandwidth across backup servers so HLS players prioritize Primary, then fail over cleanly to Backup-1, Backup-2
+                    const adjustedBw = Math.max(800000, v.bandwidth - sIdx * 150000);
+                    const fpsAttr = v.fps ? `,FRAME-RATE=${v.fps}.000` : '';
+                    const codecsAttr = v.codecs ? `,CODECS="${v.codecs}"` : ',CODECS="avc1.64002a,mp4a.40.2"';
+                    lines.push(
+                        `#EXT-X-STREAM-INF:BANDWIDTH=${adjustedBw},AVERAGE-BANDWIDTH=${Math.round(
+                            adjustedBw * 0.9
+                        )},RESOLUTION=${v.resolution}${fpsAttr}${codecsAttr},NAME="${v.label} (${serverTag})"`
+                    );
+                    lines.push(v.url);
+                }
+            } else if (!seenUrls.has(src.url)) {
+                seenUrls.add(src.url);
+                const bw = Math.max(1500000, 5600000 - sIdx * 400000);
                 lines.push(
-                    `#EXT-X-STREAM-INF:BANDWIDTH=${adjustedBw},AVERAGE-BANDWIDTH=${Math.round(
-                        adjustedBw * 0.9
-                    )},RESOLUTION=${v.resolution}${fpsAttr}${codecsAttr},NAME="${v.label} (${serverTag})"`
+                    `#EXT-X-STREAM-INF:BANDWIDTH=${bw},RESOLUTION=1920x1080,FRAME-RATE=50.000,CODECS="avc1.64002a,mp4a.40.2",NAME="${src.quality} (${serverTag})"`
                 );
-                lines.push(v.url);
+                lines.push(src.url);
             }
-        } else if (!seenUrls.has(src.url)) {
-            seenUrls.add(src.url);
-            const bw = Math.max(1500000, 5600000 - sIdx * 400000);
-            lines.push(
-                `#EXT-X-STREAM-INF:BANDWIDTH=${bw},RESOLUTION=1920x1080,FRAME-RATE=50.000,CODECS="avc1.64002a,mp4a.40.2",NAME="${src.quality} (${serverTag})"`
-            );
-            lines.push(src.url);
-        }
-    });
+        });
 
     return lines.join('\n') + '\n';
 }
