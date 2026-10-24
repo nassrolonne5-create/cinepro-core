@@ -28,7 +28,7 @@ export interface LiveStreamSource {
     masterUrl?: string;
     quality: string;
     qualities?: HlsQualityVariant[];
-    language: 'ar' | 'en' | 'fr' | 'es' | 'tr' | 'multi';
+    language: 'ar' | 'en' | 'fr' | 'es' | 'tr' | 'it' | 'multi';
     languageLabel: string;
     type: 'hls';
     verified?: boolean;
@@ -65,7 +65,7 @@ export interface LiveChannel {
         | 'motorsport'
         | 'movies'
         | 'entertainment';
-    language: 'ar' | 'en' | 'fr' | 'es' | 'tr' | 'multi';
+    language: 'ar' | 'en' | 'fr' | 'es' | 'tr' | 'it' | 'multi';
     languageLabel: string;
     country: string;
     logo: string;
@@ -75,7 +75,7 @@ export interface LiveChannel {
         label: string;
         url: string;
         quality: string;
-        language: 'ar' | 'en' | 'fr' | 'es' | 'tr' | 'multi';
+        language: 'ar' | 'en' | 'fr' | 'es' | 'tr' | 'it' | 'multi';
         headers?: Record<string, string>;
     }>;
     epg?: {
@@ -757,11 +757,11 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     },
 
     // =========================================================================
-    // 5. MENA & ARABIC SPORTS NETWORKS (SSC / Saudi & Gulf Sports, Alkass, Abu Dhabi Sports, Dubai Sports, OnTime, KTV, Arryadia)
+    // 5. MENA & ARABIC SPORTS NETWORKS (SSC, STARZPLAY / AD Sports Premium, Alkass, Abu Dhabi Sports, Dubai Sports, OnTime, KTV, Arryadia)
     // =========================================================================
     {
         id: 'ssc-sport-1-ar',
-        name: 'SSC Sport 1 / Starzplay Saudi & AFC HD (Arabic)',
+        name: 'SSC Sport 1 HD (Saudi Roshn League & AFC Arabic)',
         shortName: 'SSC 1 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -772,14 +772,12 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SSC / Starzplay Sports 1 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC / Gulf Sports 1 Backup HD (1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC Sport 1 Direct (Upstream)', url: `${EDGE_CDN_BASE}/premium614/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Sport 1 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium611/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-sport-2-ar',
-        name: 'SSC Sport 2 / Starzplay Saudi & AFC HD (Arabic)',
+        name: 'SSC Sport 2 HD (Saudi Roshn League & AFC Arabic)',
         shortName: 'SSC 2 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -790,14 +788,12 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SSC / Starzplay Sports 2 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC / Gulf Sports 2 Backup HD (1080p)', url: `${EDGE_CDN_BASE}/premium601/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC Sport 2 Direct (Upstream)', url: `${EDGE_CDN_BASE}/premium615/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Sport 2 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium612/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-sport-3-ar',
-        name: 'SSC Sport 3 / Gulf Football HD (Arabic)',
+        name: 'SSC Sport 3 HD (Saudi Roshn League & F1 Arabic)',
         shortName: 'SSC 3 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -808,8 +804,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SSC / Gulf Sports 3 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium782/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC Sport 3 Direct (Upstream)', url: `${EDGE_CDN_BASE}/premium616/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Sport 3 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium613/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -825,7 +820,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Extra 1 / Gulf Sports HD (1080p)', url: `${EDGE_CDN_BASE}/premium783/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Extra 1 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium619/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -841,7 +836,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Extra 2 / Gulf Sports HD (1080p)', url: `${EDGE_CDN_BASE}/premium784/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'SSC Extra 2 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium620/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -857,7 +852,39 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Extra 3 / Gulf Sports HD (1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'SSC Extra 3 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium621/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'starzplay-sports-1-ar',
+        name: 'STARZPLAY Sports 1 / AD Sports Premium 1 HD (Serie A Arabic)',
+        shortName: 'STARZPLAY 1 AR',
+        network: 'STARZPLAY / AD Sports Premium',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'AE',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'STARZPLAY Sports 1 / AD Sports Premium 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'starzplay-sports-2-ar',
+        name: 'STARZPLAY Sports 2 / AD Sports Premium 2 HD (Serie A Arabic)',
+        shortName: 'STARZPLAY 2 AR',
+        network: 'STARZPLAY / AD Sports Premium',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'AE',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'STARZPLAY Sports 2 / AD Sports Premium 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -910,7 +937,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     },
     {
         id: 'ad-sports-1-ar',
-        name: 'Abu Dhabi Sports 1 & Premium 1 HD (Arabic)',
+        name: 'Abu Dhabi Sports 1 HD (Arabic)',
         shortName: 'AD Sports 1',
         network: 'Abu Dhabi Sports',
         category: 'mena',
@@ -921,13 +948,12 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Abu Dhabi Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'Abu Dhabi Sports 1 Premium HD (1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Abu Dhabi Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ad-sports-2-ar',
-        name: 'Abu Dhabi Sports 2 & Premium 2 HD (Arabic)',
+        name: 'Abu Dhabi Sports 2 HD (Arabic)',
         shortName: 'AD Sports 2',
         network: 'Abu Dhabi Sports',
         category: 'mena',
@@ -938,7 +964,6 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Abu Dhabi Sports 2 Premium HD (1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
             { label: 'Abu Dhabi Sports 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium601/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
@@ -2191,6 +2216,134 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         ]
     },
     {
+        id: 'dazn-1-it',
+        name: 'Zona DAZN / DAZN 1 Italia HD (Serie A Enilive)',
+        shortName: 'DAZN 1 Serie A',
+        network: 'DAZN Italia',
+        category: 'europe',
+        language: 'it',
+        languageLabel: 'Italiano (Italian)',
+        country: 'IT',
+        logo: 'https://i.postimg.cc/VsW3Jsrz/logo-DAZN-Combat.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Zona DAZN 1 Italia Serie A (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium877/index.m3u8`, quality: '1080p', language: 'it', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'dazn-2-it',
+        name: 'DAZN 2 Italia HD (Serie A Enilive)',
+        shortName: 'DAZN 2 Serie A',
+        network: 'DAZN Italia',
+        category: 'europe',
+        language: 'it',
+        languageLabel: 'Italiano (Italian)',
+        country: 'IT',
+        logo: 'https://i.postimg.cc/VsW3Jsrz/logo-DAZN-Combat.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'DAZN 2 Italia Serie A (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium878/index.m3u8`, quality: '1080p', language: 'it', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sport-calcio-it',
+        name: 'Sky Sport Calcio HD Italia (Serie A)',
+        shortName: 'Sky Calcio IT',
+        network: 'Sky Sport Italia',
+        category: 'europe',
+        language: 'it',
+        languageLabel: 'Italiano (Italian)',
+        country: 'IT',
+        logo: 'https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1303.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Sky Sport Calcio Italia (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium870/index.m3u8`, quality: '1080p', language: 'it', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sport-uno-it',
+        name: 'Sky Sport Uno HD Italia (Serie A & UEFA Champions League)',
+        shortName: 'Sky Sport Uno IT',
+        network: 'Sky Sport Italia',
+        category: 'europe',
+        language: 'it',
+        languageLabel: 'Italiano (Italian)',
+        country: 'IT',
+        logo: 'https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1301.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Sky Sport Uno Italia (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium461/index.m3u8`, quality: '1080p', language: 'it', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sport-arena-it',
+        name: 'Sky Sport Arena HD Italia (Serie A & International)',
+        shortName: 'Sky Arena IT',
+        network: 'Sky Sport Italia',
+        category: 'europe',
+        language: 'it',
+        languageLabel: 'Italiano (Italian)',
+        country: 'IT',
+        logo: 'https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1322.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Sky Sport Arena Italia (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium462/index.m3u8`, quality: '1080p', language: 'it', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sport-max-it',
+        name: 'Sky Sport Max HD Italia (Serie A & European Football)',
+        shortName: 'Sky Max IT',
+        network: 'Sky Sport Italia',
+        category: 'europe',
+        language: 'it',
+        languageLabel: 'Italiano (Italian)',
+        country: 'IT',
+        logo: 'https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1302.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Sky Sport Max Italia (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium460/index.m3u8`, quality: '1080p', language: 'it', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sport-252-it',
+        name: 'Sky Sport 252 / Calcio 2 HD Italia (Serie A Matchday)',
+        shortName: 'Sky Sport 252 IT',
+        network: 'Sky Sport Italia',
+        category: 'europe',
+        language: 'it',
+        languageLabel: 'Italiano (Italian)',
+        country: 'IT',
+        logo: 'https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1303.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Sky Sport 252 Italia (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium872/index.m3u8`, quality: '1080p', language: 'it', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'sky-sport-24-it',
+        name: 'Sky Sport 24 HD Italia (24/7 Serie A & Calcio News)',
+        shortName: 'Sky Sport 24 IT',
+        network: 'Sky Sport Italia',
+        category: 'europe',
+        language: 'it',
+        languageLabel: 'Italiano (Italian)',
+        country: 'IT',
+        logo: 'https://d2n0069hmnqmmx.cloudfront.net/epgdata/1.0/newchanlogos/512/512/skychb1314.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Sky Sport 24 Italia (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium869/index.m3u8`, quality: '1080p', language: 'it', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
         id: 'dazn-combat',
         name: 'DAZN Combat & Boxing HD',
         shortName: 'DAZN Combat',
@@ -3340,6 +3493,7 @@ export async function resolveChannelStreams(
         fr: 'Français (French)',
         es: 'Español (Spanish)',
         tr: 'Türkçe (Turkish)',
+        it: 'Italiano (Italian)',
         multi: 'Multi-Audio'
     };
 
@@ -3575,180 +3729,333 @@ let lastEventsFetchTime = 0;
 let eventsFetchPromise: Promise<LiveSportEvent[]> | null = null;
 const EVENTS_TTL_MS = 90 * 1000; // 90 seconds cache for live scores
 
+export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
+    string,
+    {
+        ar: string[];
+        en: string[];
+        fr: string[];
+        it?: string[];
+        es?: string[];
+        tr?: string[];
+    }
+> = {
+    // UEFA Champions League / Europa League / Conference League
+    'uefa.champions': {
+        ar: ['bein-sports-1-ar', 'bein-sports-2-ar', 'bein-sports-3-ar', 'bein-sports-4-ar', 'bein-sports-5-ar', 'bein-sports-6-ar'],
+        en: ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4', 'cbs-sports-golazo', 'supersport-grandstand', 'supersport-football', 'bein-sports-en-1', 'bein-sports-en-2', 'bein-sports-en-3', 'premier-sports-1'],
+        fr: ['canal-plus-foot-fr', 'rmc-sport-1-fr', 'bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-fr-3', 'bein-sports-max-4-fr', 'bein-sports-max-5-fr', 'bein-sports-max-6-fr'],
+        it: ['sky-sport-uno-it', 'sky-sport-arena-it', 'sky-sport-max-it', 'sky-sport-252-it'],
+        tr: ['bein-sports-1-tr', 'bein-sports-2-tr', 'bein-sports-3-tr']
+    },
+    'uefa.europa': {
+        ar: ['bein-sports-1-ar', 'bein-sports-2-ar', 'bein-sports-3-ar', 'bein-sports-4-ar', 'bein-sports-5-ar', 'bein-sports-6-ar'],
+        en: ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4', 'cbs-sports-golazo', 'supersport-football', 'bein-sports-en-1', 'bein-sports-en-2'],
+        fr: ['canal-plus-foot-fr', 'rmc-sport-1-fr', 'bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-max-4-fr'],
+        it: ['sky-sport-uno-it', 'sky-sport-arena-it', 'sky-sport-252-it'],
+        tr: ['bein-sports-1-tr', 'bein-sports-2-tr']
+    },
+    'uefa.europa.conf': {
+        ar: ['bein-sports-3-ar', 'bein-sports-4-ar', 'bein-sports-5-ar', 'bein-sports-6-ar'],
+        en: ['tnt-sports-3', 'tnt-sports-4', 'cbs-sports-golazo', 'premier-sports-1', 'bein-sports-en-3'],
+        fr: ['canal-plus-foot-fr', 'bein-sports-max-5-fr', 'bein-sports-max-6-fr'],
+        it: ['sky-sport-arena-it', 'sky-sport-max-it']
+    },
+
+    // English Premier League & FA Cup
+    'eng.1': {
+        ar: ['bein-sports-1-ar', 'bein-sports-2-ar'],
+        en: ['sky-sports-premier-league', 'sky-sports-main-event', 'tnt-sports-1', 'supersport-premier-league', 'supersport-grandstand', 'usa-network-hd', 'nbc-sports-now', 'bein-sports-en-1', 'bein-sports-en-2'],
+        fr: ['canal-plus-foot-fr'],
+        it: ['sky-sport-uno-it', 'sky-sport-max-it']
+    },
+    'eng.fa': {
+        ar: ['bein-sports-1-ar', 'bein-sports-2-ar'],
+        en: ['tnt-sports-1', 'tnt-sports-2', 'supersport-football', 'espn-hd', 'bein-sports-en-1'],
+        fr: ['bein-sports-fr-1', 'bein-sports-fr-2']
+    },
+
+    // EFL Championship & Carabao Cup
+    'eng.2': {
+        ar: ['bein-sports-2-ar'],
+        en: ['sky-sports-football', 'sky-sports-plus', 'sky-sports-action', 'sky-sports-main-event', 'cbs-sports-golazo', 'supersport-football', 'bein-sports-en-2'],
+        fr: ['bein-sports-fr-3']
+    },
+
+    // Spanish LaLiga
+    'esp.1': {
+        ar: ['bein-sports-3-ar', 'bein-sports-1-ar'],
+        en: ['premier-sports-1', 'premier-sports-2', 'supersport-laliga', 'espn-hd', 'espn-2-hd', 'bein-sports-en-1'],
+        fr: ['bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-max-4-fr'],
+        es: ['dazn-laliga-es', 'bein-sports-xtra-es', 'real-madrid-tv']
+    },
+
+    // Italian Serie A (MENA: Exclusively STARZPLAY / Abu Dhabi Sports — NEVER beIN Sports AR!; IT: DAZN Italia & Sky Sport Calcio/Uno)
+    'ita.1': {
+        ar: ['starzplay-sports-1-ar', 'starzplay-sports-2-ar', 'ad-sports-1-ar', 'ad-sports-2-ar'],
+        it: ['dazn-1-it', 'dazn-2-it', 'sky-sport-calcio-it', 'sky-sport-uno-it', 'sky-sport-arena-it', 'sky-sport-max-it', 'sky-sport-252-it'],
+        en: ['tnt-sports-2', 'tnt-sports-3', 'tnt-sports-1', 'tnt-sports-4', 'cbs-sports-golazo', 'supersport-football', 'supersport-variety-1'],
+        fr: ['lequipe-fr', 'bein-sports-fr-2', 'bein-sports-fr-3', 'bein-sports-max-4-fr']
+    },
+
+    // German Bundesliga (MENA: NEVER beIN Sports AR! Only Dubai Sports 1 AR for FTA; UK: Sky Sports; US: ESPN; FR: beIN Sports FR)
+    'ger.1': {
+        ar: ['dubai-sports-1-ar'],
+        en: ['sky-sports-football', 'sky-sports-mix', 'sky-sports-plus', 'espn-2-hd', 'espn-hd'],
+        fr: ['bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-fr-3', 'bein-sports-max-4-fr', 'bein-sports-max-5-fr', 'bein-sports-max-6-fr', 'bein-sports-max-7-fr'],
+        it: ['sky-sport-arena-it', 'sky-sport-max-it']
+    },
+
+    // French Ligue 1 (MENA: beIN Sports 4 AR; FR: DAZN Ligue 1 & beIN FR 1; EN: beIN EN 2)
+    'fra.1': {
+        ar: ['bein-sports-4-ar', 'bein-sports-2-ar'],
+        en: ['bein-sports-en-2', 'bein-sports-en-3', 'bein-sports-xtra-en', 'tnt-sports-3'],
+        fr: ['dazn-ligue1-fr', 'bein-sports-fr-1', 'canal-plus-foot-fr']
+    },
+
+    // Roshn Saudi League (MENA: Exclusively SSC Sports — NEVER beIN Sports AR!; US: Fox Sports; FR: Canal+ Foot)
+    'ksa.1': {
+        ar: ['ssc-sport-1-ar', 'ssc-sport-2-ar', 'ssc-sport-3-ar', 'ssc-extra-1-ar', 'ssc-extra-2-ar', 'ssc-extra-3-ar'],
+        en: ['fox-sports-2', 'fox-sports-1'],
+        fr: ['canal-plus-foot-fr']
+    },
+
+    // AFC Champions League Elite
+    'afc.champions': {
+        ar: ['bein-sports-afc-ar', 'ssc-sport-1-ar', 'ssc-sport-2-ar', 'alkass-1-ar', 'alkass-2-ar', 'ad-sports-1-ar', 'ad-sports-2-ar'],
+        en: ['fox-sports-2'],
+        fr: []
+    },
+
+    // MLS / Americas
+    'usa.1': {
+        ar: [],
+        en: ['fox-sports-1', 'fox-sports-2', 'espn-hd', 'espn-2-hd', 'cbs-sports-golazo'],
+        fr: [],
+        es: ['bein-sports-xtra-es']
+    },
+
+    // NBA Basketball
+    'nba': {
+        ar: [],
+        en: ['nba-tv', 'espn-hd', 'espn-2-hd', 'tnt-sports-1', 'tnt-sports-2', 'bein-sports-en-1', 'bein-sports-xtra-en'],
+        fr: ['bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-max-4-fr']
+    },
+
+    // NFL Football
+    'nfl': {
+        ar: [],
+        en: ['nfl-network', 'nfl-redzone', 'fox-sports-1', 'espn-hd', 'fox-sports-2', 'espn-2-hd', 'nbc-sports-now', 'sky-sports-action'],
+        fr: ['bein-sports-fr-2', 'bein-sports-max-4-fr']
+    },
+
+    // NHL Ice Hockey
+    'nhl': {
+        ar: [],
+        en: ['nhl-network', 'espn-hd', 'espn-2-hd', 'espnu-hd', 'premier-sports-1', 'premier-sports-2'],
+        fr: []
+    },
+
+    // MLB Baseball
+    'mlb': {
+        ar: [],
+        en: ['mlb-network', 'fox-sports-1', 'espn-hd', 'fox-sports-2', 'tnt-sports-2'],
+        fr: []
+    },
+
+    // UFC / MMA
+    'ufc': {
+        ar: ['ad-sports-2-ar', 'ad-sports-1-ar'],
+        en: ['dazn-combat', 'tnt-sports-1', 'tnt-sports-2', 'espn-hd', 'espn-2-hd'],
+        fr: ['rmc-sport-1-fr']
+    },
+
+    // Formula 1
+    'f1': {
+        ar: ['ssc-sport-3-ar', 'bein-sports-8-ar'],
+        en: ['sky-sports-f1', 'red-bull-tv', 'espn-2-hd'],
+        fr: ['canal-plus-foot-fr']
+    },
+
+    // ATP / WTA Tennis
+    'atp': {
+        ar: ['bein-sports-7-ar', 'bein-sports-8-ar', 'bein-sports-9-ar'],
+        en: ['sky-sports-tennis', 'tennis-channel', 'eurosport-1', 'eurosport-2'],
+        fr: ['bein-sports-fr-3', 'bein-sports-max-4-fr']
+    }
+};
+
 const LEAGUE_DEFINITIONS: Array<{
     sport: string;
     slug: string;
     label: string;
     labelAr: string;
     durationMinutes: number;
-    channelPool: string[];
 }> = [
-    {
-        sport: 'soccer',
-        slug: 'uefa.champions',
-        label: 'UEFA Champions League',
-        labelAr: 'دوري أبطال أوروبا',
-        durationMinutes: 125,
-        channelPool: ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4', 'supersport-grandstand', 'supersport-football', 'premier-sports-1', 'bein-sports-1-ar', 'bein-sports-2-ar', 'bein-sports-en-1', 'bein-sports-fr-1', 'canal-plus-foot-fr']
-    },
-    {
-        sport: 'soccer',
-        slug: 'uefa.europa',
-        label: 'UEFA Europa League',
-        labelAr: 'الدوري الأوروبي',
-        durationMinutes: 125,
-        channelPool: ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4', 'supersport-football', 'bein-sports-2-ar', 'bein-sports-3-ar', 'bein-sports-en-2', 'bein-sports-fr-2']
-    },
-    {
-        sport: 'soccer',
-        slug: 'eng.1',
-        label: 'English Premier League',
-        labelAr: 'الدوري الإنجليزي الممتاز',
-        durationMinutes: 120,
-        channelPool: [
-            'sky-sports-premier-league',
-            'sky-sports-main-event',
-            'tnt-sports-1',
-            'supersport-premier-league',
-            'supersport-grandstand',
-            'supersport-variety-1',
-            'usa-network-hd',
-            'premier-sports-1',
-            'bein-sports-1-ar',
-            'bein-sports-2-ar',
-            'bein-sports-en-1',
-            'canal-plus-foot-fr'
-        ]
-    },
-    {
-        sport: 'soccer',
-        slug: 'eng.2',
-        label: 'EFL Sky Bet Championship',
-        labelAr: 'دوري البطولة الإنجليزية (تشامبيونشيب)',
-        durationMinutes: 120,
-        channelPool: ['sky-sports-football', 'sky-sports-plus', 'sky-sports-action', 'sky-sports-main-event', 'bein-sports-en-2']
-    },
-    {
-        sport: 'soccer',
-        slug: 'esp.1',
-        label: 'Spanish LaLiga',
-        labelAr: 'الدوري الإسباني (لاليغا)',
-        durationMinutes: 120,
-        channelPool: ['premier-sports-1', 'premier-sports-2', 'supersport-laliga', 'dazn-laliga-es', 'bein-sports-3-ar', 'bein-sports-en-1', 'bein-sports-fr-1', 'espn-hd']
-    },
-    {
-        sport: 'soccer',
-        slug: 'ita.1',
-        label: 'Italian Serie A',
-        labelAr: 'الدوري الإيطالي (سيري آ)',
-        durationMinutes: 120,
-        channelPool: ['tnt-sports-2', 'tnt-sports-3', 'supersport-football', 'supersport-variety-1', 'ad-sports-1-ar', 'ad-sports-2-ar', 'bein-sports-4-ar', 'bein-sports-fr-2']
-    },
-    {
-        sport: 'soccer',
-        slug: 'ger.1',
-        label: 'German Bundesliga',
-        labelAr: 'الدوري الألماني (بوندسليغا)',
-        durationMinutes: 120,
-        channelPool: ['sky-sports-football', 'sky-sports-mix', 'bein-sports-5-ar', 'bein-sports-fr-2', 'espn-2-hd']
-    },
-    {
-        sport: 'soccer',
-        slug: 'fra.1',
-        label: 'French Ligue 1',
-        labelAr: 'الدوري الفرنسي (ليغ 1)',
-        durationMinutes: 120,
-        channelPool: ['tnt-sports-4', 'dazn-ligue1-fr', 'bein-sports-6-ar', 'bein-sports-fr-1', 'canal-plus-foot-fr', 'bein-sports-en-2']
-    },
-    {
-        sport: 'soccer',
-        slug: 'ksa.1',
-        label: 'Roshn Saudi League',
-        labelAr: 'دوري روشن السعودي للمحترفين',
-        durationMinutes: 120,
-        channelPool: ['ssc-sport-1-ar', 'ssc-sport-2-ar', 'ssc-sport-3-ar', 'ssc-extra-1-ar', 'ssc-extra-2-ar', 'ssc-extra-3-ar', 'fox-sports-2']
-    },
-    {
-        sport: 'soccer',
-        slug: 'afc.champions',
-        label: 'AFC Champions League Elite',
-        labelAr: 'دوري أبطال آسيا للنخبة',
-        durationMinutes: 125,
-        channelPool: ['ssc-sport-1-ar', 'bein-sports-afc-ar', 'alkass-1-ar', 'alkass-2-ar', 'ad-sports-1-ar', 'dubai-sports-1-ar']
-    },
-    {
-        sport: 'soccer',
-        slug: 'eng.fa',
-        label: 'English FA Cup',
-        labelAr: 'كأس الاتحاد الإنجليزي',
-        durationMinutes: 125,
-        channelPool: ['tnt-sports-1', 'tnt-sports-2', 'supersport-premier-league', 'bein-sports-1-ar', 'bein-sports-en-1', 'espn-hd']
-    },
-    {
-        sport: 'soccer',
-        slug: 'usa.1',
-        label: 'Major League Soccer (MLS)',
-        labelAr: 'الدوري الأمريكي لكرة القدم',
-        durationMinutes: 120,
-        channelPool: ['sky-sports-football', 'fox-sports-1', 'espn-hd', 'dubai-sports-1-ar']
-    },
-    {
-        sport: 'basketball',
-        slug: 'nba',
-        label: 'NBA Basketball',
-        labelAr: 'دوري كرة السلة الأمريكي NBA',
-        durationMinutes: 150,
-        channelPool: ['sky-sports-action', 'sky-sports-mix', 'tnt-sports-3', 'bein-sports-en-1', 'bein-sports-fr-3', 'nba-tv', 'espn-hd', 'espn-2-hd']
-    },
-    {
-        sport: 'football',
-        slug: 'nfl',
-        label: 'NFL Football',
-        labelAr: 'دوري كرة القدم الأمريكية NFL',
-        durationMinutes: 180,
-        channelPool: ['sky-sports-action', 'sky-sports-main-event', 'fox-sports-1', 'nfl-network', 'nfl-redzone', 'espn-hd', 'nbc-sports-now']
-    },
-    {
-        sport: 'hockey',
-        slug: 'nhl',
-        label: 'NHL Ice Hockey',
-        labelAr: 'دوري الهوكي الأمريكي NHL',
-        durationMinutes: 150,
-        channelPool: ['premier-sports-1', 'premier-sports-2', 'nhl-network', 'espn-2-hd']
-    },
-    {
-        sport: 'baseball',
-        slug: 'mlb',
-        label: 'MLB Baseball',
-        labelAr: 'دوري البيسبول الأمريكي MLB',
-        durationMinutes: 165,
-        channelPool: ['tnt-sports-4', 'mlb-network', 'fox-sports-1', 'fox-sports-2', 'espn-hd']
-    },
-    {
-        sport: 'racing',
-        slug: 'f1',
-        label: 'Formula 1 World Championship',
-        labelAr: 'بطولة العالم للفورمولا 1',
-        durationMinutes: 120,
-        channelPool: ['sky-sports-f1', 'sky-sports-main-event', 'bein-sports-8-ar', 'ssc-sport-3-ar', 'espn-2-hd']
-    },
-    {
-        sport: 'mma',
-        slug: 'ufc',
-        label: 'UFC Fight Night / PPV',
-        labelAr: 'بطولة UFC للفنون القتالية المختلطة',
-        durationMinutes: 180,
-        channelPool: ['tnt-sports-1', 'tnt-sports-2', 'ad-sports-2-ar', 'rmc-sport-1-fr', 'espn-hd', 'dazn-combat']
-    },
-    {
-        sport: 'tennis',
-        slug: 'atp',
-        label: 'ATP World Tour Tennis',
-        labelAr: 'بطولة رابطة محترفي التنس ATP',
-        durationMinutes: 140,
-        channelPool: ['sky-sports-tennis', 'bein-sports-7-ar', 'tennis-channel', 'eurosport-1', 'eurosport-2']
-    }
+    { sport: 'soccer', slug: 'uefa.champions', label: 'UEFA Champions League', labelAr: 'دوري أبطال أوروبا', durationMinutes: 125 },
+    { sport: 'soccer', slug: 'uefa.europa', label: 'UEFA Europa League', labelAr: 'الدوري الأوروبي', durationMinutes: 125 },
+    { sport: 'soccer', slug: 'uefa.europa.conf', label: 'UEFA Conference League', labelAr: 'دوري المؤتمر الأوروبي', durationMinutes: 125 },
+    { sport: 'soccer', slug: 'eng.1', label: 'English Premier League', labelAr: 'الدوري الإنجليزي الممتاز', durationMinutes: 120 },
+    { sport: 'soccer', slug: 'eng.2', label: 'EFL Sky Bet Championship', labelAr: 'دوري البطولة الإنجليزية (تشامبيونشيب)', durationMinutes: 120 },
+    { sport: 'soccer', slug: 'esp.1', label: 'Spanish LaLiga', labelAr: 'الدوري الإسباني (لاليغا)', durationMinutes: 120 },
+    { sport: 'soccer', slug: 'ita.1', label: 'Italian Serie A', labelAr: 'الدوري الإيطالي (سيري آ)', durationMinutes: 120 },
+    { sport: 'soccer', slug: 'ger.1', label: 'German Bundesliga', labelAr: 'الدوري الألماني (بوندسليغا)', durationMinutes: 120 },
+    { sport: 'soccer', slug: 'fra.1', label: 'French Ligue 1', labelAr: 'الدوري الفرنسي (ليغ 1)', durationMinutes: 120 },
+    { sport: 'soccer', slug: 'ksa.1', label: 'Roshn Saudi League', labelAr: 'دوري روشن السعودي للمحترفين', durationMinutes: 120 },
+    { sport: 'soccer', slug: 'afc.champions', label: 'AFC Champions League Elite', labelAr: 'دوري أبطال آسيا للنخبة', durationMinutes: 125 },
+    { sport: 'soccer', slug: 'eng.fa', label: 'English FA Cup', labelAr: 'كأس الاتحاد الإنجليزي', durationMinutes: 125 },
+    { sport: 'soccer', slug: 'usa.1', label: 'Major League Soccer (MLS)', labelAr: 'الدوري الأمريكي لكرة القدم', durationMinutes: 120 },
+    { sport: 'basketball', slug: 'nba', label: 'NBA Basketball', labelAr: 'دوري كرة السلة الأمريكي NBA', durationMinutes: 150 },
+    { sport: 'football', slug: 'nfl', label: 'NFL Football', labelAr: 'دوري كرة القدم الأمريكية NFL', durationMinutes: 180 },
+    { sport: 'hockey', slug: 'nhl', label: 'NHL Ice Hockey', labelAr: 'دوري الهوكي الأمريكي NHL', durationMinutes: 150 },
+    { sport: 'baseball', slug: 'mlb', label: 'MLB Baseball', labelAr: 'دوري البيسبول الأمريكي MLB', durationMinutes: 165 },
+    { sport: 'racing', slug: 'f1', label: 'Formula 1 World Championship', labelAr: 'بطولة العالم للفورمولا 1', durationMinutes: 120 },
+    { sport: 'mma', slug: 'ufc', label: 'UFC Fight Night / PPV', labelAr: 'بطولة UFC للفنون القتالية المختلطة', durationMinutes: 180 },
+    { sport: 'tennis', slug: 'atp', label: 'ATP World Tour Tennis', labelAr: 'بطولة رابطة محترفي التنس ATP', durationMinutes: 140 }
 ];
+
+/**
+ * Safely parses an ESPN scoreboard event (fixes "Home vs Away" on UFC, Tennis, and Formula 1)
+ */
+export function parseEspnEventForScraper(
+    ev: any,
+    sport: string,
+    leagueName: string,
+    leagueSlug: string,
+    durationMinutes = 120
+): {
+    id: string;
+    title: string;
+    shortTitle: string;
+    sport: string;
+    league: string;
+    leagueSlug: string;
+    startTime: string;
+    endTime: string;
+    status: 'LIVE' | 'UPCOMING' | 'FINISHED';
+    statusDetail: string;
+    broadcasts: string[];
+    homeTeam: { name: string; shortName: string; logo: string; score?: string };
+    awayTeam: { name: string; shortName: string; logo: string; score?: string };
+} | null {
+    if (!ev || !ev.id) return null;
+    const competitions = Array.isArray(ev.competitions) ? ev.competitions : [];
+    if (competitions.length === 0) return null;
+
+    // For UFC / MMA, pick the LAST competition in the array (Main Event bout)
+    const comp =
+        (sport === 'mma' || leagueSlug === 'ufc') && competitions.length > 1
+            ? competitions[competitions.length - 1]
+            : competitions[0];
+
+    const rawState = String(comp?.status?.type?.state || ev?.status?.type?.state || 'pre').toLowerCase();
+    const status: 'LIVE' | 'UPCOMING' | 'FINISHED' =
+        rawState === 'in' ? 'LIVE' : rawState === 'post' ? 'FINISHED' : 'UPCOMING';
+    const statusDetail =
+        comp?.status?.type?.shortDetail ||
+        ev?.status?.type?.shortDetail ||
+        ev?.status?.type?.description ||
+        'Scheduled';
+
+    const broadcasts: string[] = [];
+    if (Array.isArray(comp?.broadcasts)) {
+        for (const b of comp.broadcasts) {
+            if (Array.isArray(b.names)) {
+                broadcasts.push(...b.names);
+            }
+        }
+    }
+
+    const startMs = Date.parse(comp?.date || ev.date) || Date.now();
+    const startIso = new Date(startMs).toISOString();
+    const endIso = new Date(startMs + durationMinutes * 60 * 1000).toISOString();
+
+    // Motorsport / Formula 1 handling
+    if (sport === 'racing' || sport === 'motorsport' || leagueSlug === 'f1') {
+        const raceTitle = ev.name || ev.shortName || 'Formula 1 Grand Prix';
+        return {
+            id: String(ev.id),
+            title: raceTitle,
+            shortTitle: ev.shortName || 'F1 GP',
+            sport: 'motorsport',
+            league: leagueName || 'Formula 1',
+            leagueSlug: 'f1',
+            startTime: startIso,
+            endTime: endIso,
+            status,
+            statusDetail,
+            broadcasts: broadcasts.length > 0 ? broadcasts : [leagueName, 'International HD Feed'],
+            homeTeam: { name: raceTitle, shortName: 'F1', logo: '', score: undefined },
+            awayTeam: { name: statusDetail, shortName: 'GP', logo: '', score: undefined }
+        };
+    }
+
+    const competitors = Array.isArray(comp?.competitors) ? comp.competitors : [];
+    if (competitors.length < 2) return null;
+
+    const homeComp = competitors.find((c: any) => c.homeAway === 'home') || competitors[0];
+    const awayComp = competitors.find((c: any) => c.homeAway === 'away') || competitors[1];
+
+    // Extract team name OR athlete name (fixes UFC & Tennis "Home vs Away" bug)
+    const homeName =
+        homeComp?.team?.displayName ||
+        homeComp?.team?.name ||
+        homeComp?.athlete?.displayName ||
+        homeComp?.athlete?.fullName ||
+        '';
+    const awayName =
+        awayComp?.team?.displayName ||
+        awayComp?.team?.name ||
+        awayComp?.athlete?.displayName ||
+        awayComp?.athlete?.fullName ||
+        '';
+
+    if (!homeName || !awayName || (homeName === 'Home' && awayName === 'Away')) {
+        return null;
+    }
+
+    return {
+        id: String(ev.id),
+        title: `${homeName} vs ${awayName}`,
+        shortTitle:
+            ev.shortName ||
+            `${homeName.slice(0, 3).toUpperCase()} vs ${awayName.slice(0, 3).toUpperCase()}`,
+        sport,
+        league: leagueName,
+        leagueSlug,
+        startTime: startIso,
+        endTime: endIso,
+        status,
+        statusDetail,
+        broadcasts: broadcasts.length > 0 ? broadcasts : [leagueName, 'International HD Feed'],
+        homeTeam: {
+            name: homeName,
+            shortName:
+                homeComp?.team?.abbreviation ||
+                homeComp?.athlete?.shortName ||
+                homeName.slice(0, 3).toUpperCase(),
+            logo:
+                homeComp?.team?.logo ||
+                homeComp?.athlete?.headshot?.href ||
+                homeComp?.athlete?.flag?.href ||
+                '',
+            score: homeComp?.score !== undefined ? String(homeComp.score) : undefined
+        },
+        awayTeam: {
+            name: awayName,
+            shortName:
+                awayComp?.team?.abbreviation ||
+                awayComp?.athlete?.shortName ||
+                awayName.slice(0, 3).toUpperCase(),
+            logo:
+                awayComp?.team?.logo ||
+                awayComp?.athlete?.headshot?.href ||
+                awayComp?.athlete?.flag?.href ||
+                '',
+            score: awayComp?.score !== undefined ? String(awayComp.score) : undefined
+        }
+    };
+}
 
 export async function getLiveSportEvents(
     publicBaseUrl: string,
@@ -3781,151 +4088,34 @@ export async function getLiveSportEvents(
                     const rawEvents = Array.isArray(data.events) ? data.events : [];
                     const leagueLogo = data.leagues?.[0]?.logos?.[0]?.href || '';
 
-                    rawEvents.forEach((ev: any, evIdx: number) => {
-                        const comp = ev.competitions?.[0];
-                        const competitors = Array.isArray(comp?.competitors) ? comp.competitors : [];
-                        const home = competitors.find((c: any) => c.homeAway === 'home') || competitors[0] || {};
-                        const away = competitors.find((c: any) => c.homeAway === 'away') || competitors[1] || {};
-
-                        const state = ev.status?.type?.state || 'pre';
-                        const status: 'LIVE' | 'UPCOMING' | 'FINISHED' =
-                            state === 'in' ? 'LIVE' : state === 'post' ? 'FINISHED' : 'UPCOMING';
-
-                        const broadcasts: string[] = [];
-                        if (Array.isArray(comp?.broadcasts)) {
-                            for (const b of comp.broadcasts) {
-                                if (Array.isArray(b.names)) {
-                                    broadcasts.push(...b.names);
-                                }
-                            }
-                        }
-
-                        const recIds = new Set<string>(lg.channelPool);
-
-                        // Smart channel rotation so simultaneous matches in the same league distribute across numbered channels
-                        if (lg.slug === 'ksa.1') {
-                            const sscChannels = ['ssc-sport-1-ar', 'ssc-sport-2-ar', 'ssc-sport-3-ar', 'ssc-extra-1-ar', 'ssc-extra-2-ar', 'ssc-extra-3-ar'];
-                            recIds.clear();
-                            recIds.add(sscChannels[evIdx % sscChannels.length]);
-                            recIds.add('ssc-sport-1-ar');
-                            recIds.add('fox-sports-2');
-                        } else if (lg.slug === 'eng.2') {
-                            const eflSkyChannels = ['sky-sports-football', 'sky-sports-plus', 'sky-sports-action', 'sky-sports-mix'];
-                            recIds.clear();
-                            recIds.add(eflSkyChannels[evIdx % eflSkyChannels.length]);
-                            recIds.add('bein-sports-en-2');
-                        } else if (lg.slug === 'eng.1') {
-                            const beinAr = ['bein-sports-1-ar', 'bein-sports-2-ar', 'bein-sports-3-ar', 'bein-sports-4-ar'];
-                            const beinEn = ['bein-sports-en-1', 'bein-sports-en-2', 'bein-sports-en-3'];
-                            const ukEpl = ['sky-sports-premier-league', 'sky-sports-main-event', 'tnt-sports-1', 'supersport-premier-league', 'supersport-grandstand', 'supersport-variety-1', 'usa-network-hd', 'premier-sports-1'];
-                            recIds.clear();
-                            recIds.add(beinAr[evIdx % beinAr.length]);
-                            recIds.add(beinEn[evIdx % beinEn.length]);
-                            recIds.add(ukEpl[evIdx % ukEpl.length]);
-                            recIds.add(ukEpl[(evIdx + 1) % ukEpl.length]);
-                            recIds.add('supersport-premier-league');
-                            recIds.add('canal-plus-foot-fr');
-                        } else if (lg.slug === 'esp.1') {
-                            const beinAr = ['bein-sports-3-ar', 'bein-sports-1-ar', 'bein-sports-4-ar'];
-                            const intlPool = ['premier-sports-1', 'premier-sports-2', 'supersport-laliga', 'dazn-laliga-es'];
-                            recIds.clear();
-                            recIds.add(beinAr[evIdx % beinAr.length]);
-                            recIds.add(intlPool[evIdx % intlPool.length]);
-                            recIds.add('dazn-laliga-es');
-                            recIds.add('supersport-laliga');
-                            recIds.add('bein-sports-en-1');
-                            recIds.add('bein-sports-fr-1');
-                        } else if (lg.slug === 'ita.1') {
-                            const arPool = ['ad-sports-1-ar', 'ad-sports-2-ar', 'bein-sports-4-ar'];
-                            const intlPool = ['tnt-sports-2', 'tnt-sports-3', 'supersport-football', 'supersport-variety-1'];
-                            recIds.clear();
-                            recIds.add(arPool[evIdx % arPool.length]);
-                            recIds.add(intlPool[evIdx % intlPool.length]);
-                            recIds.add('bein-sports-fr-2');
-                        } else if (lg.slug === 'ger.1') {
-                            const arPool = ['bein-sports-5-ar', 'bein-sports-2-ar'];
-                            const intlPool = ['sky-sports-football', 'sky-sports-mix', 'espn-2-hd'];
-                            recIds.clear();
-                            recIds.add(arPool[evIdx % arPool.length]);
-                            recIds.add(intlPool[evIdx % intlPool.length]);
-                            recIds.add('bein-sports-fr-2');
-                        } else if (lg.slug === 'fra.1') {
-                            const arPool = ['bein-sports-6-ar', 'bein-sports-2-ar'];
-                            const frPool = ['dazn-ligue1-fr', 'bein-sports-fr-1', 'canal-plus-foot-fr', 'tnt-sports-4'];
-                            recIds.clear();
-                            recIds.add(arPool[evIdx % arPool.length]);
-                            recIds.add(frPool[evIdx % frPool.length]);
-                            recIds.add('bein-sports-en-2');
-                        } else if (lg.slug === 'uefa.champions' || lg.slug === 'uefa.europa') {
-                            const tntPool = ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4'];
-                            const beinAr = ['bein-sports-1-ar', 'bein-sports-2-ar', 'bein-sports-3-ar', 'bein-sports-4-ar', 'bein-sports-5-ar', 'bein-sports-6-ar'];
-                            const beinEn = ['bein-sports-en-1', 'bein-sports-en-2', 'bein-sports-en-3'];
-                            const beinFr = ['bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-fr-3'];
-                            recIds.clear();
-                            recIds.add(tntPool[evIdx % tntPool.length]);
-                            recIds.add(beinAr[evIdx % beinAr.length]);
-                            recIds.add(beinEn[evIdx % beinEn.length]);
-                            recIds.add(beinFr[evIdx % beinFr.length]);
-                            recIds.add('supersport-football');
-                            recIds.add('canal-plus-foot-fr');
-                        }
-
-                        const bText = broadcasts.join(' ').toLowerCase();
-                        if (bText.includes('fox') || bText.includes('fs1')) recIds.add('fox-sports-1');
-                        if (bText.includes('fs2')) recIds.add('fox-sports-2');
-                        if (bText.includes('espn2')) recIds.add('espn-2-hd');
-                        else if (bText.includes('espn')) recIds.add('espn-hd');
-                        if (bText.includes('sky')) recIds.add('sky-sports-main-event');
-                        if (bText.includes('tnt')) recIds.add('tnt-sports-1');
-                        if (bText.includes('cbs') || bText.includes('paramount')) recIds.add('cbs-sports-golazo');
-                        if (bText.includes('nbc') || bText.includes('peacock')) recIds.add('nbc-sports-now');
-                        if (bText.includes('usa')) recIds.add('usa-network-hd');
-
-                        const eventIdStr = String(ev.id || `${lg.slug}-${evIdx}`);
-                        const recommendedChannels = Array.from(recIds)
-                            .map((cid) => CORE_SPORTS_CHANNELS.find((ch) => ch.id === cid))
-                            .filter((ch): ch is LiveChannel => Boolean(ch))
-                            .map((ch) => ({
-                                channelId: ch.id,
-                                name: ch.name,
-                                language: ch.language,
-                                languageLabel: ch.languageLabel,
-                                logo: ch.logo,
-                                streamEndpoint: `${publicBaseUrl}/v1/live/stream/${ch.id}`,
-                                masterPlaylistUrl: `${publicBaseUrl}/v1/live/master/${ch.id}.m3u8`
-                            }));
-
-                        const startIso = ev.date ? new Date(ev.date).toISOString() : new Date().toISOString();
-                        const endIso = new Date(new Date(startIso).getTime() + lg.durationMinutes * 60 * 1000).toISOString();
+                    rawEvents.forEach((ev: any) => {
+                        const parsed = parseEspnEventForScraper(
+                            ev,
+                            lg.sport,
+                            lg.label,
+                            lg.slug,
+                            lg.durationMinutes
+                        );
+                        if (!parsed) return;
 
                         events.push({
-                            id: eventIdStr,
-                            title: ev.name || `${away.team?.displayName || 'Away'} vs ${home.team?.displayName || 'Home'}`,
-                            shortTitle: ev.shortName || ev.name || '',
-                            sport: lg.sport,
-                            league: lg.label,
-                            leagueSlug: lg.slug,
+                            id: parsed.id,
+                            title: parsed.title,
+                            shortTitle: parsed.shortTitle,
+                            sport: parsed.sport,
+                            league: parsed.league,
+                            leagueSlug: parsed.leagueSlug,
                             leagueLogo,
-                            startTime: startIso,
-                            endTime: endIso,
-                            status,
-                            statusDetail: ev.status?.type?.shortDetail || ev.status?.type?.description || status,
-                            homeTeam: {
-                                name: home.team?.displayName || home.team?.name || 'Home',
-                                shortName: home.team?.abbreviation || home.team?.shortDisplayName || 'HOM',
-                                logo: home.team?.logo || '',
-                                score: home.score
-                            },
-                            awayTeam: {
-                                name: away.team?.displayName || away.team?.name || 'Away',
-                                shortName: away.team?.abbreviation || away.team?.shortDisplayName || 'AWY',
-                                logo: away.team?.logo || '',
-                                score: away.score
-                            },
-                            broadcasts: broadcasts.length > 0 ? broadcasts : [lg.label, 'International HD Feed'],
-                            matchStreamEndpoint: `${publicBaseUrl}/v1/live/match/${encodeURIComponent(eventIdStr)}`,
-                            matchMasterPlaylistUrl: `${publicBaseUrl}/v1/live/match/${encodeURIComponent(eventIdStr)}/master.m3u8`,
-                            recommendedChannels
+                            startTime: parsed.startTime,
+                            endTime: parsed.endTime,
+                            status: parsed.status,
+                            statusDetail: parsed.statusDetail,
+                            homeTeam: parsed.homeTeam,
+                            awayTeam: parsed.awayTeam,
+                            broadcasts: parsed.broadcasts,
+                            matchStreamEndpoint: `${publicBaseUrl}/v1/live/match/${encodeURIComponent(parsed.id)}`,
+                            matchMasterPlaylistUrl: `${publicBaseUrl}/v1/live/match/${encodeURIComponent(parsed.id)}/master.m3u8`,
+                            recommendedChannels: []
                         });
                     });
                 } catch {
@@ -3934,6 +4124,7 @@ export async function getLiveSportEvents(
             })
         );
 
+        // Sort LIVE first, then UPCOMING by kickoff time, then FINISHED
         events.sort((a, b) => {
             const order = { LIVE: 0, UPCOMING: 1, FINISHED: 2 };
             if (order[a.status] !== order[b.status]) {
@@ -3941,6 +4132,72 @@ export async function getLiveSportEvents(
             }
             return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
         });
+
+        // De-conflicted per-time-slot channel assignment across all leagues
+        const claimedBySlot = new Map<string, Set<string>>();
+        const getSlotKey = (ev: LiveSportEvent): string => {
+            if (ev.status === 'LIVE') return 'LIVE_NOW';
+            const startMs = Date.parse(ev.startTime || '');
+            const hourBucket = Number.isNaN(startMs) ? 0 : Math.floor(startMs / (60 * 60 * 1000));
+            return `${ev.status}_${hourBucket}`;
+        };
+
+        for (const ev of events) {
+            // Never assign live EPG channels to finished matches
+            if (ev.status === 'FINISHED') {
+                ev.recommendedChannels = [];
+                continue;
+            }
+
+            const pool = SCRAPER_LEAGUE_CHANNEL_POOLS[ev.leagueSlug];
+            if (!pool) {
+                ev.recommendedChannels = [];
+                continue;
+            }
+
+            const slotKey = getSlotKey(ev);
+            if (!claimedBySlot.has(slotKey)) {
+                claimedBySlot.set(slotKey, new Set<string>());
+            }
+            const claimedInSlot = claimedBySlot.get(slotKey)!;
+
+            const assignedIds: string[] = [];
+            const claimOne = (candidates?: string[]) => {
+                if (!Array.isArray(candidates) || candidates.length === 0) return;
+                for (const chId of candidates) {
+                    if (!claimedInSlot.has(chId)) {
+                        claimedInSlot.add(chId);
+                        assignedIds.push(chId);
+                        return; // Strictly 1 channel per language/network family per match
+                    }
+                }
+            };
+
+            const teamsLower = `${ev.homeTeam?.name || ''} ${ev.awayTeam?.name || ''}`.toLowerCase();
+            const filteredEs = (pool.es || []).filter(
+                (id) => id !== 'real-madrid-tv' || teamsLower.includes('real madrid')
+            );
+
+            claimOne(pool.ar);
+            claimOne(pool.it);
+            claimOne(pool.en);
+            claimOne(pool.fr);
+            claimOne(filteredEs);
+            claimOne(pool.tr);
+
+            ev.recommendedChannels = assignedIds
+                .map((cid) => CORE_SPORTS_CHANNELS.find((ch) => ch.id === cid))
+                .filter((ch): ch is LiveChannel => Boolean(ch))
+                .map((ch) => ({
+                    channelId: ch.id,
+                    name: ch.name,
+                    language: ch.language,
+                    languageLabel: ch.languageLabel,
+                    logo: ch.logo,
+                    streamEndpoint: `${publicBaseUrl}/v1/live/stream/${ch.id}`,
+                    masterPlaylistUrl: `${publicBaseUrl}/v1/live/master/${ch.id}.m3u8`
+                }));
+        }
 
         if (events.length > 0) {
             cachedEvents = events;
@@ -3985,7 +4242,7 @@ function getNetworkEPGTemplates(ch: LiveChannel): EPGTemplateSlot[] {
     const net = ch.network.toLowerCase();
 
     // 1. SSC Sports (Saudi Pro League, King's Cup, AFC Champions League Elite)
-    if (id.startsWith('ssc-sport')) {
+    if (id.startsWith('ssc-sport') || id.startsWith('ssc-extra')) {
         return [
             {
                 title: 'استوديو دوري روشن السعودي المباشر (Roshn Saudi League Live Studio)',
@@ -4022,7 +4279,7 @@ function getNetworkEPGTemplates(ch: LiveChannel): EPGTemplateSlot[] {
         ];
     }
 
-    // 2. beIN Sports Arabic (Champions League, EPL, LaLiga, Serie A, Bundesliga, Ligue 1, AFC)
+    // 2. beIN Sports Arabic (Champions League, EPL, LaLiga, Ligue 1, AFC)
     if (id.startsWith('bein-sports-') && ch.language === 'ar') {
         if (id.includes('news')) {
             return [
@@ -4043,16 +4300,16 @@ function getNetworkEPGTemplates(ch: LiveChannel): EPGTemplateSlot[] {
             ];
         }
         const focusLeague =
-            id === 'bein-sports-1-ar' || id === 'bein-sports-2-ar'
+            id === 'bein-sports-1-ar' || id === 'bein-sports-2-ar' || id === 'bein-sports-premium-1-ar' || id === 'bein-sports-premium-2-ar'
                 ? 'الدوري الإنجليزي الممتاز ودوري أبطال أوروبا (Premier League & UCL)'
-                : id === 'bein-sports-3-ar'
+                : id === 'bein-sports-3-ar' || id === 'bein-sports-premium-3-ar'
                 ? 'الدوري الإسباني - لاليغا (Spanish LaLiga)'
                 : id === 'bein-sports-4-ar'
-                ? 'الدوري الإيطالي - سيري آ (Italian Serie A)'
+                ? 'الدوري الفرنسي - ليغ 1 والبطولات الأوروبية (French Ligue 1 & UEFA)'
                 : id === 'bein-sports-5-ar'
-                ? 'الدوري الألماني - بوندسليغا (German Bundesliga)'
+                ? 'دوري أبطال أوروبا والدوري الأوروبي (UEFA Champions & Europa League)'
                 : id === 'bein-sports-6-ar'
-                ? 'الدوري الفرنسي - ليغ 1 (French Ligue 1)'
+                ? 'دوري المؤتمر الأوروبي والبطولات الأفريقية (UEFA & CAF Competitions)'
                 : id === 'bein-sports-afc-ar'
                 ? 'دوري أبطال آسيا للنخبة (AFC Champions League)'
                 : 'البطولات العالمية والقارية الكبرى';
@@ -4119,10 +4376,38 @@ function getNetworkEPGTemplates(ch: LiveChannel): EPGTemplateSlot[] {
                 }
             ];
         }
+        if (id.startsWith('starzplay-sports')) {
+            return [
+                {
+                    title: 'الأستوديو التحليلي للدوري الإيطالي (Serie A Live Studio - STARZPLAY)',
+                    subtitle: 'تغطية حصرية لمباريات الكالتشيو الإيطالي وكأس إيطاليا • STARZPLAY / AD Sports Premium HD',
+                    description: 'البث المباشر والأستوديو التحليلي لمباريات الدوري الإيطالي (إنتر ميلان، ميلان، يوفنتوس، نابولي، روما) عبر قنوات ستارز بلاي وأبوظبي الرياضية بريميوم.',
+                    category: 'Live Serie A Studio',
+                    sport: 'soccer',
+                    league: 'Italian Serie A'
+                },
+                {
+                    title: 'قمة الكالتشيو الإيطالي وكأس السوبر (Serie A Enilive Featured Match)',
+                    subtitle: 'بث مباشر وتعليق عربي 1080p Full HD',
+                    description: 'تغطية شاملة لأقوى مواجهات الدوري الإيطالي وكأس إيطاليا مع نخبة المحللين.',
+                    category: 'Serie A Football',
+                    sport: 'soccer',
+                    league: 'Italian Serie A'
+                },
+                {
+                    title: 'ملخصات وأهداف الدوري الإيطالي (Serie A Matchday Highlights)',
+                    subtitle: 'جميع أهداف الجولة وأبرز اللقطات الفنية من ملاعب إيطاليا',
+                    description: 'استعراض شامل لأهداف وملخصات جولة الدوري الإيطالي.',
+                    category: 'Football Highlights',
+                    sport: 'soccer',
+                    league: 'Italian Serie A'
+                }
+            ];
+        }
         if (id.startsWith('ad-sports')) {
             return [
                 {
-                    title: 'استوديو دوري أدنوك للمحترفين والكرة الإيطالية (ADNOC Pro League & Serie A)',
+                    title: 'استوديو دوري أدنوك للمحترفين والبطولات الآسيوية (ADNOC Pro League & Asian Football)',
                     subtitle: 'تغطية مباشرة من أبوظبي الرياضية HD',
                     description: 'تحليل شامل لمنافسات الكرة الإماراتية والعربية والبطولات القارية.',
                     category: 'Live Football Studio',
@@ -4282,6 +4567,28 @@ function getNetworkEPGTemplates(ch: LiveChannel): EPGTemplateSlot[] {
         ];
     }
 
+    // 5b. Italian Serie A Broadcasters (DAZN Italia & Sky Sport Italia)
+    if (ch.language === 'it') {
+        return [
+            {
+                title: `Serie A Enilive Diretta & Studio Pre-Partita - ${ch.shortName}`,
+                subtitle: `${ch.name} • Copertura Diretta Serie A, Coppa Italia & Champions League`,
+                description: `Diretta esclusiva, approfondimenti tattici e collegamenti dagli stadi della Serie A su ${ch.name}.`,
+                category: 'Serie A Live',
+                sport: 'soccer',
+                league: 'Italian Serie A'
+            },
+            {
+                title: id.includes('dazn') ? 'Sunday Night Square & Zona Serie A Live' : 'Sky Calcio Club & Gol Collection Serie A',
+                subtitle: 'Analisi, gol e highlights di tutte le partite di Serie A',
+                description: 'Tutti i gol della giornata di Serie A, interviste ai protagonisti e moviola in studio.',
+                category: 'Calcio Studio',
+                sport: 'soccer',
+                league: 'Italian Serie A'
+            }
+        ];
+    }
+
     // 6. ESPN / Fox Sports / US League Networks (NBA TV, NFL Network, MLB, NHL)
     if (ch.category === 'espn' || ch.category === 'fox' || ch.category === 'usa') {
         if (id.includes('nba')) {
@@ -4378,12 +4685,40 @@ export function getChannelEPG(channelId: string, publicBaseUrl: string): Channel
 
     if (!ch) return null;
 
+    // Mirror EPG onto shared-stream alias channels (beIN Premium 1..3 -> beIN 1..3)
+    const aliasMap: Record<string, string> = {
+        'bein-sports-premium-1-ar': 'bein-sports-1-ar',
+        'bein-sports-premium-2-ar': 'bein-sports-2-ar',
+        'bein-sports-premium-3-ar': 'bein-sports-3-ar'
+    };
+    const primaryIdForAlias = aliasMap[ch.id];
+    if (primaryIdForAlias) {
+        const primaryEpg = getChannelEPG(primaryIdForAlias, publicBaseUrl);
+        if (primaryEpg) {
+            return {
+                ...primaryEpg,
+                channelId: ch.id,
+                channelName: ch.name,
+                shortName: ch.shortName,
+                logo: ch.logo,
+                streamEndpoint: `${publicBaseUrl}/v1/live/stream/${ch.id}`,
+                masterPlaylistUrl: `${publicBaseUrl}/v1/live/master/${ch.id}.m3u8`,
+                nowPlaying: { ...primaryEpg.nowPlaying, channelId: ch.id },
+                nextUp: { ...primaryEpg.nextUp, channelId: ch.id },
+                upcoming: primaryEpg.upcoming.map((u) => ({ ...u, channelId: ch.id })),
+                schedule: primaryEpg.schedule.map((s) => ({ ...s, channelId: ch.id }))
+            };
+        }
+    }
+
     const nowMs = Date.now();
     const templates = getNetworkEPGTemplates(ch);
 
-    // Find all real sports events assigned to this channel
-    const channelEvents = cachedEvents.filter((ev) =>
-        ev.recommendedChannels.some((rc) => rc.channelId === ch.id)
+    // Find all active/upcoming real sports events assigned to this channel (strictly excluding FINISHED matches)
+    const channelEvents = cachedEvents.filter(
+        (ev) =>
+            ev.status !== 'FINISHED' &&
+            ev.recommendedChannels.some((rc) => rc.channelId === ch.id)
     );
 
     // Build 2-hour base slots from -2h to +22h (12 slots = 24 hours)
@@ -4429,35 +4764,33 @@ export function getChannelEPG(channelId: string, publicBaseUrl: string): Channel
     }
 
     // Overlay real LIVE and UPCOMING sports events onto the channel's EPG schedule
+    // Strictly exclude FINISHED matches so they never get stuck in nowPlaying!
     for (const ev of channelEvents) {
+        if (ev.status === 'FINISHED') continue;
+
         const evStartMs = new Date(ev.startTime).getTime();
         const evEndMs = ev.endTime ? new Date(ev.endTime).getTime() : evStartMs + 120 * 60 * 1000;
         const durationMin = Math.max(60, Math.round((evEndMs - evStartMs) / 60000));
+        const minsUntil = Math.round((evStartMs - nowMs) / 60000);
 
-        const inBroadcastWindow = nowMs >= evStartMs && nowMs < evEndMs;
-        const isLiveNow = ev.status === 'LIVE' || inBroadcastWindow;
-        const isFinished = !isLiveNow && (ev.status === 'FINISHED' || nowMs >= evEndMs);
+        const isLiveNow =
+            ev.status === 'LIVE' || (ev.status === 'UPCOMING' && minsUntil >= -10 && minsUntil <= 10);
 
-        // Only include events within [-4h, +36h] window
-        if (evEndMs < nowMs - 4 * 3600 * 1000 || evStartMs > nowMs + 36 * 3600 * 1000) {
+        // Only include events within [-3h, +36h] window
+        if (evEndMs < nowMs - 3 * 3600 * 1000 || evStartMs > nowMs + 36 * 3600 * 1000) {
             continue;
         }
 
         const hasScore =
+            ev.status === 'LIVE' &&
             ev.homeTeam.score !== undefined &&
-            ev.awayTeam.score !== undefined &&
-            (ev.status === 'LIVE' || ev.status === 'FINISHED');
+            ev.awayTeam.score !== undefined;
 
         const scoreText = hasScore
             ? `${ev.homeTeam.name} ${ev.homeTeam.score} - ${ev.awayTeam.score} ${ev.awayTeam.name}`
             : `${ev.homeTeam.name} vs ${ev.awayTeam.name}`;
 
-        const isPostMatchStudio = inBroadcastWindow && ev.status === 'FINISHED';
-        const livePrefix = isPostMatchStudio
-            ? ch.language === 'ar'
-                ? 'الأستوديو التحليلي بعد المباراة: '
-                : 'Post-Match Studio: '
-            : isLiveNow
+        const livePrefix = isLiveNow
             ? ch.language === 'ar'
                 ? 'مباشر: '
                 : 'LIVE: '
@@ -4465,20 +4798,18 @@ export function getChannelEPG(channelId: string, publicBaseUrl: string): Channel
 
         const progressPct = isLiveNow
             ? Math.min(99, Math.max(5, Math.round(((nowMs - evStartMs) / Math.max(1, evEndMs - evStartMs)) * 100)))
-            : isFinished
-            ? 100
             : 0;
 
         const prog: EPGProgram = {
-            id: `epg-ev-${ch.id}-${ev.id}`,
+            id: `epg-${ch.id}-${ev.id}`,
             channelId: ch.id,
-            title: `${livePrefix}${scoreText}`,
+            title: isLiveNow ? `${livePrefix}${scoreText}` : `${ev.homeTeam.name} vs ${ev.awayTeam.name}`,
             subtitle: `${ev.league} • ${ev.statusDetail}`,
             description:
                 ch.language === 'ar'
                     ? `نقل حي ومباشر لمباراة ${ev.homeTeam.name} ضد ${ev.awayTeam.name} ضمن منافسات ${ev.league} عبر ${ch.name}.`
                     : `Live broadcast of ${ev.homeTeam.name} vs ${ev.awayTeam.name} in the ${ev.league} on ${ch.name}.`,
-            category: ev.league,
+            category: 'Live Sports',
             sport: ev.sport,
             league: ev.league,
             startTime: new Date(evStartMs).toISOString(),
@@ -4486,9 +4817,9 @@ export function getChannelEPG(channelId: string, publicBaseUrl: string): Channel
             durationMinutes: durationMin,
             progressPct,
             isLive: isLiveNow,
-            status: isLiveNow ? 'LIVE' : isFinished ? 'FINISHED' : 'UPCOMING',
+            status: isLiveNow ? 'LIVE' : 'UPCOMING',
             language: ch.language,
-            eventId: ev.id,
+            eventId: String(ev.id),
             matchInfo: {
                 homeTeam: ev.homeTeam,
                 awayTeam: ev.awayTeam,
@@ -4506,23 +4837,23 @@ export function getChannelEPG(channelId: string, publicBaseUrl: string): Channel
             if (!overlaps) continue;
 
             if (!existing.eventId) {
-                scheduleMap.delete(slotKey);
+                if (existingStart <= nowMs && evStartMs > nowMs && !prog.isLive) {
+                    scheduleMap.set(slotKey, {
+                        ...existing,
+                        endTime: new Date(evStartMs).toISOString(),
+                        durationMinutes: Math.max(15, Math.round((evStartMs - existingStart) / 60000)),
+                        isLive: true,
+                        status: 'LIVE'
+                    });
+                } else {
+                    scheduleMap.delete(slotKey);
+                }
             } else {
-                // Another real match already occupies this time window on this channel.
-                // Prefer LIVE over non-live; if both have same status, deterministically pick one per channel hash.
                 if (prog.isLive && !existing.isLive) {
                     scheduleMap.delete(slotKey);
-                } else if (!prog.isLive && existing.isLive) {
+                } else {
                     skipDueToSimultaneousMatch = true;
                     break;
-                } else {
-                    const evHash = String(ev.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-                    if ((chHash + evHash) % 2 === 0) {
-                        scheduleMap.delete(slotKey);
-                    } else {
-                        skipDueToSimultaneousMatch = true;
-                        break;
-                    }
                 }
             }
         }
@@ -4539,19 +4870,24 @@ export function getChannelEPG(channelId: string, publicBaseUrl: string): Channel
         return 0;
     });
 
-    // Determine nowPlaying (prioritize real LIVE match, picking deterministically by channel if multiple are simultaneous)
-    const liveRealMatches = schedule.filter((p) => p.eventId && p.isLive);
-    let nowPlaying =
-        (liveRealMatches.length > 0 ? liveRealMatches[chHash % liveRealMatches.length] : undefined) ||
+    // Determine nowPlaying (prioritize real LIVE match, strictly excluding any FINISHED match)
+    const liveRealMatches = schedule.filter((p) => p.eventId && p.isLive && p.status === 'LIVE');
+    const nowPlaying =
+        liveRealMatches[0] ||
         schedule.find((p) => {
             const s = new Date(p.startTime).getTime();
             const e = new Date(p.endTime).getTime();
-            return nowMs >= s && nowMs < e;
+            return nowMs >= s && nowMs < e && p.status !== 'FINISHED';
         }) ||
         schedule.find((p) => p.isLive) ||
         schedule[0];
 
-    const upcoming = schedule.filter((p) => new Date(p.startTime).getTime() > nowMs && p.id !== nowPlaying?.id);
+    const upcoming = schedule.filter(
+        (p) =>
+            p.status === 'UPCOMING' &&
+            new Date(p.startTime).getTime() > nowMs &&
+            p.id !== nowPlaying?.id
+    );
     const nextUp =
         upcoming[0] ||
         schedule[schedule.indexOf(nowPlaying) + 1] ||
