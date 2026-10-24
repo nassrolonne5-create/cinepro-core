@@ -404,6 +404,22 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
             { label: 'beIN Premium 3 AR (1080p)', url: `${EDGE_CDN_BASE}/premium93/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
+    {
+        id: 'bein-sports-afc-ar',
+        name: 'beIN Sports AFC HD (Arabic)',
+        shortName: 'beIN AFC AR',
+        network: 'beIN Sports',
+        category: 'bein',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'QA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'beIN Sports AFC AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium97/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+        ]
+    },
 
     // =========================================================================
     // 2. beIN SPORTS — ENGLISH (EN)
@@ -423,7 +439,6 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         streams: [
             { label: 'beIN XTRA English (Amagi 1080p)', url: 'https://bein-xtra-bein.amagi.tv/playlist.m3u8', quality: '1080p', language: 'en' },
             { label: 'beIN XTRA English (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium100/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN XTRA English (Tubi 1080p)', url: 'https://live-manifest.production-public.tubi.io/live/2fd3d156-b63c-47c8-9d04-5961ddd9cee8/playlist.m3u8', quality: '1080p', language: 'en' },
             { label: 'beIN XTRA English (LocalNow CDN)', url: 'https://amg01334-beinsportsllc-beinxtra-localnow-kcy6r.amagi.tv/playlist.m3u8', quality: '1080p', language: 'en' }
         ]
     },
@@ -710,8 +725,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     },
     {
         id: 'bein-sports-haber-tr',
-        name: 'beIN Sports Haber / A Spor HD (TR)',
-        shortName: 'A Spor / Haber TR',
+        name: 'HT Spor / Turkish Sports HD (TR)',
+        shortName: 'HT Spor TR',
         network: 'beIN Sports',
         category: 'bein',
         language: 'tr',
@@ -721,7 +736,6 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'A Spor Türkiye HD (1080p)', url: 'https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/aspor/aspor.m3u8', quality: '1080p', language: 'tr' },
             { label: 'HT Spor Türkiye HD (1080p)', url: 'https://ciner.daioncdn.net/ht-spor/ht-spor.m3u8?app=web', quality: '1080p', language: 'tr' }
         ]
     },
@@ -738,8 +752,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN XTRA Español (Amagi 1080p)', url: 'https://bein-esp-xumo.amagi.tv/playlistR1080p.m3u8', quality: '1080p', language: 'es' },
-            { label: 'beIN XTRA Español (Tubi 1080p)', url: 'https://live-manifest.production-public.tubi.io/live/6cd31e43-d255-4ab4-b065-7f28bd541047/playlist.m3u8', quality: '1080p', language: 'es' }
+            { label: 'beIN XTRA Español (Amagi 1080p)', url: 'https://bein-esp-xumo.amagi.tv/playlistR1080p.m3u8', quality: '1080p', language: 'es' }
         ]
     },
 
@@ -844,8 +857,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Extra 3 / Gulf Sports HD (1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'SSC Extra 3 / Bahrain Sports HD (720p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8', quality: '720p', language: 'ar' }
+            { label: 'SSC Extra 3 / Gulf Sports HD (1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1075,7 +1087,22 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'HBO East HD (1080p)', url: `${EDGE_CDN_BASE}/premium321/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'HBO East HD (1080p)', url: `${EDGE_CDN_BASE}/premium321/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'hbo-2-hd',
+        name: 'HBO 2 Movies & Series HD',
+        shortName: 'HBO 2 HD',
+        network: 'HBO',
+        category: 'movies',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'US',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
             { label: 'HBO 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium689/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
@@ -1188,7 +1215,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Rotana Cinema HD (1080p)', url: 'https://rotana.hibridcdn.net/rotananet/cinema_net-7Y83PP5adWixDF93/playlist.m3u8', quality: '1080p', language: 'ar', headers: ROTANA_HEADERS }
+            { label: 'Rotana Cinema HD (1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx001/playlist.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1220,7 +1247,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Rotana Comedy HD (1080p)', url: 'https://rotana.hibridcdn.net/rotananet/comedy_net-7Y83PP5adWixDF93/playlist.m3u8', quality: '1080p', language: 'ar', headers: ROTANA_HEADERS }
+            { label: 'Rotana Comedy HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-4/24f134f1cd63db9346439e96b86ca6ed/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1236,8 +1263,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'MBC 1 HD (Primary 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-1/15cf99af5de54063fdabfefe66adc075/index.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'MBC 1 MENA HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-1-na/eec141533c90dd34722c503a296dd0d8/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'MBC 1 HD (Primary 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-1/15cf99af5de54063fdabfefe66adc075/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1274,7 +1300,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     },
     {
         id: 'mbc-drama-ar',
-        name: 'MBC Drama & MBC+ Drama HD (إم بي سي دراما)',
+        name: 'MBC Drama HD (إم بي سي دراما)',
         shortName: 'MBC Drama HD',
         network: 'MBC',
         category: 'entertainment',
@@ -1285,14 +1311,29 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'MBC Drama HD (Primary 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-drama/2c28a458e2f3253e678b07ac7d13fe71/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'MBC Drama HD (Primary 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-drama/2c28a458e2f3253e678b07ac7d13fe71/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'mbc-plus-drama-ar',
+        name: 'MBC+ Drama HD (إم بي سي بلس دراما)',
+        shortName: 'MBC+ Drama HD',
+        network: 'MBC',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/vwAgJNi.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
             { label: 'MBC+ Drama HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-plus-drama/e37251ec2aac8f6c98f75cd0fa37cd28/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
         id: 'mbc-masr-ar',
-        name: 'MBC Masr 1 & 2 HD (إم بي سي مصر)',
-        shortName: 'MBC Masr HD',
+        name: 'MBC Masr 1 HD (إم بي سي مصر 1)',
+        shortName: 'MBC Masr 1 HD',
         network: 'MBC',
         category: 'entertainment',
         language: 'ar',
@@ -1302,9 +1343,23 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'MBC Masr 1 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr/956eac069c78a35d47245db6cdbb1575/index.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'MBC Masr 2 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr-2/754931856515075b0aabf0e583495c68/index.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'MBC Masr Drama HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr-drama/567b703c19ede6598222de81b0e4508b/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'MBC Masr 1 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr/956eac069c78a35d47245db6cdbb1575/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'mbc-masr-2-ar',
+        name: 'MBC Masr 2 HD (إم بي سي مصر 2)',
+        shortName: 'MBC Masr 2 HD',
+        network: 'MBC',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'EG',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'MBC Masr 2 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr-2/754931856515075b0aabf0e583495c68/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1320,13 +1375,13 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'MBC Iraq HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-iraq/e38c44b1b43474e1c39cb5b90203691e/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'MBC Iraq HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-5/ee6b000cee0629411b666ab26cb13e9b/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
         id: 'bab-al-hara-ar',
-        name: 'Bab Al Hara Series 24/7 HD (باب الحارة)',
-        shortName: 'Bab Al Hara',
+        name: 'Shahid Series 24/7 HD (مسلسلات شاهد)',
+        shortName: 'Shahid Series',
         network: 'Shahid Series',
         category: 'entertainment',
         language: 'ar',
@@ -1336,8 +1391,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Bab Al Hara 24/7 HD (1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx010/playlist.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'Maraya Comedy 24/7 HD (1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx008/playlist.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'Shahid Series 24/7 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-drama/2c28a458e2f3253e678b07ac7d13fe71/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1734,8 +1788,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Fox Sports 1 US (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium39/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'Fox Sports 1 US (Direct HD)', url: 'http://85.237.89.160:9590/usa-s/FOX-SPORTS-1/index.m3u8', quality: '720p', language: 'en' }
+            { label: 'Fox Sports 1 US (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium39/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1785,7 +1838,6 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         featured: true,
         streams: [
             { label: 'ESPN US (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium44/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'ESPN US (Direct HD)', url: 'http://85.237.89.160:9590/usa-s/ESPN-HD/index.m3u8', quality: '720p', language: 'en' },
             { label: 'ESPN US (Mirror 1080p)', url: 'http://stream.bottledesk.net/6500/index.m3u8', quality: '1080p', language: 'en' }
         ]
     },
@@ -1802,8 +1854,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'ESPN 2 US (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium45/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'ESPN 2 US (Direct HD)', url: 'http://85.237.89.160:9590/usa-s/ESPN-2-HD/index.m3u8', quality: '720p', language: 'en' }
+            { label: 'ESPN 2 US (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium45/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1819,14 +1870,12 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'ESPNU HD (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium316/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'ESPNU HD (US Direct)', url: 'http://85.237.89.160:9590/usa-s/ESPN-U-HD/index.m3u8', quality: '720p', language: 'en' },
-            { label: 'ESPNU Backup', url: 'http://23.237.104.106:8080/USA_ESPNU/index.m3u8', quality: '720p', language: 'en' }
+            { label: 'ESPNU HD (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium316/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'cbs-sports-golazo',
-        name: 'CBS Sports Golazo Network',
+        name: 'CBS Sports Network & Golazo HD',
         shortName: 'CBS Golazo',
         network: 'CBS Sports',
         category: 'usa',
@@ -1837,7 +1886,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'CBS Golazo (Pluto Live HD)', url: 'https://jmp2.uk/plu-63a0e33a45264d000850ed7e.m3u8', quality: '720p', language: 'en' }
+            { label: 'CBS Sports Network HD (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium308/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1886,8 +1935,23 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'NFL Network (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium405/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'NFL Channel (Pluto HD)', url: 'https://jmp2.uk/plu-5ced7d5df64be98e07ed47b6.m3u8', quality: '720p', language: 'en' }
+            { label: 'NFL Network (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium405/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'nfl-redzone',
+        name: 'NFL RedZone HD',
+        shortName: 'NFL RedZone',
+        network: 'NFL',
+        category: 'usa',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'US',
+        logo: 'https://i.imgur.com/O9BapV9.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'NFL RedZone (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium667/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1903,14 +1967,13 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'NHL Network (Amagi 1080p)', url: 'https://nhl-firetv.amagi.tv/playlist.m3u8', quality: '1080p', language: 'en' },
             { label: 'NHL Network (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium663/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
             { label: 'NHL Network (TVNow 1080p)', url: 'https://cache0.wonvt.st/live/0nkruul0d8pahi1pz4sjc/master.m3u8', quality: '1080p', language: 'en', headers: TVNOW_HEADERS }
         ]
     },
     {
         id: 'mlb-network',
-        name: 'MLB Network / Strike Zone HD',
+        name: 'MLB Network HD',
         shortName: 'MLB Network',
         network: 'MLB',
         category: 'usa',
@@ -1921,14 +1984,12 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'MLB Network (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium399/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'MLB Network (TVNow 1080p)', url: 'https://cache0.wonvt.st/live/0s8stho175fs0z1w0nugo/master.m3u8', quality: '1080p', language: 'en', headers: TVNOW_HEADERS },
-            { label: 'MLB Strike Zone (US HD)', url: 'http://23.237.104.106:8080/USA_MLB_STRIKE_ZONE/index.m3u8', quality: '720p', language: 'en' }
+            { label: 'MLB Network (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium399/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
 
     // =========================================================================
-    // 8. EUROPEAN, FRENCH & SPANISH SPORTS (Eurosport, Canal+, RMC, L'Équipe, FIFA+, Premier Sports)
+    // 8. EUROPEAN, FRENCH & SPANISH SPORTS (Eurosport, Canal+, RMC, L'Équipe, FIFA+, Premier Sports, DAZN)
     // =========================================================================
     {
         id: 'eurosport-1',
@@ -2043,7 +2104,6 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '720p',
         featured: false,
         streams: [
-            { label: 'FIFA+ English (Pluto CDN)', url: 'https://jmp2.uk/plu-660c29b5aec9680008f5b4a4.m3u8', quality: '720p', language: 'en' },
             { label: 'FIFA+ US (CloudFront)', url: 'https://d2w9q46ikgrcwx.cloudfront.net/v1/master/3722c60a815c199d9c0ef36c5b73da68a62b09d1/cc-of5cbk3sav3w5/v1/sysdata_s_p_a_fifa_7/samsungheadend_us/latest/main/hls/playlist.m3u8', quality: '720p', language: 'en' }
         ]
     },
@@ -2099,6 +2159,38 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         ]
     },
     {
+        id: 'dazn-laliga-es',
+        name: 'DAZN LaLiga 1 HD (Spain)',
+        shortName: 'DAZN LaLiga ES',
+        network: 'DAZN',
+        category: 'europe',
+        language: 'es',
+        languageLabel: 'Español (Spanish)',
+        country: 'ES',
+        logo: 'https://i.postimg.cc/VsW3Jsrz/logo-DAZN-Combat.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'DAZN LaLiga 1 Spain (1080p)', url: `${EDGE_CDN_BASE}/premium538/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'dazn-ligue1-fr',
+        name: 'DAZN Ligue 1 HD (France)',
+        shortName: 'DAZN Ligue 1 FR',
+        network: 'DAZN',
+        category: 'europe',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://i.postimg.cc/VsW3Jsrz/logo-DAZN-Combat.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'DAZN Ligue 1 France (1080p)', url: `${EDGE_CDN_BASE}/premium960/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
         id: 'dazn-combat',
         name: 'DAZN Combat & Boxing HD',
         shortName: 'DAZN Combat',
@@ -2111,10 +2203,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'DAZN Combat (Primary)', url: 'https://jmp2.uk/plu-64d626ac9b414d000820e2fc.m3u8', quality: '720p', language: 'en' },
-            { label: 'DAZN LaLiga (1080p)', url: `${EDGE_CDN_BASE}/premium538/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS },
-            { label: 'DAZN Ligue 1 (1080p)', url: `${EDGE_CDN_BASE}/premium960/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
-            { label: 'PFL MMA Network', url: 'https://jmp2.uk/plu-64f6180130ab3300083d896b.m3u8', quality: '720p', language: 'en' }
+            { label: 'DAZN Combat & Boxing HD (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium50/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -2130,8 +2219,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Red Bull TV (Akamai 1080p)', url: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8', quality: '1080p', language: 'en' },
-            { label: 'Rally TV Motorsports (1080p)', url: 'https://rally-tv-live.akamaized.net/hls/live/2117704/RallyTV-Pri/master.m3u8', quality: '1080p', language: 'en' }
+            { label: 'Red Bull TV (Akamai 1080p)', url: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8', quality: '1080p', language: 'en' }
         ]
     },
     {
@@ -2147,8 +2235,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Tennis Channel 1 (US 1080p)', url: 'http://23.237.104.106:8080/USA_TENNIS/index.m3u8', quality: '1080p', language: 'en' },
-            { label: 'Tennis Channel (Amagi 1080p)', url: 'https://cdn-ue1-prod.tsv2.amagi.tv/linear/amg01444-tennischannelth-tennischannelnl-samsungnl/playlist.m3u8', quality: '1080p', language: 'en' }
+            { label: 'Tennis Channel US (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium40/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Tennis Channel 1 (US Direct 1080p)', url: 'http://23.237.104.106:8080/USA_TENNIS/index.m3u8', quality: '1080p', language: 'en' }
         ]
     }
 ];
@@ -3546,7 +3634,7 @@ const LEAGUE_DEFINITIONS: Array<{
         label: 'Spanish LaLiga',
         labelAr: 'الدوري الإسباني (لاليغا)',
         durationMinutes: 120,
-        channelPool: ['premier-sports-1', 'premier-sports-2', 'supersport-laliga', 'bein-sports-3-ar', 'bein-sports-en-1', 'bein-sports-fr-1', 'espn-hd']
+        channelPool: ['premier-sports-1', 'premier-sports-2', 'supersport-laliga', 'dazn-laliga-es', 'bein-sports-3-ar', 'bein-sports-en-1', 'bein-sports-fr-1', 'espn-hd']
     },
     {
         sport: 'soccer',
@@ -3570,7 +3658,7 @@ const LEAGUE_DEFINITIONS: Array<{
         label: 'French Ligue 1',
         labelAr: 'الدوري الفرنسي (ليغ 1)',
         durationMinutes: 120,
-        channelPool: ['tnt-sports-4', 'bein-sports-6-ar', 'bein-sports-fr-1', 'canal-plus-foot-fr', 'bein-sports-en-2']
+        channelPool: ['tnt-sports-4', 'dazn-ligue1-fr', 'bein-sports-6-ar', 'bein-sports-fr-1', 'canal-plus-foot-fr', 'bein-sports-en-2']
     },
     {
         sport: 'soccer',
@@ -3618,7 +3706,7 @@ const LEAGUE_DEFINITIONS: Array<{
         label: 'NFL Football',
         labelAr: 'دوري كرة القدم الأمريكية NFL',
         durationMinutes: 180,
-        channelPool: ['sky-sports-action', 'sky-sports-main-event', 'fox-sports-1', 'nfl-network', 'espn-hd', 'nbc-sports-now']
+        channelPool: ['sky-sports-action', 'sky-sports-main-event', 'fox-sports-1', 'nfl-network', 'nfl-redzone', 'espn-hd', 'nbc-sports-now']
     },
     {
         sport: 'hockey',
@@ -3727,28 +3815,59 @@ export async function getLiveSportEvents(
                             recIds.add(eflSkyChannels[evIdx % eflSkyChannels.length]);
                             recIds.add('bein-sports-en-2');
                         } else if (lg.slug === 'eng.1') {
-                            const beinAr = ['bein-sports-1-ar', 'bein-sports-2-ar'];
-                            const ukEpl = ['sky-sports-premier-league', 'sky-sports-main-event', 'tnt-sports-1', 'supersport-premier-league', 'supersport-grandstand', 'supersport-variety-1', 'usa-network-hd'];
+                            const beinAr = ['bein-sports-1-ar', 'bein-sports-2-ar', 'bein-sports-3-ar', 'bein-sports-4-ar'];
+                            const beinEn = ['bein-sports-en-1', 'bein-sports-en-2', 'bein-sports-en-3'];
+                            const ukEpl = ['sky-sports-premier-league', 'sky-sports-main-event', 'tnt-sports-1', 'supersport-premier-league', 'supersport-grandstand', 'supersport-variety-1', 'usa-network-hd', 'premier-sports-1'];
                             recIds.clear();
-                            recIds.add('sky-sports-premier-league');
-                            recIds.add('sky-sports-main-event');
-                            recIds.add('supersport-premier-league');
-                            recIds.add('supersport-grandstand');
-                            recIds.add('tnt-sports-1');
-                            recIds.add(ukEpl[evIdx % ukEpl.length]);
                             recIds.add(beinAr[evIdx % beinAr.length]);
-                            recIds.add('bein-sports-en-1');
-                            recIds.add('usa-network-hd');
+                            recIds.add(beinEn[evIdx % beinEn.length]);
+                            recIds.add(ukEpl[evIdx % ukEpl.length]);
+                            recIds.add(ukEpl[(evIdx + 1) % ukEpl.length]);
+                            recIds.add('supersport-premier-league');
                             recIds.add('canal-plus-foot-fr');
+                        } else if (lg.slug === 'esp.1') {
+                            const beinAr = ['bein-sports-3-ar', 'bein-sports-1-ar', 'bein-sports-4-ar'];
+                            const intlPool = ['premier-sports-1', 'premier-sports-2', 'supersport-laliga', 'dazn-laliga-es'];
+                            recIds.clear();
+                            recIds.add(beinAr[evIdx % beinAr.length]);
+                            recIds.add(intlPool[evIdx % intlPool.length]);
+                            recIds.add('dazn-laliga-es');
+                            recIds.add('supersport-laliga');
+                            recIds.add('bein-sports-en-1');
+                            recIds.add('bein-sports-fr-1');
+                        } else if (lg.slug === 'ita.1') {
+                            const arPool = ['ad-sports-1-ar', 'ad-sports-2-ar', 'bein-sports-4-ar'];
+                            const intlPool = ['tnt-sports-2', 'tnt-sports-3', 'supersport-football', 'supersport-variety-1'];
+                            recIds.clear();
+                            recIds.add(arPool[evIdx % arPool.length]);
+                            recIds.add(intlPool[evIdx % intlPool.length]);
+                            recIds.add('bein-sports-fr-2');
+                        } else if (lg.slug === 'ger.1') {
+                            const arPool = ['bein-sports-5-ar', 'bein-sports-2-ar'];
+                            const intlPool = ['sky-sports-football', 'sky-sports-mix', 'espn-2-hd'];
+                            recIds.clear();
+                            recIds.add(arPool[evIdx % arPool.length]);
+                            recIds.add(intlPool[evIdx % intlPool.length]);
+                            recIds.add('bein-sports-fr-2');
+                        } else if (lg.slug === 'fra.1') {
+                            const arPool = ['bein-sports-6-ar', 'bein-sports-2-ar'];
+                            const frPool = ['dazn-ligue1-fr', 'bein-sports-fr-1', 'canal-plus-foot-fr', 'tnt-sports-4'];
+                            recIds.clear();
+                            recIds.add(arPool[evIdx % arPool.length]);
+                            recIds.add(frPool[evIdx % frPool.length]);
+                            recIds.add('bein-sports-en-2');
                         } else if (lg.slug === 'uefa.champions' || lg.slug === 'uefa.europa') {
                             const tntPool = ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4'];
-                            const beinAr = ['bein-sports-1-ar', 'bein-sports-2-ar', 'bein-sports-3-ar', 'bein-sports-4-ar'];
+                            const beinAr = ['bein-sports-1-ar', 'bein-sports-2-ar', 'bein-sports-3-ar', 'bein-sports-4-ar', 'bein-sports-5-ar', 'bein-sports-6-ar'];
+                            const beinEn = ['bein-sports-en-1', 'bein-sports-en-2', 'bein-sports-en-3'];
+                            const beinFr = ['bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-fr-3'];
                             recIds.clear();
                             recIds.add(tntPool[evIdx % tntPool.length]);
                             recIds.add(beinAr[evIdx % beinAr.length]);
+                            recIds.add(beinEn[evIdx % beinEn.length]);
+                            recIds.add(beinFr[evIdx % beinFr.length]);
                             recIds.add('supersport-football');
-                            recIds.add('bein-sports-en-1');
-                            recIds.add('bein-sports-fr-1');
+                            recIds.add('canal-plus-foot-fr');
                         }
 
                         const bText = broadcasts.join(' ').toLowerCase();
@@ -4377,21 +4496,40 @@ export function getChannelEPG(channelId: string, publicBaseUrl: string): Channel
             }
         };
 
-        // Remove any synthetic template slot that overlaps with this real match fixture
+        // Remove any synthetic template slot that overlaps with this real match fixture,
+        // and prevent overlapping simultaneous live matches on a single linear TV channel
+        let skipDueToSimultaneousMatch = false;
         for (const [slotKey, existing] of Array.from(scheduleMap.entries())) {
             const existingStart = new Date(existing.startTime).getTime();
             const existingEnd = new Date(existing.endTime).getTime();
-            if (!existing.eventId && existingStart < evEndMs && existingEnd > evStartMs) {
+            const overlaps = existingStart < evEndMs && existingEnd > evStartMs;
+            if (!overlaps) continue;
+
+            if (!existing.eventId) {
                 scheduleMap.delete(slotKey);
+            } else {
+                // Another real match already occupies this time window on this channel.
+                // Prefer LIVE over non-live; if both have same status, deterministically pick one per channel hash.
+                if (prog.isLive && !existing.isLive) {
+                    scheduleMap.delete(slotKey);
+                } else if (!prog.isLive && existing.isLive) {
+                    skipDueToSimultaneousMatch = true;
+                    break;
+                } else {
+                    const evHash = String(ev.id).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+                    if ((chHash + evHash) % 2 === 0) {
+                        scheduleMap.delete(slotKey);
+                    } else {
+                        skipDueToSimultaneousMatch = true;
+                        break;
+                    }
+                }
             }
         }
 
-        // Avoid map key collision when multiple matches on this channel kick off at the exact same timestamp
-        let mapKey = evStartMs;
-        while (scheduleMap.has(mapKey)) {
-            mapKey += 1;
+        if (!skipDueToSimultaneousMatch) {
+            scheduleMap.set(evStartMs, prog);
         }
-        scheduleMap.set(mapKey, prog);
     }
 
     const schedule = Array.from(scheduleMap.values()).sort((a, b) => {
@@ -4856,7 +4994,8 @@ async function attemptChannelFailoverManifest(
 export async function handleLiveHlsProxyRequest(
     encodedData: string,
     publicBaseUrl: string,
-    reply: any
+    reply: any,
+    extraQuery?: { relay?: string; profile?: string }
 ): Promise<any> {
     let parsed: { url: string; headers?: Record<string, string>; channelId?: string; q?: string };
     try {
@@ -4873,11 +5012,14 @@ export async function handleLiveHlsProxyRequest(
         return reply.code(400).header('Access-Control-Allow-Origin', '*').send({ error: 'Missing url in proxy data' });
     }
 
+    const relaySlot = extraQuery?.relay || '1';
+    const requestedProfile = extraQuery?.profile || parsed.q || '';
     const isM3U8Url = /\.m3u8(\?|$)/i.test(parsed.url);
-    const manifestCacheKey = `${publicBaseUrl}::${parsed.url}`;
+    const manifestCacheKey = `${publicBaseUrl}::${parsed.url}::r=${relaySlot}::p=${requestedProfile}`;
 
     // 1. Fast micro-cache (3200ms) for rapid concurrent manifest polls to prevent Edge CDN rate limiting
-    if (isM3U8Url) {
+    // Bypass micro-cache when relay=2 is explicitly requested so secondary relay fetches a fresh manifest
+    if (isM3U8Url && relaySlot === '1') {
         const recentManifest = lastGoodManifestCache.get(manifestCacheKey);
         if (recentManifest && Date.now() - recentManifest.updatedAt < 3200) {
             return reply
@@ -4888,7 +5030,7 @@ export async function handleLiveHlsProxyRequest(
                 .header('Access-Control-Allow-Origin', '*')
                 .send(recentManifest.content);
         }
-    } else {
+    } else if (!isM3U8Url) {
         // 2. Check unwrapped segment RAM cache for instant 0ms response
         const cachedSeg = unwrappedSegmentCache.get(parsed.url);
         if (cachedSeg && Date.now() < cachedSeg.expiresAt) {
@@ -5222,19 +5364,22 @@ export async function generateMatchMasterPlaylist(
     ];
 
     const seenUrls = new Set<string>();
-    resolved.sources.slice(0, 10).forEach((src, idx) => {
-        if (seenUrls.has(src.url)) return;
-        seenUrls.add(src.url);
-        const bw = Math.max(1500000, 6000000 - idx * 300000);
-        const res = src.quality.includes('720') ? '1280x720' : '1920x1080';
-        lines.push(
-            `#EXT-X-STREAM-INF:BANDWIDTH=${bw},RESOLUTION=${res},FRAME-RATE=50.000,CODECS="avc1.64002a,mp4a.40.2",NAME="${src.server.replace(
-                /"/g,
-                "'"
-            )}"`
-        );
-        lines.push(src.url);
-    });
+    resolved.sources
+        .filter((src) => !src.id.endsWith('-abr'))
+        .slice(0, 12)
+        .forEach((src, idx) => {
+            if (seenUrls.has(src.url)) return;
+            seenUrls.add(src.url);
+            const bw = Math.max(1500000, 6000000 - idx * 300000);
+            const res = src.quality.includes('720') ? '1280x720' : '1920x1080';
+            lines.push(
+                `#EXT-X-STREAM-INF:BANDWIDTH=${bw},RESOLUTION=${res},FRAME-RATE=50.000,CODECS="avc1.64002a,mp4a.40.2",NAME="${src.server.replace(
+                    /"/g,
+                    "'"
+                )}"`
+            );
+            lines.push(src.url);
+        });
 
     return lines.join('\n') + '\n';
 }

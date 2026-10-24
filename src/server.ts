@@ -787,14 +787,20 @@ async function main() {
     // 6. CORS-Free Live HLS Manifest & Segment Proxy
     app.get('/v1/live/proxy/manifest.m3u8', async (request: any, reply: any) => {
         const baseUrl = getRequestPublicBaseUrl(request);
-        const encodedData = String((request.query as any)?.data || '');
-        return handleLiveHlsProxyRequest(encodedData, baseUrl, reply);
+        const q = (request.query || {}) as { data?: string; relay?: string; profile?: string };
+        return handleLiveHlsProxyRequest(String(q.data || ''), baseUrl, reply, {
+            relay: q.relay,
+            profile: q.profile
+        });
     });
 
     app.get('/v1/live/proxy/segment.ts', async (request: any, reply: any) => {
         const baseUrl = getRequestPublicBaseUrl(request);
-        const encodedData = String((request.query as any)?.data || '');
-        return handleLiveHlsProxyRequest(encodedData, baseUrl, reply);
+        const q = (request.query || {}) as { data?: string; relay?: string; profile?: string };
+        return handleLiveHlsProxyRequest(String(q.data || ''), baseUrl, reply, {
+            relay: q.relay,
+            profile: q.profile
+        });
     });
 
     await server.start();

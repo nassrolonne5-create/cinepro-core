@@ -35,13 +35,18 @@ export class IptvSportsProvider extends BaseProvider {
         if (byId) return byId.id;
 
         if (title) {
-            const byTitle = CORE_SPORTS_CHANNELS.find(
+            const exactTitle = CORE_SPORTS_CHANNELS.find(
                 (ch) =>
                     ch.name.toLowerCase() === title ||
-                    ch.shortName.toLowerCase() === title ||
-                    title.includes(ch.shortName.toLowerCase())
+                    ch.shortName.toLowerCase() === title
             );
-            if (byTitle) return byTitle.id;
+            if (exactTitle) return exactTitle.id;
+
+            // Sort by longest shortName first so "MBC Masr 2" or "HBO 2" never collides with "MBC Masr" or "HBO"
+            const byPartial = [...CORE_SPORTS_CHANNELS]
+                .sort((a, b) => b.shortName.length - a.shortName.length)
+                .find((ch) => title.includes(ch.shortName.toLowerCase()));
+            if (byPartial) return byPartial.id;
         }
 
         return null;
