@@ -2168,6 +2168,150 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         ]
     },
     {
+        id: 'movistar-laliga-es',
+        name: 'Movistar LaLiga TV HD (M+ LaLiga Spain)',
+        shortName: 'M+ LaLiga ES',
+        network: 'Movistar Plus+',
+        category: 'europe',
+        language: 'es',
+        languageLabel: 'Español (Spanish)',
+        country: 'ES',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Movistar_Plus%2B_2022_logo.svg/512px-Movistar_Plus%2B_2022_logo.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Movistar LaLiga TV HD Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium84/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'dazn-laliga-es',
+        name: 'DAZN LaLiga 1 HD (Spain)',
+        shortName: 'DAZN LaLiga ES',
+        network: 'DAZN España',
+        category: 'europe',
+        language: 'es',
+        languageLabel: 'Español (Spanish)',
+        country: 'ES',
+        logo: 'https://i.postimg.cc/VsW3Jsrz/logo-DAZN-Combat.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'DAZN LaLiga 1 Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium538/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'movistar-plus-es',
+        name: 'Movistar Plus+ HD (M+ El Partidazo LaLiga Spain)',
+        shortName: 'Movistar+ ES',
+        network: 'Movistar Plus+',
+        category: 'europe',
+        language: 'es',
+        languageLabel: 'Español (Spanish)',
+        country: 'ES',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Movistar_Plus%2B_2022_logo.svg/512px-Movistar_Plus%2B_2022_logo.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Movistar Plus+ HD Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium437/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'laliga-hypermotion-es',
+        name: 'LaLiga TV Hypermotion HD (M+ LaLiga 2 Spain)',
+        shortName: 'LaLiga Hypermotion ES',
+        network: 'Movistar Plus+',
+        category: 'europe',
+        language: 'es',
+        languageLabel: 'Español (Spanish)',
+        country: 'ES',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Movistar_Plus%2B_2022_logo.svg/512px-Movistar_Plus%2B_2022_logo.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'LaLiga TV Hypermotion HD Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium539/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'movistar-liga-de-campeones-es',
+        name: 'Movistar Liga de Campeones HD (M+ Champions Spain)',
+        shortName: 'M+ Campeones ES',
+        network: 'Movistar Plus+',
+        category: 'europe',
+        language: 'es',
+        languageLabel: 'Español (Spanish)',
+        country: 'ES',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Movistar_Plus%2B_2022_logo.svg/512px-Movistar_Plus%2B_2022_logo.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Movistar Liga de Campeones HD Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium435/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'movistar-vamos-es',
+        name: 'Movistar Vamos HD (Vamos por M+ Spain)',
+        shortName: 'M+ Vamos ES',
+        network: 'Movistar Plus+',
+        category: 'europe',
+        language: 'es',
+        languageLabel: 'Español (Spanish)',
+        country: 'ES',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Movistar_Plus%2B_2022_logo.svg/512px-Movistar_Plus%2B_2022_logo.svg.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Movistar Vamos HD Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium521/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'movistar-deportes-es',
+        name: 'Movistar Deportes HD (Deportes por M+ Spain)',
+        shortName: 'M+ Deportes ES',
+        network: 'Movistar Plus+',
+        category: 'europe',
+        language: 'es',
+        languageLabel: 'Español (Spanish)',
+        country: 'ES',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Movistar_Plus%2B_2022_logo.svg/512px-Movistar_Plus%2B_2022_logo.svg.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Movistar Deportes HD Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium436/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'dazn-f1-es',
+        name: 'DAZN F1 España HD (Formula 1 Spain)',
+        shortName: 'DAZN F1 ES',
+        network: 'DAZN España',
+        category: 'motorsport',
+        language: 'es',
+        languageLabel: 'Español (Spanish)',
+        country: 'ES',
+        logo: 'https://i.postimg.cc/VsW3Jsrz/logo-DAZN-Combat.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'DAZN F1 España HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium537/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'espn-deportes-es',
+        name: 'ESPN Deportes HD (LaLiga & Champions en Español)',
+        shortName: 'ESPN Deportes',
+        network: 'ESPN Deportes',
+        category: 'espn',
+        language: 'es',
+        languageLabel: 'Español (Spanish)',
+        country: 'US',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/ESPN_wordmark.svg/960px-ESPN_wordmark.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'ESPN Deportes HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium375/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
         id: 'real-madrid-tv',
         name: 'Real Madrid TV HD',
         shortName: 'Real Madrid TV',
@@ -2181,22 +2325,6 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         featured: false,
         streams: [
             { label: 'Real Madrid TV (Akamai Official)', url: 'https://rmtv.akamaized.net/hls/live/2043153/rmtv-es-web/master.m3u8', quality: '720p', language: 'es' }
-        ]
-    },
-    {
-        id: 'dazn-laliga-es',
-        name: 'DAZN LaLiga 1 HD (Spain)',
-        shortName: 'DAZN LaLiga ES',
-        network: 'DAZN',
-        category: 'europe',
-        language: 'es',
-        languageLabel: 'Español (Spanish)',
-        country: 'ES',
-        logo: 'https://i.postimg.cc/VsW3Jsrz/logo-DAZN-Combat.png',
-        quality: '1080p',
-        featured: true,
-        streams: [
-            { label: 'DAZN LaLiga 1 Spain (1080p)', url: `${EDGE_CDN_BASE}/premium538/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -3746,6 +3874,7 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
         en: ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4', 'cbs-sports-golazo', 'supersport-grandstand', 'supersport-football', 'bein-sports-en-1', 'bein-sports-en-2', 'bein-sports-en-3', 'premier-sports-1'],
         fr: ['canal-plus-foot-fr', 'rmc-sport-1-fr', 'bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-fr-3', 'bein-sports-max-4-fr', 'bein-sports-max-5-fr', 'bein-sports-max-6-fr'],
         it: ['sky-sport-uno-it', 'sky-sport-arena-it', 'sky-sport-max-it', 'sky-sport-252-it'],
+        es: ['movistar-liga-de-campeones-es', 'movistar-plus-es', 'movistar-vamos-es', 'espn-deportes-es'],
         tr: ['bein-sports-1-tr', 'bein-sports-2-tr', 'bein-sports-3-tr']
     },
     'uefa.europa': {
@@ -3753,13 +3882,15 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
         en: ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4', 'cbs-sports-golazo', 'supersport-football', 'bein-sports-en-1', 'bein-sports-en-2'],
         fr: ['canal-plus-foot-fr', 'rmc-sport-1-fr', 'bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-max-4-fr'],
         it: ['sky-sport-uno-it', 'sky-sport-arena-it', 'sky-sport-252-it'],
+        es: ['movistar-liga-de-campeones-es', 'movistar-vamos-es', 'espn-deportes-es'],
         tr: ['bein-sports-1-tr', 'bein-sports-2-tr']
     },
     'uefa.europa.conf': {
         ar: ['bein-sports-3-ar', 'bein-sports-4-ar', 'bein-sports-5-ar', 'bein-sports-6-ar'],
         en: ['tnt-sports-3', 'tnt-sports-4', 'cbs-sports-golazo', 'premier-sports-1', 'bein-sports-en-3'],
         fr: ['canal-plus-foot-fr', 'bein-sports-max-5-fr', 'bein-sports-max-6-fr'],
-        it: ['sky-sport-arena-it', 'sky-sport-max-it']
+        it: ['sky-sport-arena-it', 'sky-sport-max-it'],
+        es: ['movistar-liga-de-campeones-es', 'movistar-vamos-es']
     },
 
     // English Premier League & FA Cup
@@ -3767,12 +3898,14 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
         ar: ['bein-sports-1-ar', 'bein-sports-2-ar'],
         en: ['sky-sports-premier-league', 'sky-sports-main-event', 'tnt-sports-1', 'supersport-premier-league', 'supersport-grandstand', 'usa-network-hd', 'nbc-sports-now', 'bein-sports-en-1', 'bein-sports-en-2'],
         fr: ['canal-plus-foot-fr'],
-        it: ['sky-sport-uno-it', 'sky-sport-max-it']
+        it: ['sky-sport-uno-it', 'sky-sport-max-it'],
+        es: ['movistar-liga-de-campeones-es', 'movistar-vamos-es']
     },
     'eng.fa': {
         ar: ['bein-sports-1-ar', 'bein-sports-2-ar'],
         en: ['tnt-sports-1', 'tnt-sports-2', 'supersport-football', 'espn-hd', 'bein-sports-en-1'],
-        fr: ['bein-sports-fr-1', 'bein-sports-fr-2']
+        fr: ['bein-sports-fr-1', 'bein-sports-fr-2'],
+        es: ['espn-deportes-es', 'movistar-vamos-es']
     },
 
     // EFL Championship & Carabao Cup
@@ -3781,13 +3914,24 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
         en: ['sky-sports-football', 'sky-sports-plus', 'sky-sports-action', 'sky-sports-main-event', 'cbs-sports-golazo', 'supersport-football', 'bein-sports-en-2'],
         fr: ['bein-sports-fr-3']
     },
+    'eng.league_cup': {
+        ar: ['bein-sports-1-ar', 'bein-sports-4-ar', 'bein-sports-5-ar', 'bein-sports-6-ar', 'bein-sports-9-ar'],
+        en: ['sky-sports-football', 'sky-sports-main-event', 'sky-sports-plus', 'cbs-sports-golazo', 'supersport-football', 'bein-sports-en-1'],
+        fr: ['bein-sports-fr-1', 'bein-sports-fr-2']
+    },
 
-    // Spanish LaLiga
+    // Spanish LaLiga & LaLiga 2 Hypermotion (Spain: Movistar LaLiga, DAZN LaLiga, Movistar Plus+, LaLiga TV Hypermotion; MENA: beIN 4 & 2 AR)
     'esp.1': {
-        ar: ['bein-sports-3-ar', 'bein-sports-1-ar'],
+        ar: ['bein-sports-4-ar', 'bein-sports-2-ar', 'bein-sports-1-ar'],
         en: ['premier-sports-1', 'premier-sports-2', 'supersport-laliga', 'espn-hd', 'espn-2-hd', 'bein-sports-en-1'],
         fr: ['bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-max-4-fr'],
-        es: ['dazn-laliga-es', 'bein-sports-xtra-es', 'real-madrid-tv']
+        es: ['movistar-laliga-es', 'dazn-laliga-es', 'movistar-plus-es', 'espn-deportes-es', 'movistar-vamos-es', 'bein-sports-xtra-es', 'real-madrid-tv']
+    },
+    'esp.2': {
+        ar: ['bein-sports-5-ar', 'bein-sports-4-ar'],
+        en: ['premier-sports-2', 'bein-sports-en-2'],
+        fr: ['bein-sports-max-5-fr'],
+        es: ['laliga-hypermotion-es', 'movistar-laliga-es', 'movistar-vamos-es', 'bein-sports-xtra-es']
     },
 
     // Italian Serie A (MENA: Exclusively STARZPLAY / Abu Dhabi Sports — NEVER beIN Sports AR!; IT: DAZN Italia & Sky Sport Calcio/Uno)
@@ -3806,11 +3950,28 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
         it: ['sky-sport-arena-it', 'sky-sport-max-it']
     },
 
-    // French Ligue 1 (MENA: beIN Sports 4 AR; FR: DAZN Ligue 1 & beIN FR 1; EN: beIN EN 2)
+    // French Ligue 1 & Ligue 2 (MENA: Ligue 1 on beIN Sports 3 AR; Ligue 2 on beIN Sports 4 AR; FR: DAZN Ligue 1 & beIN FR)
     'fra.1': {
-        ar: ['bein-sports-4-ar', 'bein-sports-2-ar'],
+        ar: ['bein-sports-3-ar', 'bein-sports-2-ar'],
         en: ['bein-sports-en-2', 'bein-sports-en-3', 'bein-sports-xtra-en', 'tnt-sports-3'],
         fr: ['dazn-ligue1-fr', 'bein-sports-fr-1', 'canal-plus-foot-fr']
+    },
+    'fra.2': {
+        ar: ['bein-sports-4-ar', 'bein-sports-6-ar'],
+        en: ['bein-sports-en-3', 'bein-sports-xtra-en'],
+        fr: ['bein-sports-fr-2', 'bein-sports-max-4-fr', 'bein-sports-max-5-fr']
+    },
+
+    // CAF Champions League & Confederation Cup (MENA: Exclusively beIN Sports 6 AR)
+    'caf.champions': {
+        ar: ['bein-sports-6-ar', 'bein-sports-5-ar'],
+        en: ['supersport-football', 'bein-sports-en-3'],
+        fr: ['bein-sports-fr-2', 'bein-sports-max-4-fr']
+    },
+    'caf.confed': {
+        ar: ['bein-sports-6-ar', 'bein-sports-5-ar'],
+        en: ['supersport-football', 'bein-sports-en-3'],
+        fr: ['bein-sports-fr-3', 'bein-sports-max-5-fr']
     },
 
     // Roshn Saudi League (MENA: Exclusively SSC Sports — NEVER beIN Sports AR!; US: Fox Sports; FR: Canal+ Foot)
@@ -3835,9 +3996,9 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
         es: ['bein-sports-xtra-es']
     },
 
-    // NBA Basketball
+    // NBA Basketball (MENA: beIN Sports 8 AR)
     'nba': {
-        ar: [],
+        ar: ['bein-sports-8-ar'],
         en: ['nba-tv', 'espn-hd', 'espn-2-hd', 'tnt-sports-1', 'tnt-sports-2', 'bein-sports-en-1', 'bein-sports-xtra-en'],
         fr: ['bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-max-4-fr']
     },
@@ -3874,14 +4035,16 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
     'f1': {
         ar: ['ssc-sport-3-ar', 'bein-sports-8-ar'],
         en: ['sky-sports-f1', 'red-bull-tv', 'espn-2-hd'],
-        fr: ['canal-plus-foot-fr']
+        fr: ['canal-plus-foot-fr'],
+        es: ['dazn-f1-es']
     },
 
     // ATP / WTA Tennis
     'atp': {
         ar: ['bein-sports-7-ar', 'bein-sports-8-ar', 'bein-sports-9-ar'],
         en: ['sky-sports-tennis', 'tennis-channel', 'eurosport-1', 'eurosport-2'],
-        fr: ['bein-sports-fr-3', 'bein-sports-max-4-fr']
+        fr: ['bein-sports-fr-3', 'bein-sports-max-4-fr'],
+        es: ['movistar-deportes-es', 'movistar-vamos-es']
     }
 };
 
@@ -3897,10 +4060,15 @@ const LEAGUE_DEFINITIONS: Array<{
     { sport: 'soccer', slug: 'uefa.europa.conf', label: 'UEFA Conference League', labelAr: 'دوري المؤتمر الأوروبي', durationMinutes: 125 },
     { sport: 'soccer', slug: 'eng.1', label: 'English Premier League', labelAr: 'الدوري الإنجليزي الممتاز', durationMinutes: 120 },
     { sport: 'soccer', slug: 'eng.2', label: 'EFL Sky Bet Championship', labelAr: 'دوري البطولة الإنجليزية (تشامبيونشيب)', durationMinutes: 120 },
+    { sport: 'soccer', slug: 'eng.league_cup', label: 'EFL Carabao Cup', labelAr: 'كأس الرابطة الإنجليزية (كاراباو)', durationMinutes: 120 },
     { sport: 'soccer', slug: 'esp.1', label: 'Spanish LaLiga', labelAr: 'الدوري الإسباني (لاليغا)', durationMinutes: 120 },
+    { sport: 'soccer', slug: 'esp.2', label: 'Spanish LaLiga 2 Hypermotion', labelAr: 'الدوري الإسباني الدرجة الثانية', durationMinutes: 120 },
     { sport: 'soccer', slug: 'ita.1', label: 'Italian Serie A', labelAr: 'الدوري الإيطالي (سيري آ)', durationMinutes: 120 },
     { sport: 'soccer', slug: 'ger.1', label: 'German Bundesliga', labelAr: 'الدوري الألماني (بوندسليغا)', durationMinutes: 120 },
     { sport: 'soccer', slug: 'fra.1', label: 'French Ligue 1', labelAr: 'الدوري الفرنسي (ليغ 1)', durationMinutes: 120 },
+    { sport: 'soccer', slug: 'fra.2', label: 'French Ligue 2 BKT', labelAr: 'الدوري الفرنسي الدرجة الثانية', durationMinutes: 120 },
+    { sport: 'soccer', slug: 'caf.champions', label: 'CAF Champions League', labelAr: 'دوري أبطال أفريقيا', durationMinutes: 120 },
+    { sport: 'soccer', slug: 'caf.confed', label: 'CAF Confederation Cup', labelAr: 'كأس الكونفدرالية الأفريقية', durationMinutes: 120 },
     { sport: 'soccer', slug: 'ksa.1', label: 'Roshn Saudi League', labelAr: 'دوري روشن السعودي للمحترفين', durationMinutes: 120 },
     { sport: 'soccer', slug: 'afc.champions', label: 'AFC Champions League Elite', labelAr: 'دوري أبطال آسيا للنخبة', durationMinutes: 125 },
     { sport: 'soccer', slug: 'eng.fa', label: 'English FA Cup', labelAr: 'كأس الاتحاد الإنجليزي', durationMinutes: 125 },
@@ -4072,54 +4240,82 @@ export async function getLiveSportEvents(
 
     eventsFetchPromise = (async () => {
         const events: LiveSportEvent[] = [];
+        const seenEventIds = new Set<string>();
+        const tomorrowYmd = new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 10).replace(/-/g, '');
 
         await Promise.allSettled(
             LEAGUE_DEFINITIONS.map(async (lg) => {
-                try {
-                    const res = await fetch(
-                        `https://site.api.espn.com/apis/site/v2/sports/${lg.sport}/${lg.slug}/scoreboard`,
-                        {
+                const urls = [
+                    `https://site.api.espn.com/apis/site/v2/sports/${lg.sport}/${lg.slug}/scoreboard`,
+                    ...(lg.sport === 'soccer'
+                        ? [`https://site.api.espn.com/apis/site/v2/sports/${lg.sport}/${lg.slug}/scoreboard?dates=${tomorrowYmd}`]
+                        : [])
+                ];
+
+                for (const url of urls) {
+                    try {
+                        const res = await fetch(url, {
                             headers: { 'User-Agent': DEFAULT_UA },
                             signal: AbortSignal.timeout(4200)
-                        }
-                    );
-                    if (!res.ok) return;
-                    const data = (await res.json()) as any;
-                    const rawEvents = Array.isArray(data.events) ? data.events : [];
-                    const leagueLogo = data.leagues?.[0]?.logos?.[0]?.href || '';
-
-                    rawEvents.forEach((ev: any) => {
-                        const parsed = parseEspnEventForScraper(
-                            ev,
-                            lg.sport,
-                            lg.label,
-                            lg.slug,
-                            lg.durationMinutes
-                        );
-                        if (!parsed) return;
-
-                        events.push({
-                            id: parsed.id,
-                            title: parsed.title,
-                            shortTitle: parsed.shortTitle,
-                            sport: parsed.sport,
-                            league: parsed.league,
-                            leagueSlug: parsed.leagueSlug,
-                            leagueLogo,
-                            startTime: parsed.startTime,
-                            endTime: parsed.endTime,
-                            status: parsed.status,
-                            statusDetail: parsed.statusDetail,
-                            homeTeam: parsed.homeTeam,
-                            awayTeam: parsed.awayTeam,
-                            broadcasts: parsed.broadcasts,
-                            matchStreamEndpoint: `${publicBaseUrl}/v1/live/match/${encodeURIComponent(parsed.id)}`,
-                            matchMasterPlaylistUrl: `${publicBaseUrl}/v1/live/match/${encodeURIComponent(parsed.id)}/master.m3u8`,
-                            recommendedChannels: []
                         });
-                    });
-                } catch {
-                    // Ignore individual league error
+                        if (!res.ok) continue;
+                        const data = (await res.json()) as any;
+                        const rawEvents = Array.isArray(data.events) ? data.events : [];
+                        const leagueLogo = data.leagues?.[0]?.logos?.[0]?.href || '';
+
+                        rawEvents.forEach((ev: any) => {
+                            const candidateEvents: any[] =
+                                lg.sport === 'tennis' && Array.isArray(ev.groupings)
+                                    ? ev.groupings.flatMap((g: any) =>
+                                          (Array.isArray(g.competitions) ? g.competitions : [])
+                                              .filter((c: any) => c?.status?.type?.state !== 'post')
+                                              .slice(0, 3)
+                                              .map((c: any) => ({
+                                                  id: c.id || `${ev.id}-${Math.random()}`,
+                                                  name: ev.name,
+                                                  shortName: ev.shortName,
+                                                  date: c.date || ev.date,
+                                                  status: c.status,
+                                                  competitions: [c]
+                                              }))
+                                      )
+                                    : [ev];
+
+                            for (const cand of candidateEvents) {
+                                const parsed = parseEspnEventForScraper(
+                                    cand,
+                                    lg.sport,
+                                    lg.label,
+                                    lg.slug,
+                                    lg.durationMinutes
+                                );
+                                if (!parsed || seenEventIds.has(parsed.id)) continue;
+                                seenEventIds.add(parsed.id);
+
+                                events.push({
+                                    id: parsed.id,
+                                    title: parsed.title,
+                                    shortTitle: parsed.shortTitle,
+                                    sport: parsed.sport,
+                                    league: parsed.league,
+                                    leagueSlug: parsed.leagueSlug,
+                                    leagueLogo,
+                                    startTime: parsed.startTime,
+                                    endTime: parsed.endTime,
+                                    status: parsed.status,
+                                    statusDetail: parsed.statusDetail,
+                                    homeTeam: parsed.homeTeam,
+                                    awayTeam: parsed.awayTeam,
+                                    broadcasts: parsed.broadcasts,
+                                    matchStreamEndpoint: `${publicBaseUrl}/v1/live/match/${encodeURIComponent(parsed.id)}`,
+                                    matchMasterPlaylistUrl: `${publicBaseUrl}/v1/live/match/${encodeURIComponent(parsed.id)}/master.m3u8`,
+                                    recommendedChannels: []
+                                });
+                            }
+                        });
+                    } catch {
+                        // Ignore individual league error
+                    }
                 }
             })
         );
@@ -4174,15 +4370,23 @@ export async function getLiveSportEvents(
             };
 
             const teamsLower = `${ev.homeTeam?.name || ''} ${ev.awayTeam?.name || ''}`.toLowerCase();
-            const filteredEs = (pool.es || []).filter(
+            let filteredEs = (pool.es || []).filter(
                 (id) => id !== 'real-madrid-tv' || teamsLower.includes('real madrid')
             );
+            // In Spain, Movistar LaLiga and DAZN LaLiga split LaLiga EA Sports fixtures 50/50 across each matchday
+            if (ev.leagueSlug === 'esp.1' && filteredEs.length >= 2 && Number(ev.id) % 2 === 1) {
+                filteredEs = [filteredEs[1], filteredEs[0], ...filteredEs.slice(2)];
+            }
 
             claimOne(pool.ar);
             claimOne(pool.it);
             claimOne(pool.en);
             claimOne(pool.fr);
             claimOne(filteredEs);
+            if (teamsLower.includes('real madrid') && filteredEs.includes('real-madrid-tv') && !claimedInSlot.has('real-madrid-tv')) {
+                claimedInSlot.add('real-madrid-tv');
+                assignedIds.push('real-madrid-tv');
+            }
             claimOne(pool.tr);
 
             ev.recommendedChannels = assignedIds
@@ -4303,13 +4507,17 @@ function getNetworkEPGTemplates(ch: LiveChannel): EPGTemplateSlot[] {
             id === 'bein-sports-1-ar' || id === 'bein-sports-2-ar' || id === 'bein-sports-premium-1-ar' || id === 'bein-sports-premium-2-ar'
                 ? 'الدوري الإنجليزي الممتاز ودوري أبطال أوروبا (Premier League & UCL)'
                 : id === 'bein-sports-3-ar' || id === 'bein-sports-premium-3-ar'
-                ? 'الدوري الإسباني - لاليغا (Spanish LaLiga)'
-                : id === 'bein-sports-4-ar'
                 ? 'الدوري الفرنسي - ليغ 1 والبطولات الأوروبية (French Ligue 1 & UEFA)'
+                : id === 'bein-sports-4-ar'
+                ? 'الدوري الإسباني - لاليغا والبطولات الأوروبية (Spanish LaLiga & UEFA)'
                 : id === 'bein-sports-5-ar'
-                ? 'دوري أبطال أوروبا والدوري الأوروبي (UEFA Champions & Europa League)'
+                ? 'الدوري الإسباني الدرجة الثانية والدوري الأوروبي (LaLiga 2 & UEFA Europa League)'
                 : id === 'bein-sports-6-ar'
-                ? 'دوري المؤتمر الأوروبي والبطولات الأفريقية (UEFA & CAF Competitions)'
+                ? 'دوري أبطال أفريقيا ودوري المؤتمر الأوروبي (CAF Champions League & UEFA)'
+                : id === 'bein-sports-7-ar'
+                ? 'بطولات رابطة محترفي التنس ATP والرياضات العالمية (ATP World Tour Tennis)'
+                : id === 'bein-sports-8-ar'
+                ? 'دوري كرة السلة الأمريكي NBA وسباقات الفورمولا 1 (NBA & Formula 1)'
                 : id === 'bein-sports-afc-ar'
                 ? 'دوري أبطال آسيا للنخبة (AFC Champions League)'
                 : 'البطولات العالمية والقارية الكبرى';
@@ -4585,6 +4793,40 @@ function getNetworkEPGTemplates(ch: LiveChannel): EPGTemplateSlot[] {
                 category: 'Calcio Studio',
                 sport: 'soccer',
                 league: 'Italian Serie A'
+            }
+        ];
+    }
+
+    // 5c. Spanish LaLiga, Champions & Movistar Plus+ / DAZN España Broadcasters
+    if (ch.language === 'es') {
+        const esFocus =
+            id === 'movistar-laliga-es' || id === 'dazn-laliga-es' || id === 'movistar-plus-es'
+                ? 'LaLiga EA Sports Directo & El Partidazo'
+                : id === 'laliga-hypermotion-es'
+                ? 'LaLiga Hypermotion Directo (Segunda División)'
+                : id === 'movistar-liga-de-campeones-es'
+                ? 'UEFA Champions League & Europa League en Directo'
+                : id === 'dazn-f1-es'
+                ? 'Fórmula 1 Mundial FIA en Directo'
+                : id === 'movistar-deportes-es'
+                ? 'ATP Tour Tenis, Liga Endesa ACB & NBA en Directo'
+                : 'LaLiga EA Sports & Fútbol Internacional en Directo';
+        return [
+            {
+                title: `${esFocus} - ${ch.shortName}`,
+                subtitle: `${ch.name} • Previa, Directo y Post-Partido`,
+                description: `Retransmisión en directo, análisis táctico y entrevistas exclusivas desde los estadios en ${ch.name}.`,
+                category: 'Deportes en Directo',
+                sport: id === 'dazn-f1-es' ? 'motorsport' : 'soccer',
+                league: id === 'laliga-hypermotion-es' ? 'Spanish LaLiga 2 Hypermotion' : 'Spanish LaLiga'
+            },
+            {
+                title: id.includes('movistar') ? 'El Día Después & Noche de Fútbol M+' : 'El Post de DAZN LaLiga & Resumen de la Jornada',
+                subtitle: 'Todos los goles, resúmenes y análisis de la jornada de LaLiga',
+                description: 'Repaso completo a todos los goles y jugadas destacadas de LaLiga EA Sports y competiciones europeas.',
+                category: 'Estudio Fútbol',
+                sport: 'soccer',
+                league: 'Spanish LaLiga'
             }
         ];
     }
