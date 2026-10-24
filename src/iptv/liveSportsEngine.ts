@@ -4685,32 +4685,6 @@ export function getChannelEPG(channelId: string, publicBaseUrl: string): Channel
 
     if (!ch) return null;
 
-    // Mirror EPG onto shared-stream alias channels (beIN Premium 1..3 -> beIN 1..3)
-    const aliasMap: Record<string, string> = {
-        'bein-sports-premium-1-ar': 'bein-sports-1-ar',
-        'bein-sports-premium-2-ar': 'bein-sports-2-ar',
-        'bein-sports-premium-3-ar': 'bein-sports-3-ar'
-    };
-    const primaryIdForAlias = aliasMap[ch.id];
-    if (primaryIdForAlias) {
-        const primaryEpg = getChannelEPG(primaryIdForAlias, publicBaseUrl);
-        if (primaryEpg) {
-            return {
-                ...primaryEpg,
-                channelId: ch.id,
-                channelName: ch.name,
-                shortName: ch.shortName,
-                logo: ch.logo,
-                streamEndpoint: `${publicBaseUrl}/v1/live/stream/${ch.id}`,
-                masterPlaylistUrl: `${publicBaseUrl}/v1/live/master/${ch.id}.m3u8`,
-                nowPlaying: { ...primaryEpg.nowPlaying, channelId: ch.id },
-                nextUp: { ...primaryEpg.nextUp, channelId: ch.id },
-                upcoming: primaryEpg.upcoming.map((u) => ({ ...u, channelId: ch.id })),
-                schedule: primaryEpg.schedule.map((s) => ({ ...s, channelId: ch.id }))
-            };
-        }
-    }
-
     const nowMs = Date.now();
     const templates = getNetworkEPGTemplates(ch);
 
