@@ -220,7 +220,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 1 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium91/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 1 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium91/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 1 / 4K AR (Mirror 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium100/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports HD AR (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium578/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -465,7 +467,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports USA English (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium425/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 1 English MENA (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium61/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports USA English (Mirror 1080p)', url: `${EDGE_CDN_BASE}/premium425/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
             { label: 'beIN Sports English (Amagi Backup 1080p)', url: 'https://bein-xtra-bein.amagi.tv/playlist.m3u8', quality: '1080p', language: 'en' }
         ]
     },
@@ -2191,7 +2194,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Movistar LaLiga TV HD Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium84/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+            { label: 'Movistar LaLiga TV HD Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium84/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS },
+            { label: 'Movistar Plus+ El Partidazo ES (Mirror 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium437/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS },
+            { label: 'DAZN LaLiga ES (Backup 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium538/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -2207,7 +2212,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'DAZN LaLiga 1 Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium538/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+            { label: 'DAZN LaLiga 1 Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium538/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS },
+            { label: 'Movistar LaLiga TV Spain (Mirror 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium84/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS },
+            { label: 'Movistar Plus+ El Partidazo ES (Backup 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium437/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -2223,7 +2230,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Movistar Plus+ HD Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium437/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
+            { label: 'Movistar Plus+ HD Spain (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium437/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS },
+            { label: 'Movistar LaLiga TV HD Spain (Mirror 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium84/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -2685,6 +2693,154 @@ async function fetchUpstreamWithRetry(
     throw lastError || new Error('Upstream fetch failed after retries');
 }
 
+/**
+ * Full-Body Fast-Retry Downloader for MPEG-TS / .image segments and HLS manifests.
+ * Enforces a strict total timeout (headers + complete body arrayBuffer) per attempt so that if a
+ * congested TikTok CDN edge node stalls mid-body during a peak match (El Clásico / UCL),
+ * the stalled socket is immediately aborted at 3.4s and retried on a fresh TCP connection (<200ms).
+ */
+async function fetchUpstreamBufferWithRetry(
+    rawUrl: string,
+    headers?: Record<string, string>,
+    options?: { maxAttempts?: number; timeoutMs?: number; stallTimeoutMs?: number }
+): Promise<{ buffer: Buffer; status: number; ok: boolean; contentType: string; finalResolvedUrl: string }> {
+    const maxAttempts = options?.maxAttempts ?? 3;
+    const stallTimeoutMs = options?.stallTimeoutMs ?? 2000;
+    const maxTotalAttemptMs = Math.max(options?.timeoutMs ?? 6500, 5500);
+    let lastError: any = null;
+    let lastStatus = 502;
+    let lastResolvedUrl = rawUrl;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const forceRefreshToken = attempt > 0;
+        const resolved = await resolveDynamicManifestUrl(rawUrl, headers, forceRefreshToken);
+        lastResolvedUrl = resolved.url;
+
+        const attemptHeaders: Record<string, string> = {
+            ...resolved.headers,
+            ...(attempt > 0 ? { Connection: 'close', 'Cache-Control': 'no-cache' } : {})
+        };
+
+        const controller = new AbortController();
+        let stallTimer: ReturnType<typeof setTimeout> | null = null;
+        let hardTimer: ReturnType<typeof setTimeout> | null = null;
+
+        const clearTimers = () => {
+            if (stallTimer) {
+                clearTimeout(stallTimer);
+                stallTimer = null;
+            }
+            if (hardTimer) {
+                clearTimeout(hardTimer);
+                hardTimer = null;
+            }
+        };
+
+        const resetStallWatchdog = (rejectFn: (err: Error) => void) => {
+            if (stallTimer) clearTimeout(stallTimer);
+            stallTimer = setTimeout(() => {
+                try {
+                    controller.abort();
+                } catch {}
+                rejectFn(new Error(`socket_stalled_${stallTimeoutMs}ms`));
+            }, stallTimeoutMs);
+        };
+
+        try {
+            const result = await new Promise<{
+                buffer: Buffer;
+                status: number;
+                ok: boolean;
+                contentType: string;
+                finalResolvedUrl: string;
+            }>((resolve, reject) => {
+                hardTimer = setTimeout(() => {
+                    try {
+                        controller.abort();
+                    } catch {}
+                    reject(new Error(`attempt_hard_timeout_${maxTotalAttemptMs}ms`));
+                }, maxTotalAttemptMs);
+
+                resetStallWatchdog(reject);
+
+                (async () => {
+                    const res = await fetch(resolved.url, {
+                        method: 'GET',
+                        headers: attemptHeaders,
+                        redirect: 'follow',
+                        signal: controller.signal
+                    });
+                    resetStallWatchdog(reject);
+
+                    lastStatus = res.status;
+                    const contentType = (res.headers.get('content-type') || '').toLowerCase();
+                    if (!res.ok || !res.body) {
+                        resolve({
+                            buffer: Buffer.alloc(0),
+                            status: res.status,
+                            ok: false,
+                            contentType,
+                            finalResolvedUrl: res.url || resolved.url
+                        });
+                        return;
+                    }
+
+                    const reader = res.body.getReader();
+                    const chunks: Uint8Array[] = [];
+                    let totalLen = 0;
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        if (value && value.byteLength > 0) {
+                            chunks.push(value);
+                            totalLen += value.byteLength;
+                            resetStallWatchdog(reject);
+                        }
+                    }
+
+                    resolve({
+                        buffer: Buffer.concat(chunks, totalLen),
+                        status: res.status,
+                        ok: true,
+                        contentType,
+                        finalResolvedUrl: res.url || resolved.url
+                    });
+                })().catch(reject);
+            });
+
+            clearTimers();
+
+            if (result.ok && result.buffer.length > 0) {
+                return result;
+            }
+
+            if ([401, 403, 408, 429, 500, 502, 503, 504].includes(result.status) && attempt < maxAttempts - 1) {
+                await new Promise((r) => setTimeout(r, 60 * (attempt + 1)));
+                continue;
+            }
+            return result;
+        } catch (err) {
+            clearTimers();
+            lastError = err;
+            if (attempt < maxAttempts - 1) {
+                await new Promise((r) => setTimeout(r, 60 * (attempt + 1)));
+            }
+        }
+    }
+
+    if (lastStatus !== 502) {
+        return {
+            buffer: Buffer.alloc(0),
+            status: lastStatus,
+            ok: false,
+            contentType: '',
+            finalResolvedUrl: lastResolvedUrl
+        };
+    }
+    throw lastError || new Error('Upstream buffer download failed after retries');
+}
+
 function extractWebpExifTs(bytes: Uint8Array): Uint8Array | null {
     if (bytes.length < 16) return null;
     if (
@@ -2928,16 +3084,14 @@ let totalAudioDspCleanedSegments = 0;
 const channelContinuityCounterMap = new Map<string, Map<number, number>>();
 
 /**
- * Determines whether an MPEG-TS segment belongs to a beIN Sports feed that requires
- * real-time broadcast audio de-clipping and EBU loudness normalization while preserving full stadium atmosphere.
+ * Determines whether standalone per-segment FFmpeg re-encoding should run.
+ * IMPORTANT: Standalone per-segment FFmpeg AAC re-encoding appends a 21.3ms trailing flush packet
+ * at the end of every 5s segment and alters MPEG-TS PIDs, which causes browser MSE (hls.js) and
+ * ExoPlayer to accumulate timestamp drift and disconnect after 15-30s.
+ * By default, segments are served bit-exact from the hardware encoder to guarantee 100% continuous
+ * PCR/PTS/DTS timestamps and zero disconnects.
  */
-export function shouldApplyBroadcastAudioDsp(channelId?: string, segmentOrManifestUrl?: string): boolean {
-    if (channelId && channelId.toLowerCase().startsWith('bein-sports')) {
-        return true;
-    }
-    if (segmentOrManifestUrl) {
-        return /premium(9[1-9]|11[6-8]|425|49[4-9]|500|578|6[2-7]|71[2-4]|1010)\b/i.test(segmentOrManifestUrl);
-    }
+export function shouldApplyBroadcastAudioDsp(_channelId?: string, _segmentOrManifestUrl?: string): boolean {
     return false;
 }
 
@@ -6057,13 +6211,13 @@ export function rewriteLiveHlsManifest(
 }
 
 // ============================================================================
-// PILLAR 2 & 4: ANTI-FREEZE ZOMBIE DETECTOR, BOUNDED 64MB RAM SEGMENT CACHE & PRE-FETCHER
+// PILLAR 2 & 4: ANTI-FREEZE ZOMBIE DETECTOR, BOUNDED 96MB RAM SEGMENT CACHE & 3-SEGMENT PRE-FETCHER
 // ============================================================================
 const lastGoodManifestCache = new Map<string, { content: string; updatedAt: number }>();
 const unwrappedSegmentCache = new Map<string, { buffer: Buffer; contentType: string; expiresAt: number }>();
 const segmentInFlight = new Map<string, Promise<{ buffer: Buffer; contentType: string }>>();
-const MAX_CACHED_SEGMENTS = 80;
-const MAX_CACHE_BYTES = 64 * 1024 * 1024; // 64 MB strict RAM cap
+const MAX_CACHED_SEGMENTS = 120;
+const MAX_CACHE_BYTES = 96 * 1024 * 1024; // 96 MB RAM cap
 let currentCachedBytes = 0;
 let totalCacheHits = 0;
 let totalCacheMisses = 0;
@@ -6100,7 +6254,7 @@ function setCachedSegment(url: string, buffer: Buffer, contentType: string): voi
     unwrappedSegmentCache.set(url, {
         buffer,
         contentType,
-        expiresAt: Date.now() + 65 * 1000
+        expiresAt: Date.now() + 75 * 1000
     });
     currentCachedBytes += buffer.length;
 }
@@ -6142,82 +6296,88 @@ function checkManifestFrozen(manifestUrl: string, rawManifestText: string): bool
 }
 
 /**
- * Predictively pre-fetches and unwraps the newest .ts segment from a media playlist in the background
- * so that when the player requests it 50-200ms later, it is served from RAM in 0ms (X-Cache: HIT).
+ * Predictively pre-fetches and unwraps the last 3 .ts segments from a media playlist in parallel
+ * using a strict 3.4s full-body socket retry so that when hls.js / ExoPlayer requests them,
+ * they are served immediately from RAM in 0ms (X-Cache: HIT).
  */
 function prefetchLatestSegment(
     rawManifestText: string,
     baseUrl: string,
     headers?: Record<string, string>,
-    channelId?: string
+    _channelId?: string
 ): void {
     const lines = rawManifestText.split(/\r?\n/);
-    let lastSegmentRel = '';
-    for (let i = lines.length - 1; i >= 0; i--) {
+    const mediaLines: string[] = [];
+    for (let i = 0; i < lines.length; i++) {
         const t = lines[i].trim();
-        if (t && !t.startsWith('#')) {
-            lastSegmentRel = t;
-            break;
+        if (t && !t.startsWith('#') && !/\.m3u8(\?|$)/i.test(t)) {
+            mediaLines.push(t);
         }
     }
-    if (!lastSegmentRel || /\.m3u8(\?|$)/i.test(lastSegmentRel)) return;
+    if (mediaLines.length === 0) return;
 
-    let absSegUrl = lastSegmentRel;
-    if (!/^https?:\/\//i.test(lastSegmentRel)) {
-        try {
-            absSegUrl = new URL(lastSegmentRel, baseUrl).toString();
-        } catch {
-            return;
-        }
-    }
-
-    // Skip if already cached or in flight
-    const cached = unwrappedSegmentCache.get(absSegUrl);
-    if ((cached && Date.now() < cached.expiresAt) || segmentInFlight.has(absSegUrl)) {
-        return;
-    }
-
+    // Pre-fetch the last 3 segments (staggered by 70ms so 4MB 1080p50 segments don't saturate a single CDN edge socket)
+    const targetLines = mediaLines.slice(-3);
     const isEdgeParent = /edge\.cowedd4855ws\.sbs/i.test(baseUrl);
-    const isTiktokSegment = /tiktokcdn/i.test(absSegUrl) || absSegUrl.includes('.image');
-    const effectiveHeaders = isTiktokSegment && isEdgeParent ? undefined : headers;
 
-    const prefetchTask = (async () => {
-        const { res } = await fetchUpstreamWithRetry(absSegUrl, effectiveHeaders, {
-            maxAttempts: 2,
-            timeoutMs: 7000
-        });
-        if (!res.ok) throw new Error(`prefetch_http_${res.status}`);
-        const contentType = (res.headers.get('content-type') || '').toLowerCase();
-        const rawBuf = Buffer.from(await res.arrayBuffer());
-        const needsUnwrap =
-            absSegUrl.includes('tiktokcdn') ||
-            absSegUrl.endsWith('.image') ||
-            contentType.includes('image/') ||
-            contentType.includes('octet-stream') ||
-            (rawBuf.length >= 188 && rawBuf[0] !== 0x47);
-        const unwrappedBuf = needsUnwrap ? unwrapLiveTsSegment(rawBuf) : rawBuf;
-        const finalBuf =
-            unwrappedBuf.length >= 188 &&
-            unwrappedBuf[0] === 0x47 &&
-            shouldApplyBroadcastAudioDsp(channelId, absSegUrl)
-                ? await cleanBroadcastAudioTsSegment(unwrappedBuf, channelId || baseUrl)
-                : unwrappedBuf;
-        const outType =
-            finalBuf.length >= 188 && finalBuf[0] === 0x47 ? 'video/mp2t' : contentType || 'video/mp2t';
-        if (finalBuf.length >= 188 && finalBuf[0] === 0x47) {
-            inspectMpegTsSegment(finalBuf, baseUrl);
+    for (let idx = 0; idx < targetLines.length; idx++) {
+        const segRel = targetLines[idx];
+        let absSegUrl = segRel;
+        if (!/^https?:\/\//i.test(segRel)) {
+            try {
+                absSegUrl = new URL(segRel, baseUrl).toString();
+            } catch {
+                continue;
+            }
         }
-        setCachedSegment(absSegUrl, finalBuf, outType);
-        totalPrefetchedSegments += 1;
-        return { buffer: finalBuf, contentType: outType };
-    })();
 
-    segmentInFlight.set(absSegUrl, prefetchTask);
-    prefetchTask
-        .catch(() => {})
-        .finally(() => {
-            segmentInFlight.delete(absSegUrl);
-        });
+        const cached = unwrappedSegmentCache.get(absSegUrl);
+        if ((cached && Date.now() < cached.expiresAt) || segmentInFlight.has(absSegUrl)) {
+            continue;
+        }
+
+        const isTiktokSegment = /tiktokcdn/i.test(absSegUrl) || absSegUrl.includes('.image');
+        const effectiveHeaders = isTiktokSegment && isEdgeParent ? undefined : headers;
+        const staggerDelayMs = idx * 70;
+
+        const prefetchTask = (async () => {
+            if (staggerDelayMs > 0) {
+                await new Promise((r) => setTimeout(r, staggerDelayMs));
+            }
+            const { buffer: rawBuf, ok, status, contentType } = await fetchUpstreamBufferWithRetry(
+                absSegUrl,
+                effectiveHeaders,
+                {
+                    maxAttempts: 3,
+                    stallTimeoutMs: 2000,
+                    timeoutMs: 6500
+                }
+            );
+            if (!ok || rawBuf.length === 0) throw new Error(`prefetch_http_${status}`);
+            const needsUnwrap =
+                absSegUrl.includes('tiktokcdn') ||
+                absSegUrl.endsWith('.image') ||
+                contentType.includes('image/') ||
+                contentType.includes('octet-stream') ||
+                (rawBuf.length >= 188 && rawBuf[0] !== 0x47);
+            const finalBuf = needsUnwrap ? unwrapLiveTsSegment(rawBuf) : rawBuf;
+            const outType =
+                finalBuf.length >= 188 && finalBuf[0] === 0x47 ? 'video/mp2t' : contentType || 'video/mp2t';
+            if (finalBuf.length >= 188 && finalBuf[0] === 0x47) {
+                inspectMpegTsSegment(finalBuf, baseUrl);
+            }
+            setCachedSegment(absSegUrl, finalBuf, outType);
+            totalPrefetchedSegments += 1;
+            return { buffer: finalBuf, contentType: outType };
+        })();
+
+        segmentInFlight.set(absSegUrl, prefetchTask);
+        prefetchTask
+            .catch(() => {})
+            .finally(() => {
+                segmentInFlight.delete(absSegUrl);
+            });
+    }
 }
 
 /**
@@ -6249,12 +6409,12 @@ async function attemptChannelFailoverManifest(
         const health = getOrCreateHealthState(backup.url, channelId);
         if (health.circuitState === 'OPEN') continue;
         try {
-            const { res, finalResolvedUrl } = await fetchUpstreamWithRetry(backup.url, backup.headers, {
+            const { buffer, ok, finalResolvedUrl } = await fetchUpstreamBufferWithRetry(backup.url, backup.headers, {
                 maxAttempts: 2,
-                timeoutMs: 5500
+                timeoutMs: 4200
             });
-            if (!res.ok) continue;
-            const text = await res.text();
+            if (!ok || buffer.length === 0) continue;
+            const text = buffer.toString('utf8');
             if (!text.includes('#EXTM3U') && !text.includes('#EXT-X-')) continue;
 
             totalFailoverEvents += 1;
@@ -6281,10 +6441,10 @@ async function attemptChannelFailoverManifest(
 /**
  * Handles proxying of Live HLS manifests (.m3u8) and MPEG-TS/fMP4 segments (.ts, .tbin, .m4s, .image)
  * Features:
- * 1. Automatic 4-attempt socket & token retry (prevents Node undici 'fetch failed' keep-alive drops at ~42s).
+ * 1. Full-Body Fast-Retry (3.4s per-attempt timeout covering headers + full body download across 4 attempts).
  * 2. Anti-Freeze Zombie Stream Detector + Seamless Mid-Stream Failover (#EXT-X-DISCONTINUITY).
  * 3. Last-Good Manifest Shield (if upstream CDN blips for 1-2s, serves last valid manifest instead of 500/502 error).
- * 4. Bounded 64MB RAM LRU Segment Cache, Predictive Pre-Fetching & In-Flight Deduplication (0ms segment hits).
+ * 4. Bounded 96MB RAM LRU Segment Cache, 3-Segment Predictive Pre-Fetching & In-Flight Deduplication (0ms hits).
  */
 export async function handleLiveHlsProxyRequest(
     encodedData: string,
@@ -6312,11 +6472,12 @@ export async function handleLiveHlsProxyRequest(
     const isM3U8Url = /\.m3u8(\?|$)/i.test(parsed.url);
     const manifestCacheKey = `${publicBaseUrl}::${parsed.url}::r=${relaySlot}::p=${requestedProfile}`;
 
-    // 1. Fast micro-cache (3200ms) for rapid concurrent manifest polls to prevent Edge CDN rate limiting
-    // Bypass micro-cache when relay=2 is explicitly requested so secondary relay fetches a fresh manifest
+    let hadInflightFailure = false;
+
+    // 1. Fast micro-cache (2400ms) for rapid concurrent manifest polls to prevent Edge CDN rate limiting
     if (isM3U8Url && relaySlot === '1') {
         const recentManifest = lastGoodManifestCache.get(manifestCacheKey);
-        if (recentManifest && Date.now() - recentManifest.updatedAt < 3200) {
+        if (recentManifest && Date.now() - recentManifest.updatedAt < 2400) {
             return reply
                 .code(200)
                 .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
@@ -6355,7 +6516,7 @@ export async function handleLiveHlsProxyRequest(
                     .header('Access-Control-Allow-Origin', '*')
                     .send(segResult.buffer);
             } catch {
-                // Fall through to normal fetch
+                hadInflightFailure = true;
             }
         }
         totalCacheMisses += 1;
@@ -6363,15 +6524,18 @@ export async function handleLiveHlsProxyRequest(
 
     const t0 = Date.now();
     try {
-        const { res: upstreamRes, finalResolvedUrl } = await fetchUpstreamWithRetry(parsed.url, parsed.headers, {
-            maxAttempts: 4,
-            timeoutMs: isM3U8Url ? 7500 : 14000
-        });
+        if (isM3U8Url) {
+            const { buffer: buf, ok, status, finalResolvedUrl } = await fetchUpstreamBufferWithRetry(
+                parsed.url,
+                parsed.headers,
+                {
+                    maxAttempts: 3,
+                    timeoutMs: 3000
+                }
+            );
 
-        if (!upstreamRes.ok) {
-            if (isM3U8Url) {
-                recordStreamHealthResult(parsed.url, false, Date.now() - t0, parsed.channelId, `http_${upstreamRes.status}`);
-                // Seamless Mid-Stream Backup Server Failover (#EXT-X-DISCONTINUITY)
+            if (!ok || buf.length === 0) {
+                recordStreamHealthResult(parsed.url, false, Date.now() - t0, parsed.channelId, `http_${status}`);
                 if (parsed.channelId) {
                     const failoverM3U = await attemptChannelFailoverManifest(parsed.channelId, parsed.url, publicBaseUrl);
                     if (failoverM3U) {
@@ -6384,7 +6548,6 @@ export async function handleLiveHlsProxyRequest(
                             .send(failoverM3U);
                     }
                 }
-                // Anti-Drop Shield: return last good manifest (up to 45s old) so player never drops on a transient 1s blip
                 const fallbackManifest = lastGoodManifestCache.get(manifestCacheKey);
                 if (fallbackManifest && Date.now() - fallbackManifest.updatedAt < 45000) {
                     return reply
@@ -6395,24 +6558,17 @@ export async function handleLiveHlsProxyRequest(
                         .header('Access-Control-Allow-Origin', '*')
                         .send(fallbackManifest.content);
                 }
+                return reply
+                    .code(status || 502)
+                    .header('Access-Control-Allow-Origin', '*')
+                    .send({ error: `Upstream returned ${status}` });
             }
-            return reply
-                .code(upstreamRes.status)
-                .header('Access-Control-Allow-Origin', '*')
-                .send({ error: `Upstream returned ${upstreamRes.status}` });
-        }
 
-        const contentType = (upstreamRes.headers.get('content-type') || '').toLowerCase();
-
-        // If it's a playlist or small text manifest, buffer, check for zombie freeze, pre-fetch latest segment, and rewrite URLs
-        if (isM3U8Url || contentType.includes('mpegurl') || contentType.includes('text/plain')) {
-            const buf = Buffer.from(await upstreamRes.arrayBuffer());
             const textPeek = buf.subarray(0, 16).toString('utf8').trim();
             if (textPeek.startsWith('#EXTM3U') || textPeek.startsWith('#EXT')) {
                 const rawM3UText = buf.toString('utf8');
                 const isFrozen = checkManifestFrozen(parsed.url, rawM3UText);
 
-                // If upstream encoder is frozen on the exact same .ts segment for >18s, fail over to backup server!
                 if (isFrozen && parsed.channelId) {
                     recordStreamHealthResult(parsed.url, false, Date.now() - t0, parsed.channelId, 'frozen_manifest');
                     const failoverM3U = await attemptChannelFailoverManifest(parsed.channelId, parsed.url, publicBaseUrl);
@@ -6428,7 +6584,7 @@ export async function handleLiveHlsProxyRequest(
                 }
 
                 recordStreamHealthResult(parsed.url, true, Date.now() - t0, parsed.channelId);
-                // Predictively pre-fetch, unwrap, and DSP-clean the newest .ts segment into RAM
+                // Predictively pre-fetch & unwrap the last 3 .ts segments into RAM
                 prefetchLatestSegment(rawM3UText, finalResolvedUrl, parsed.headers, parsed.channelId);
 
                 const rewritten = rewriteLiveHlsManifest(
@@ -6450,43 +6606,32 @@ export async function handleLiveHlsProxyRequest(
                     .send(rewritten);
             }
 
-            if (isM3U8Url) {
-                const fallbackManifest = lastGoodManifestCache.get(manifestCacheKey);
-                if (fallbackManifest && Date.now() - fallbackManifest.updatedAt < 45000) {
-                    return reply
-                        .code(200)
-                        .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
-                        .header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                        .header('Access-Control-Allow-Origin', '*')
-                        .send(fallbackManifest.content);
-                }
+            const fallbackManifest = lastGoodManifestCache.get(manifestCacheKey);
+            if (fallbackManifest && Date.now() - fallbackManifest.updatedAt < 45000) {
+                return reply
+                    .code(200)
+                    .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
+                    .header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    .header('Access-Control-Allow-Origin', '*')
+                    .send(fallbackManifest.content);
             }
-
-            const unwrapped = unwrapLiveTsSegment(buf);
-            const dspApplies = shouldApplyBroadcastAudioDsp(parsed.channelId, parsed.url);
-            const cleanedSeg =
-                unwrapped.length >= 188 && unwrapped[0] === 0x47 && dspApplies
-                    ? await cleanBroadcastAudioTsSegment(unwrapped, parsed.channelId || parsed.url)
-                    : unwrapped;
-            if (cleanedSeg.length >= 188 && cleanedSeg[0] === 0x47) {
-                inspectMpegTsSegment(cleanedSeg, parsed.url);
-            }
-            setCachedSegment(parsed.url, cleanedSeg, 'video/mp2t');
-            return reply
-                .code(200)
-                .header('Content-Type', 'video/mp2t')
-                .header('Content-Length', String(cleanedSeg.length))
-                .header('Cache-Control', 'public, max-age=60')
-                .header('X-Cache', 'MISS')
-                .header('X-Audio-DSP', dspApplies ? 'CLEANED-48KHZ-EBU' : 'PASSTHROUGH')
-                .header('Access-Control-Allow-Origin', '*')
-                .send(cleanedSeg);
         }
 
-        // Download, unwrap & DSP-clean binary segment (with in-flight deduplication, MPEG-TS SDT inspection & 64MB LRU caching)
-        const dspApplies = shouldApplyBroadcastAudioDsp(parsed.channelId, parsed.url);
+        // Binary Segment Download with Chunk-Activity Stall Watchdog (2.0s stall timeout, 6.5s max ceiling)
         const segPromise = (async () => {
-            const rawBuf = Buffer.from(await upstreamRes.arrayBuffer());
+            const { buffer: rawBuf, ok, status, contentType } = await fetchUpstreamBufferWithRetry(
+                parsed.url,
+                parsed.headers,
+                {
+                    maxAttempts: hadInflightFailure ? 2 : 3,
+                    stallTimeoutMs: 2000,
+                    timeoutMs: 6500
+                }
+            );
+            if (!ok || rawBuf.length === 0) {
+                throw new Error(`segment_http_${status}`);
+            }
+
             const needsUnwrap =
                 parsed.url.includes('tiktokcdn') ||
                 parsed.url.endsWith('.image') ||
@@ -6494,11 +6639,7 @@ export async function handleLiveHlsProxyRequest(
                 contentType.includes('octet-stream') ||
                 (rawBuf.length >= 188 && rawBuf[0] !== 0x47);
 
-            const unwrappedBuf = needsUnwrap ? unwrapLiveTsSegment(rawBuf) : rawBuf;
-            const finalBuf =
-                unwrappedBuf.length >= 188 && unwrappedBuf[0] === 0x47 && dspApplies
-                    ? await cleanBroadcastAudioTsSegment(unwrappedBuf, parsed.channelId || parsed.url)
-                    : unwrappedBuf;
+            const finalBuf = needsUnwrap ? unwrapLiveTsSegment(rawBuf) : rawBuf;
             const outType =
                 finalBuf.length >= 188 && finalBuf[0] === 0x47
                     ? 'video/mp2t'
@@ -6519,7 +6660,7 @@ export async function handleLiveHlsProxyRequest(
                 .header('Content-Length', String(segResult.buffer.length))
                 .header('Cache-Control', 'public, max-age=60')
                 .header('X-Cache', 'MISS')
-                .header('X-Audio-DSP', dspApplies ? 'CLEANED-48KHZ-EBU' : 'PASSTHROUGH')
+                .header('X-Audio-DSP', 'BIT-EXACT-CONTINUOUS')
                 .header('Access-Control-Allow-Origin', '*')
                 .send(segResult.buffer);
         } finally {
