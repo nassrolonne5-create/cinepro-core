@@ -2920,7 +2920,7 @@ export function unwrapLiveTsSegment(buf: Buffer): Buffer {
 // REAL-TIME BROADCAST AUDIO DSP & ANTI-CLIPPING ENGINE (FOR beIN SPORTS FEEDS)
 // ============================================================================
 const BROADCAST_AUDIO_DSP_FILTER =
-    'highpass=f=85,lowpass=f=14800,agate=threshold=0.012:ratio=1.8:attack=5:release=120:range=0.25,acompressor=threshold=-18dB:ratio=3:attack=5:release=80,dynaudnorm=f=200:g=7:p=0.68:m=3.5:s=12,alimiter=limit=0.84:attack=3:release=40';
+    'highpass=f=35,lowpass=f=16500,acompressor=threshold=-16dB:ratio=2.5:attack=8:release=120,dynaudnorm=f=250:g=9:p=0.72:m=3.0:s=15,alimiter=limit=0.84:attack=3:release=50';
 
 const MAX_AUDIO_DSP_WORKERS = 8;
 let activeAudioDspWorkers = 0;
@@ -2929,7 +2929,7 @@ const channelContinuityCounterMap = new Map<string, Map<number, number>>();
 
 /**
  * Determines whether an MPEG-TS segment belongs to a beIN Sports feed that requires
- * real-time broadcast audio de-clipping, noise gating, and EBU loudness normalization.
+ * real-time broadcast audio de-clipping and EBU loudness normalization while preserving full stadium atmosphere.
  */
 export function shouldApplyBroadcastAudioDsp(channelId?: string, segmentOrManifestUrl?: string): boolean {
     if (channelId && channelId.toLowerCase().startsWith('bein-sports')) {
@@ -2973,12 +2973,11 @@ function stitchMpegTsContinuityCounters(tsBuf: Buffer, channelKey: string): Buff
 /**
  * Runs non-blocking server-side broadcast audio DSP on an unwrapped MPEG-TS segment:
  * - Video stream is copied 100% untouched (-c:v copy) with exact PTS/DTS preservation (-copyts -mpegts_copyts 1).
- * - Audio stream is filtered through:
- *   1. 85 Hz High-Pass filter (eliminates 50/60Hz AC hum & stadium microphone rumble)
- *   2. 14.8 kHz Low-Pass filter (eliminates harsh high-frequency AAC quantization hiss)
- *   3. Soft Noise Gate (attenuates background crowd static between commentary)
- *   4. 3:1 Broadcast Voice Compressor + Dynamic Loudness Normalizer (-16.5 dB target)
- *   5. -1.5 dBFS Brickwall Soft Limiter (eliminates 0.0 dB hard digital clipping on beIN 3, 4, 6, 9)
+ * - Preserves 100% of natural stadium crowd cheering, chants, and bass drums (no noise gate ducking):
+ *   1. 35 Hz Sub-Sonic High-Pass filter (removes only <35Hz DC offset while keeping full 40-85Hz stadium bass & drums)
+ *   2. 16.5 kHz Low-Pass filter (removes only >16.5kHz digital AAC aliasing hiss while keeping crowd air & excitement)
+ *   3. 2.5:1 Transparent Broadcast Mastering Compressor + Loudness Normalizer (-16.5 dB target)
+ *   4. -1.5 dBFS Soft Limiter (eliminates 0.0 dB hard crackling/clipping when the crowd roars or commentator shouts)
  */
 export async function cleanBroadcastAudioTsSegment(rawTsBuf: Buffer, channelKey: string): Promise<Buffer> {
     if (rawTsBuf.length < 188 || rawTsBuf[0] !== 0x47) {
@@ -3897,9 +3896,9 @@ export async function resolveChannelStreams(
                           sampleRateHz: 48000,
                           targetLoudnessDb: -16.5,
                           truePeakCeilingDb: -1.5,
-                          highpassHz: 85,
-                          lowpassHz: 14800,
-                          noiseGateEnabled: true
+                          highpassHz: 35,
+                          lowpassHz: 16500,
+                          noiseGateEnabled: false
                       }
                     : undefined,
                 provider: {
