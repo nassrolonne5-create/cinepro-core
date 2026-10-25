@@ -3529,6 +3529,351 @@ export async function harvestDynamicSportsM3U(): Promise<void> {
     }
 }
 
+// ============================================================================
+// PILLAR 3B: DIRECT OFFICIAL BROADCASTER XMLTV EPG HARVESTER (1-TO-1 CHANNEL MAPPING)
+// ============================================================================
+export interface XmltvRawProgramme {
+    xmlChannelId: string;
+    startMs: number;
+    stopMs: number;
+    title: string;
+    subTitle: string;
+    description: string;
+    category: string;
+    lang: string;
+}
+
+/**
+ * Exact 1-to-1 mapping from our internal channel IDs to official broadcaster XMLTV channel IDs
+ * across regional open-epg.com feeds (Qatar/MENA, Saudi Arabia, Egypt, Morocco, UK, South Africa, Spain, Italy, France, Turkey, USA).
+ */
+export const CHANNEL_TO_XMLTV_IDS: Record<string, string[]> = {
+    // 1. beIN Sports MENA (Qatar Official Feed: qatar1.xml, qatar2.xml, qatar4.xml)
+    'bein-sports-1-ar': ['beIN SPORTS 1.qa', 'beIN 4K.qa'],
+    'bein-sports-2-ar': ['beIN SPORTS 2.qa'],
+    'bein-sports-3-ar': ['beIN SPORTS 3.qa'],
+    'bein-sports-4-ar': ['beIN SPORTS 4.qa'],
+    'bein-sports-5-ar': ['beIN SPORTS 5.qa'],
+    'bein-sports-6-ar': ['beIN SPORTS 6.qa'],
+    'bein-sports-7-ar': ['beIN SPORTS 7.qa'],
+    'bein-sports-8-ar': ['beIN SPORTS 8.qa', 'beIN SPORTS NBA.qa'],
+    'bein-sports-9-ar': ['beIN SPORTS 9.qa'],
+    'bein-sports-open-ar': ['beIN SPORTS.qa', 'beIN SPORTS NEWS.qa'],
+    'bein-sports-premium-1-ar': ['beIN SPORTS 1.qa', 'beIN 4K.qa'],
+    'bein-sports-premium-2-ar': ['beIN SPORTS 2.qa'],
+    'bein-sports-premium-3-ar': ['beIN SPORTS 3.qa'],
+    'bein-sports-afc-ar': ['beIN SPORTS AFC.qa', 'beIN SPORTS 1 AFC.qa', 'beIN SPORTS 2 AFC.qa'],
+    'bein-sports-en-1': ['beIN SPORTS EN 1.qa'],
+    'bein-sports-en-2': ['beIN SPORTS EN 2.qa'],
+    'bein-sports-en-3': ['beIN SPORTS XTRA 1.qa', 'beIN SPORTS EN 1.qa'],
+    'bein-sports-xtra-en': ['beIN SPORTS XTRA 1.qa', 'beIN SPORTS XTRA 2.qa', 'beIN SPORTS XTRA 3.qa'],
+    'bein-sports-xtra-es': ['BEINSES.us', 'ESPNDHD.us', 'ESPND.us'],
+
+    // 2. Alkass Qatar Sports (qatar2.xml)
+    'alkass-1-ar': ['2023 Alkass 1.qa', '2023 Alkass 5.qa'],
+    'alkass-2-ar': ['2023 Alkass 2.qa', '2023 Alkass 6.qa'],
+    'alkass-3-ar': ['2023 Alkass 3.qa', '2023 Alkass 7.qa'],
+
+    // 3. Saudi SSC, STARZPLAY, AD Sports, Dubai Sports, Arab Sports (saudiarabia2.xml, egypt1.xml, morocco1.xml)
+    'ssc-sport-1-ar': ['stc tv sports 1 HD.sa', 'Saudi Sports 1.sa'],
+    'ssc-sport-2-ar': ['stc tv sports HD.sa', 'Saudi Sports 2.sa'],
+    'ssc-sport-3-ar': ['Saudi Sports 3.sa', 'SSC News.sa'],
+    'ssc-extra-1-ar': ['stc tv sports 1 HD.sa', 'Sport 24.sa'],
+    'ssc-extra-2-ar': ['stc tv sports HD.sa', 'Saudi Sports 2.sa'],
+    'ssc-extra-3-ar': ['SSC News.sa', 'Saudi Sports 3.sa'],
+    'starzplay-sports-1-ar': ['AD Sports Premium 1.sa', 'STARZPLAY Sports.sa', 'DAZN 1.it', 'stc tv sports 1 HD.sa'],
+    'starzplay-sports-2-ar': ['AD Sports Premium 2.sa', 'STARZPLAY Sports.sa', 'DAZN 2.it'],
+    'ad-sports-1-ar': ['AD Sports 1.sa'],
+    'ad-sports-2-ar': ['AD Sports 2.sa'],
+    'dubai-sports-1-ar': ['Dubai Sports HD.sa', 'Dubai Sports 2.sa'],
+    'ontime-sports-1-ar': ['أون إي.eg', 'إم بي سي مصر 2.eg', 'ON E.eg'],
+    'ktv-sport-ar': ['الكويت.eg', 'Kuwait.eg'],
+    'arryadia-ar': ['Arryadia.ma'],
+
+    // 4. MENA Movies, MBC, Rotana, Entertainment (qatar4.xml, egypt1.xml, egypt2.xml, saudiarabia2.xml, unitedkingdom2.xml)
+    'bein-movies-premiere-en': ['MOVIES1 PREMIERE DIGITAL.qa', 'Sky Cinema Premiere HD.uk', 'Sky Cinema Premiere.uk'],
+    'bein-movies-action-en': ['MOVIES2 ACTION DIGITAL.qa', 'Sky Cinema Action HD.uk', 'Sky Cinema Action.uk'],
+    'bein-movies-drama-en': ['MOVIES3 DRAMA DIGITAL.qa', 'Sky Cinema Drama HD.uk', 'Sky Cinema Drama.uk'],
+    'bein-movies-hits-en': ['MOVIES4 FAMILY DIGITAL.qa', 'Sky Cinema Hits HD.uk', 'Sky Cinema Hits.uk'],
+    'bein-movies-action-ar': ['MOVIES2 ACTION DIGITAL.qa', 'Sky Cinema Action HD.uk'],
+    'bein-movies-thriller-ar': ['MOVIES3 DRAMA DIGITAL.qa', 'Sky Cinema Thriller HD.uk'],
+    'bein-aflam-ar': ['روتانا سينما.eg', 'Rotana Cinema HD.sa', 'MOVIES4 FAMILY DIGITAL.qa'],
+    'rotana-cinema-ar': ['روتانا سينما.eg', 'Rotana Cinema HD.sa', 'Rotana Cinema.eg'],
+    'rotana-drama-ar': ['روتانا دراما.eg', 'Rotana Drama HD.sa', 'Rotana Drama.eg'],
+    'rotana-comedy-ar': ['روتانا كوميدي.eg', 'Rotana Comedy.sa', 'Rotana Comedy.eg'],
+    'mbc-1-ar': ['إم بي سي.eg', 'MBC 1 HD.sa', 'MBC.eg'],
+    'mbc-4-ar': ['إم بي سي 4.eg', 'MBC 4 HD.sa', 'MBC 4.eg'],
+    'mbc-5-ar': ['إم بي سي 5.eg', 'MBC 5.eg'],
+    'mbc-drama-ar': ['إم بي سي دراما.eg', 'MBC Drama HD.sa', 'MBC Drama.eg'],
+    'mbc-plus-drama-ar': ['إم بي سي دراما +.eg', 'MBC+ Drama HD.sa', 'MBC Drama +.eg'],
+    'mbc-masr-ar': ['إم بي سي مصر.eg', 'MBC MASR.sa', 'MBC Egypt.eg'],
+    'mbc-masr-2-ar': ['إم بي سي مصر 2.eg', 'MBC MASR 2.sa', 'MBC MASR 2.eg'],
+    'mbc-iraq-ar': ['إم بي سي العراق.eg', 'MBC Iraq.eg'],
+    'bab-al-hara-ar': ['إم بي سي دراما +.eg', 'MBC+ Drama HD.sa', 'إم بي سي دراما.eg'],
+    'spacetoon-ar': ['Space Toon.sa'],
+    'hbo-hd': ['HBOHD.us', 'HBO.us'],
+    'hbo-2-hd': ['HBOP.us', 'HBOHTS.us', 'HBODRMA.us'],
+    'showtime-hd': ['HBOMOV.us', 'HBOHD.us'],
+    'starz-hd': ['STARZ.us', 'STARZP.us'],
+    'cinemax-hd': ['HBOC.us', 'HBOHTS.us'],
+
+    // 5. UK Sky Sports, TNT Sports, Premier Sports, Eurosport (unitedkingdom3.xml, unitedkingdom2.xml, unitedkingdom1.xml)
+    'sky-sports-main-event': ['Sky Sports Main Event HD.uk', 'Sky Sports Main Event.uk'],
+    'sky-sports-premier-league': ['Sky Sports Premier League HD.uk', 'Sky Sports Premier League.uk'],
+    'sky-sports-football': ['Sky Sports Football HD.uk', 'Sky Sports Football.uk'],
+    'sky-sports-plus': ['Sky Sports + HD.uk', 'Sky Sports +.uk', 'Sky Sports + SD.uk'],
+    'sky-sports-action': ['Sky Sports NFL HD.uk', 'Sky Sports Action HD.uk', 'Sky Sports NFL.uk', 'Sky Sports Action.uk'],
+    'sky-sports-f1': ['Sky Sports F1 HD.uk', 'Sky Sports F1.uk'],
+    'sky-sports-cricket': ['Sky Sports Cricket HD.uk', 'Sky Sports Cricket.uk'],
+    'sky-sports-golf': ['Sky Sports Golf HD.uk', 'Sky Sports Golf.uk'],
+    'sky-sports-tennis': ['Sky Sports Tennis HD.uk', 'Sky Sports Tennis.uk', 'Sky Sports Tennis SD.uk'],
+    'sky-sports-mix': ['Sky Sports Mix HD.uk', 'Sky Sports Mix.uk'],
+    'sky-sports-news': ['Sky Sports News HD.uk', 'Sky Sports News.uk'],
+    'sky-sports-racing': ['Sky Sports Racing.uk', 'Racing TV HD.uk'],
+    'tnt-sports-1': ['TNT Sports 1 HD.uk', 'TNT Sports 1.uk'],
+    'tnt-sports-2': ['TNT Sports 2 HD.uk', 'TNT Sports 2.uk'],
+    'tnt-sports-3': ['TNT Sports 3 HD.uk', 'TNT Sports 3.uk'],
+    'tnt-sports-4': ['TNT Sports 4 HD.uk', 'TNT Sports 4.uk'],
+    'premier-sports-1': ['Premier Sports 1 HD.uk'],
+    'premier-sports-2': ['Premier Sports 2 HD.uk'],
+    'eurosport-1': ['Eurosport 1.uk', 'British Eurosport HD.uk', 'Eurosport 1.fr'],
+    'eurosport-2': ['Eurosport 2 HD.uk', 'Eurosport 2.uk', 'Eurosport 2.fr'],
+
+    // 6. South Africa SuperSport (southafrica2.xml)
+    'supersport-premier-league': ['SS Premier League.za'],
+    'supersport-grandstand': ['SS Grandstand.za'],
+    'supersport-football': ['SS Football.za', 'SS Football Plus.za'],
+    'supersport-laliga': ['SS La Liga.za'],
+    'supersport-variety-1': ['SS Action.za', 'SS Extra.za'],
+
+    // 7. Spain Movistar Plus+ & DAZN España (spain1.xml, spain2.xml)
+    'movistar-laliga-es': ['M+ LALIGA TV.es', 'M+ LALIGA.es', 'M+ LALIGA HDR.es'],
+    'dazn-laliga-es': ['DAZN LALIGA.es', 'DAZN LALIGA 2.es'],
+    'movistar-plus-es': ['Movistar Plus+.es', 'Movistar Plus.es'],
+    'laliga-hypermotion-es': ['LALIGA TV HYPERMOTION.es', 'LALIGA TV HYPERMOTION 2.es'],
+    'movistar-liga-de-campeones-es': ['Movistar Liga de Campeones.es'],
+    'movistar-vamos-es': ['#Vamos.es', 'M+ Vamos.es'],
+    'movistar-deportes-es': ['Movistar Deportes 1.es', 'DAZN 1.es'],
+    'dazn-f1-es': ['DAZN F1.es'],
+    'real-madrid-tv': ['Real Madrid TV.es'],
+
+    // 8. Italy Serie A DAZN & Sky Sport Italia (italy5.xml, italy1.xml)
+    'dazn-1-it': ['DAZN 1.it', 'Sky Sport Calcio.it'],
+    'dazn-2-it': ['DAZN 2.it', 'Sky Sport Uno.it'],
+    'sky-sport-calcio-it': ['Sky Sport Calcio.it'],
+    'sky-sport-uno-it': ['Sky Sport Uno.it'],
+    'sky-sport-arena-it': ['Sky Sport Arena.it'],
+    'sky-sport-max-it': ['Sky Sport Max.it', 'Sky Sport Calcio.it'],
+    'sky-sport-252-it': ['Sky Sport.it', 'Sky Sport 4K.it', 'Sky Sport Calcio.it'],
+    'sky-sport-24-it': ['Sky TG24.it', 'Sky Sport.it'],
+
+    // 9. France beIN Sports FR, Canal+, RMC Sport, L'Équipe (france1.xml)
+    'bein-sports-fr-1': ['beIN SPORTS 1.fr'],
+    'bein-sports-fr-2': ['beIN SPORTS 2.fr'],
+    'bein-sports-fr-3': ['beIN SPORTS 3.fr'],
+    'bein-sports-max-4-fr': ['beIN SPORTS MAX 4.fr'],
+    'bein-sports-max-5-fr': ['beIN SPORTS MAX 5.fr'],
+    'bein-sports-max-6-fr': ['beIN SPORTS MAX 6.fr'],
+    'bein-sports-max-7-fr': ['beIN SPORTS MAX 7.fr'],
+    'bein-sports-max-9-fr': ['beIN SPORTS MAX 9.fr'],
+    'bein-sports-max-10-fr': ['beIN SPORTS MAX 10.fr'],
+    'canal-plus-foot-fr': ['Canal+ Foot.fr', 'Canal+ Sport.fr'],
+    'dazn-ligue1-fr': ['Canal+ Ligue 1.fr', 'Canal+ Foot.fr'],
+    'rmc-sport-1-fr': ['RMC Sport 1.fr', 'RMC Sport 2.fr'],
+    'lequipe-fr': ["L'Equipe.fr"],
+
+    // 10. Turkey beIN Sports TR (turkey1.xml)
+    'bein-sports-1-tr': ['beIN SPORTS 1.tr'],
+    'bein-sports-2-tr': ['beIN SPORTS 2.tr'],
+    'bein-sports-3-tr': ['beIN SPORTS 3.tr'],
+    'bein-sports-4-tr': ['beIN SPORTS 4.tr'],
+    'bein-sports-5-tr': ['beIN SPORTS 5.tr'],
+    'bein-sports-haber-tr': ['beIN SPORTS HABER.tr'],
+
+    // 11. USA ESPN, Fox Sports, NBC/USA, CBS, League Networks (unitedstates1.xml, unitedstates2.xml)
+    'usa-network-hd': ['USAHD.us', 'USA.us', 'NBCSN.us'],
+    'fox-sports-1': ['FS1HD.us', 'FS1.us'],
+    'fox-sports-2': ['FS2HD.us', 'FS2.us'],
+    'fox-sports-news': ['FS1HD.us', 'FS2HD.us'],
+    'espn-hd': ['ESPNHD.us', 'ESPN.us'],
+    'espn-2-hd': ['ESPN2HD.us', 'ESPN2.us'],
+    'espnu-hd': ['ESPNUHD.us', 'ESPNU.us'],
+    'espn-deportes-es': ['ESPNDHD.us', 'ESPND.us'],
+    'cbs-sports-golazo': ['CBSSNHD.us', 'CBSSN.us'],
+    'nbc-sports-now': ['NBCSN.us', 'NBC4KS2.us', 'USAHD.us'],
+    'nba-tv': ['NBATVHD.us', 'NBATV.us'],
+    'nfl-network': ['NFLNET.us', 'NFLHD.us'],
+    'nfl-redzone': ['NFLNRZ.us', 'NFLNRZD.us', 'NFLNET.us'],
+    'nhl-network': ['NHLNET.us', 'NHLHD.us'],
+    'mlb-network': ['MLBN.us', 'MLBHD.us'],
+    'tennis-channel': ['TENNIS.us']
+};
+
+const ALL_TARGET_XMLTV_IDS = new Set<string>(Object.values(CHANNEL_TO_XMLTV_IDS).flat());
+
+const OFFICIAL_XMLTV_FEEDS = [
+    'https://www.open-epg.com/files/qatar1.xml',
+    'https://www.open-epg.com/files/qatar2.xml',
+    'https://www.open-epg.com/files/qatar4.xml',
+    'https://www.open-epg.com/files/saudiarabia2.xml',
+    'https://www.open-epg.com/files/egypt1.xml',
+    'https://www.open-epg.com/files/egypt2.xml',
+    'https://www.open-epg.com/files/morocco1.xml',
+    'https://www.open-epg.com/files/unitedkingdom3.xml',
+    'https://www.open-epg.com/files/unitedkingdom2.xml',
+    'https://www.open-epg.com/files/unitedkingdom1.xml',
+    'https://www.open-epg.com/files/southafrica2.xml',
+    'https://www.open-epg.com/files/spain1.xml',
+    'https://www.open-epg.com/files/spain2.xml',
+    'https://www.open-epg.com/files/italy5.xml',
+    'https://www.open-epg.com/files/italy1.xml',
+    'https://www.open-epg.com/files/france1.xml',
+    'https://www.open-epg.com/files/turkey1.xml',
+    'https://www.open-epg.com/files/unitedstates1.xml'
+];
+
+let xmltvScheduleCache = new Map<string, XmltvRawProgramme[]>();
+let lastXmltvHarvestTime = 0;
+let xmltvHarvestPromise: Promise<void> | null = null;
+const XMLTV_HARVEST_TTL_MS = 20 * 60 * 1000; // 20 minutes
+
+function unescapeXmlText(raw: string): string {
+    if (!raw) return '';
+    return raw
+        .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;/g, "'")
+        .replace(/&#39;/g, "'")
+        .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(Number(dec)))
+        .trim();
+}
+
+function parseXmltvTimestamp(raw: string): number {
+    if (!raw) return 0;
+    const m = raw.trim().match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(?:\s*([+-])(\d{2})(\d{2}))?/);
+    if (!m) return 0;
+    const year = Number(m[1]);
+    const month = Number(m[2]) - 1;
+    const day = Number(m[3]);
+    const hour = Number(m[4]);
+    const minute = Number(m[5]);
+    const second = Number(m[6]);
+    const utcMs = Date.UTC(year, month, day, hour, minute, second);
+    if (!m[7]) return utcMs;
+    const sign = m[7] === '+' ? 1 : -1;
+    const tzHours = Number(m[8] || 0);
+    const tzMins = Number(m[9] || 0);
+    const offsetMs = sign * (tzHours * 3600 + tzMins * 60) * 1000;
+    return utcMs - offsetMs;
+}
+
+/**
+ * Harvests real-time official broadcaster XMLTV schedules across all regional open-epg.com feeds
+ * and caches programmes within [-4h, +36h] for our 142 channels.
+ */
+export async function harvestOfficialXmltvEpg(): Promise<void> {
+    if (Date.now() - lastXmltvHarvestTime < XMLTV_HARVEST_TTL_MS && xmltvScheduleCache.size > 0) {
+        return;
+    }
+    if (xmltvHarvestPromise) {
+        return xmltvHarvestPromise;
+    }
+
+    xmltvHarvestPromise = (async () => {
+        const nowMs = Date.now();
+        const minStopMs = nowMs - 4 * 3600 * 1000;
+        const maxStartMs = nowMs + 36 * 3600 * 1000;
+        const nextCache = new Map<string, XmltvRawProgramme[]>();
+
+        const fetchAndParseXmlFeed = async (feedUrl: string) => {
+            for (let attempt = 0; attempt < 2; attempt++) {
+                try {
+                    const res = await fetch(feedUrl, {
+                        headers: { 'User-Agent': DEFAULT_UA },
+                        signal: AbortSignal.timeout(12000)
+                    });
+                    if (!res.ok) continue;
+                    const xmlText = await res.text();
+
+                    const progRegex = /<programme\s+start="([^"]+)"\s+stop="([^"]+)"\s+channel="([^"]+)"[^>]*>([\s\S]*?)<\/programme>/g;
+                    let match: RegExpExecArray | null;
+                    while ((match = progRegex.exec(xmlText)) !== null) {
+                        const rawChannelId = unescapeXmlText(match[3]);
+                        if (!ALL_TARGET_XMLTV_IDS.has(rawChannelId)) continue;
+
+                        const startMs = parseXmltvTimestamp(match[1]);
+                        const stopMs = parseXmltvTimestamp(match[2]);
+                        if (!startMs || !stopMs || stopMs <= minStopMs || startMs >= maxStartMs) continue;
+
+                        const inner = match[4];
+                        const titleMatch = inner.match(/<title(?:\s+lang="([^"]*)")?[^>]*>([\s\S]*?)<\/title>/i);
+                        const title = unescapeXmlText(titleMatch?.[2] || '');
+                        if (
+                            !title ||
+                            /in HD on 50\d/i.test(title) ||
+                            /^nessun evento in onda$/i.test(title) ||
+                            /^dazn\s*[12]$/i.test(title)
+                        ) {
+                            continue;
+                        }
+
+                        const lang = (titleMatch?.[1] || '').trim().toLowerCase();
+                        const subMatch = inner.match(/<sub-title[^>]*>([\s\S]*?)<\/sub-title>/i);
+                        const descMatch = inner.match(/<desc[^>]*>([\s\S]*?)<\/desc>/i);
+                        const catMatch = inner.match(/<category[^>]*>([\s\S]*?)<\/category>/i);
+
+                        const prog: XmltvRawProgramme = {
+                            xmlChannelId: rawChannelId,
+                            startMs,
+                            stopMs,
+                            title,
+                            subTitle: unescapeXmlText(subMatch?.[1] || ''),
+                            description: unescapeXmlText(descMatch?.[1] || ''),
+                            category: unescapeXmlText(catMatch?.[1] || ''),
+                            lang
+                        };
+
+                        const list = nextCache.get(rawChannelId) || [];
+                        list.push(prog);
+                        nextCache.set(rawChannelId, list);
+                    }
+                    return;
+                } catch {
+                    // Retry once if transient socket timeout
+                }
+            }
+        };
+
+        const batchSize = 5;
+        for (let i = 0; i < OFFICIAL_XMLTV_FEEDS.length; i += batchSize) {
+            const batch = OFFICIAL_XMLTV_FEEDS.slice(i, i + batchSize);
+            await Promise.allSettled(batch.map((feedUrl) => fetchAndParseXmlFeed(feedUrl)));
+        }
+
+        if (nextCache.size > 0) {
+            for (const [cid, list] of nextCache.entries()) {
+                list.sort((a, b) => a.startMs - b.startMs);
+                // Deduplicate identical start times
+                const deduped: XmltvRawProgramme[] = [];
+                for (const item of list) {
+                    if (deduped.length === 0 || deduped[deduped.length - 1].startMs !== item.startMs) {
+                        deduped.push(item);
+                    }
+                }
+                // Merge into existing cache so any single feed blip doesn't wipe previously harvested regions
+                xmltvScheduleCache.set(cid, deduped);
+            }
+            lastXmltvHarvestTime = Date.now();
+        }
+        xmltvHarvestPromise = null;
+    })();
+
+    return xmltvHarvestPromise;
+}
+
 /**
  * Builds a proxied URL through CinePro's Live HLS Proxy (embeds channelId for automatic mid-stream failover)
  */
@@ -3670,6 +4015,7 @@ export function getLiveChannels(
     filters?: { lang?: string; category?: string; query?: string }
 ): Array<LiveChannel & { streamEndpoint: string; masterPlaylistUrl: string; defaultProxyUrl: string; backupServerCount: number }> {
     harvestDynamicSportsM3U().catch(() => {});
+    harvestOfficialXmltvEpg().catch(() => {});
     if (Date.now() - lastEventsFetchTime >= EVENTS_TTL_MS) {
         getLiveSportEvents(publicBaseUrl).catch(() => {});
     }
@@ -3752,6 +4098,7 @@ export async function resolveChannelStreams(
 }> {
     await Promise.allSettled([
         harvestDynamicSportsM3U(),
+        harvestOfficialXmltvEpg(),
         Date.now() - lastEventsFetchTime >= EVENTS_TTL_MS ? getLiveSportEvents(publicBaseUrl) : Promise.resolve([])
     ]);
 
@@ -4421,6 +4768,8 @@ export async function getLiveSportEvents(
     publicBaseUrl: string,
     filters?: { sport?: string; status?: string }
 ): Promise<LiveSportEvent[]> {
+    await harvestOfficialXmltvEpg().catch(() => {});
+
     if (Date.now() - lastEventsFetchTime < EVENTS_TTL_MS && cachedEvents.length > 0) {
         return filterEvents(cachedEvents, filters);
     }
@@ -4521,7 +4870,34 @@ export async function getLiveSportEvents(
             return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
         });
 
-        // De-conflicted per-time-slot channel assignment across all leagues
+        // Helper: extract significant team name tokens (>= 4 chars) to match against official XMLTV titles
+        const extractTeamTokens = (teamName: string): string[] =>
+            (teamName || '')
+                .toLowerCase()
+                .replace(/[^a-z0-9\u0600-\u06FF\s]/g, ' ')
+                .split(/\s+/)
+                .filter(
+                    (w) =>
+                        w.length >= 4 &&
+                        ![
+                            'club',
+                            'real',
+                            'city',
+                            'united',
+                            'sporting',
+                            'athletic',
+                            'atletico',
+                            'futbol',
+                            'football',
+                            'wanderers',
+                            'albion',
+                            'hotspur',
+                            'saint',
+                            'olympique'
+                        ].includes(w)
+                );
+
+        // De-conflicted per-time-slot channel assignment across all leagues, prioritizing exact XMLTV matches
         const claimedBySlot = new Map<string, Set<string>>();
         const getSlotKey = (ev: LiveSportEvent): string => {
             if (ev.status === 'LIVE') return 'LIVE_NOW';
@@ -4537,12 +4913,6 @@ export async function getLiveSportEvents(
                 continue;
             }
 
-            const pool = SCRAPER_LEAGUE_CHANNEL_POOLS[ev.leagueSlug];
-            if (!pool) {
-                ev.recommendedChannels = [];
-                continue;
-            }
-
             const slotKey = getSlotKey(ev);
             if (!claimedBySlot.has(slotKey)) {
                 claimedBySlot.set(slotKey, new Set<string>());
@@ -4550,36 +4920,81 @@ export async function getLiveSportEvents(
             const claimedInSlot = claimedBySlot.get(slotKey)!;
 
             const assignedIds: string[] = [];
-            const claimOne = (candidates?: string[]) => {
-                if (!Array.isArray(candidates) || candidates.length === 0) return;
-                for (const chId of candidates) {
-                    if (!claimedInSlot.has(chId)) {
-                        claimedInSlot.add(chId);
-                        assignedIds.push(chId);
-                        return; // Strictly 1 channel per language/network family per match
+            const coveredLangs = new Set<string>();
+
+            const evStartMs = Date.parse(ev.startTime || '') || Date.now();
+            const evEndMs = Date.parse(ev.endTime || '') || evStartMs + 120 * 60 * 1000;
+            const homeTokens = extractTeamTokens(ev.homeTeam?.name || '');
+            const awayTokens = extractTeamTokens(ev.awayTeam?.name || '');
+            const homeFull = (ev.homeTeam?.name || '').toLowerCase();
+            const awayFull = (ev.awayTeam?.name || '').toLowerCase();
+
+            // STEP 1: Check Official Broadcaster XMLTV Cache first!
+            // If any channel's official XMLTV schedule explicitly lists this match during this window, pin it!
+            if (xmltvScheduleCache.size > 0 && (homeTokens.length > 0 || awayTokens.length > 0)) {
+                for (const ch of CORE_SPORTS_CHANNELS) {
+                    const xmlIds = CHANNEL_TO_XMLTV_IDS[ch.id];
+                    if (!xmlIds || xmlIds.length === 0) continue;
+                    const xmlProgs = xmltvScheduleCache.get(xmlIds[0]) || [];
+                    const matchingProg = xmlProgs.find((p) => {
+                        const overlaps = p.startMs < evEndMs + 30 * 60000 && p.stopMs > evStartMs - 30 * 60000;
+                        if (!overlaps) return false;
+                        const text = `${p.title} ${p.subTitle} ${p.description}`.toLowerCase();
+                        const hasHome =
+                            (homeFull.length >= 4 && text.includes(homeFull)) ||
+                            homeTokens.some((t) => text.includes(t));
+                        const hasAway =
+                            (awayFull.length >= 4 && text.includes(awayFull)) ||
+                            awayTokens.some((t) => text.includes(t));
+                        return hasHome && hasAway;
+                    });
+                    if (matchingProg && !assignedIds.includes(ch.id)) {
+                        claimedInSlot.add(ch.id);
+                        assignedIds.push(ch.id);
+                        coveredLangs.add(ch.language);
                     }
                 }
-            };
-
-            const teamsLower = `${ev.homeTeam?.name || ''} ${ev.awayTeam?.name || ''}`.toLowerCase();
-            let filteredEs = (pool.es || []).filter(
-                (id) => id !== 'real-madrid-tv' || teamsLower.includes('real madrid')
-            );
-            // In Spain, Movistar LaLiga and DAZN LaLiga split LaLiga EA Sports fixtures 50/50 across each matchday
-            if (ev.leagueSlug === 'esp.1' && filteredEs.length >= 2 && Number(ev.id) % 2 === 1) {
-                filteredEs = [filteredEs[1], filteredEs[0], ...filteredEs.slice(2)];
             }
 
-            claimOne(pool.ar);
-            claimOne(pool.it);
-            claimOne(pool.en);
-            claimOne(pool.fr);
-            claimOne(filteredEs);
-            if (teamsLower.includes('real madrid') && filteredEs.includes('real-madrid-tv') && !claimedInSlot.has('real-madrid-tv')) {
-                claimedInSlot.add('real-madrid-tv');
-                assignedIds.push('real-madrid-tv');
+            // STEP 2: For any language not yet covered by an explicit XMLTV match, use league broadcaster pools
+            // while skipping any channel whose official XMLTV schedule is already airing a known programme
+            const pool = SCRAPER_LEAGUE_CHANNEL_POOLS[ev.leagueSlug];
+            if (pool) {
+                const claimOne = (candidates?: string[], langKey?: string) => {
+                    if (langKey && coveredLangs.has(langKey)) return;
+                    if (!Array.isArray(candidates) || candidates.length === 0) return;
+                    for (const chId of candidates) {
+                        if (claimedInSlot.has(chId) || assignedIds.includes(chId)) continue;
+                        claimedInSlot.add(chId);
+                        assignedIds.push(chId);
+                        return;
+                    }
+                };
+
+                const teamsLower = `${ev.homeTeam?.name || ''} ${ev.awayTeam?.name || ''}`.toLowerCase();
+                let filteredEs = (pool.es || []).filter(
+                    (id) => id !== 'real-madrid-tv' || teamsLower.includes('real madrid')
+                );
+                if (ev.leagueSlug === 'esp.1' && filteredEs.length >= 2 && Number(ev.id) % 2 === 1) {
+                    filteredEs = [filteredEs[1], filteredEs[0], ...filteredEs.slice(2)];
+                }
+
+                claimOne(pool.ar, 'ar');
+                claimOne(pool.it, 'it');
+                claimOne(pool.en, 'en');
+                claimOne(pool.fr, 'fr');
+                claimOne(filteredEs, 'es');
+                if (
+                    teamsLower.includes('real madrid') &&
+                    filteredEs.includes('real-madrid-tv') &&
+                    !claimedInSlot.has('real-madrid-tv') &&
+                    !assignedIds.includes('real-madrid-tv')
+                ) {
+                    claimedInSlot.add('real-madrid-tv');
+                    assignedIds.push('real-madrid-tv');
+                }
+                claimOne(pool.tr, 'tr');
             }
-            claimOne(pool.tr);
 
             ev.recommendedChannels = assignedIds
                 .map((cid) => CORE_SPORTS_CHANNELS.find((ch) => ch.id === cid))
@@ -5108,8 +5523,9 @@ function getNetworkEPGTemplates(ch: LiveChannel): EPGTemplateSlot[] {
 }
 
 /**
- * Computes the complete EPG (Now Playing, Next Up, Upcoming & 24h Schedule) for a single channel
- * Combines real-time ESPN live/upcoming fixtures mapped to this channel with continuous network programming.
+ * Computes the complete EPG (Now Playing, Next Up, Upcoming & 24h Schedule) for a single channel.
+ * Prioritizes Direct Official Broadcaster XMLTV schedules (1-to-1 mapped per channel from open-epg.com)
+ * and enriches live matches with real-time ESPN live scores and team logos.
  */
 export function getChannelEPG(channelId: string, publicBaseUrl: string): ChannelEPG | null {
     const normalizedId = channelId.toLowerCase().trim();
@@ -5120,6 +5536,127 @@ export function getChannelEPG(channelId: string, publicBaseUrl: string): Channel
     if (!ch) return null;
 
     const nowMs = Date.now();
+
+    // 1. Check Official Broadcaster XMLTV Schedule first (1-to-1 channel truth)
+    const xmltvIds = CHANNEL_TO_XMLTV_IDS[ch.id] || [];
+    let officialXmlProgs: XmltvRawProgramme[] = [];
+    for (const xmlId of xmltvIds) {
+        const candidate = xmltvScheduleCache.get(xmlId);
+        if (candidate && candidate.length > 0) {
+            // Prefer a feed that has an active or upcoming programme around nowMs
+            if (candidate.some((p) => p.stopMs > nowMs && p.startMs <= nowMs + 12 * 3600 * 1000)) {
+                officialXmlProgs = candidate;
+                break;
+            }
+            if (officialXmlProgs.length === 0) {
+                officialXmlProgs = candidate;
+            }
+        }
+    }
+
+    if (officialXmlProgs.length > 0) {
+        const xmlSchedule: EPGProgram[] = officialXmlProgs.map((xp, idx) => {
+            const isCurrent = nowMs >= xp.startMs && nowMs < xp.stopMs;
+            const isPast = nowMs >= xp.stopMs;
+            const durationMinutes = Math.max(5, Math.round((xp.stopMs - xp.startMs) / 60000));
+            const progressPct = isCurrent
+                ? Math.min(99, Math.max(1, Math.round(((nowMs - xp.startMs) / Math.max(1, xp.stopMs - xp.startMs)) * 100)))
+                : isPast
+                ? 100
+                : 0;
+
+            // Check if this official XMLTV programme matches a live/upcoming ESPN match (for live score & team logos enrichment)
+            const textLower = `${xp.title} ${xp.subTitle} ${xp.description}`.toLowerCase();
+            const matchedEv = cachedEvents.find((ev) => {
+                if (ev.status === 'FINISHED') return false;
+                const evStart = Date.parse(ev.startTime || '') || 0;
+                const evEnd = Date.parse(ev.endTime || '') || evStart + 120 * 60000;
+                if (xp.startMs >= evEnd + 45 * 60000 || xp.stopMs <= evStart - 45 * 60000) return false;
+                const hName = (ev.homeTeam?.name || '').toLowerCase();
+                const aName = (ev.awayTeam?.name || '').toLowerCase();
+                const hTokens = hName.split(/\s+/).filter((w) => w.length >= 4 && !['club', 'real', 'city', 'united'].includes(w));
+                const aTokens = aName.split(/\s+/).filter((w) => w.length >= 4 && !['club', 'real', 'city', 'united'].includes(w));
+                const hasH = (hName.length >= 4 && textLower.includes(hName)) || hTokens.some((t) => textLower.includes(t));
+                const hasA = (aName.length >= 4 && textLower.includes(aName)) || aTokens.some((t) => textLower.includes(t));
+                return hasH && hasA;
+            });
+
+            const hasLiveScore =
+                isCurrent &&
+                matchedEv &&
+                matchedEv.status === 'LIVE' &&
+                matchedEv.homeTeam.score !== undefined &&
+                matchedEv.awayTeam.score !== undefined;
+
+            const baseSubtitle = xp.subTitle || xp.category || `${ch.network} Official Schedule`;
+            const enrichedSubtitle = hasLiveScore
+                ? `${baseSubtitle} • LIVE ${matchedEv!.homeTeam.score} - ${matchedEv!.awayTeam.score} (${matchedEv!.statusDetail})`
+                : baseSubtitle;
+
+            return {
+                id: `epg-xml-${ch.id}-${xp.startMs}-${idx}`,
+                channelId: ch.id,
+                title: xp.title,
+                subtitle: enrichedSubtitle,
+                description: xp.description || xp.subTitle || `${xp.title} on ${ch.name}`,
+                category: xp.category || ch.category,
+                sport: matchedEv?.sport || (ch.category === 'movies' || ch.category === 'entertainment' ? undefined : 'soccer'),
+                league: matchedEv?.league || xp.subTitle || undefined,
+                startTime: new Date(xp.startMs).toISOString(),
+                endTime: new Date(xp.stopMs).toISOString(),
+                durationMinutes,
+                progressPct,
+                isLive: isCurrent,
+                status: isCurrent ? 'LIVE' : isPast ? 'FINISHED' : 'UPCOMING',
+                language: ch.language,
+                eventId: matchedEv ? String(matchedEv.id) : undefined,
+                matchInfo: matchedEv
+                    ? {
+                          homeTeam: matchedEv.homeTeam,
+                          awayTeam: matchedEv.awayTeam,
+                          statusDetail: matchedEv.statusDetail
+                      }
+                    : undefined
+            };
+        });
+
+        const nowPlaying =
+            xmlSchedule.find((p) => {
+                const s = new Date(p.startTime).getTime();
+                const e = new Date(p.endTime).getTime();
+                return nowMs >= s && nowMs < e;
+            }) ||
+            xmlSchedule.find((p) => new Date(p.startTime).getTime() > nowMs) ||
+            xmlSchedule[xmlSchedule.length - 1];
+
+        const upcoming = xmlSchedule.filter(
+            (p) => new Date(p.startTime).getTime() > nowMs && p.id !== nowPlaying?.id
+        );
+        const nextUp =
+            upcoming[0] ||
+            xmlSchedule[xmlSchedule.indexOf(nowPlaying) + 1] ||
+            nowPlaying;
+
+        return {
+            channelId: ch.id,
+            channelName: ch.name,
+            shortName: ch.shortName,
+            network: ch.network,
+            category: ch.category,
+            language: ch.language,
+            languageLabel: ch.languageLabel,
+            logo: ch.logo,
+            streamEndpoint: `${publicBaseUrl}/v1/live/stream/${ch.id}`,
+            masterPlaylistUrl: `${publicBaseUrl}/v1/live/master/${ch.id}.m3u8`,
+            updatedAt: new Date(nowMs).toISOString(),
+            nowPlaying,
+            nextUp,
+            upcoming: upcoming.slice(0, 8),
+            schedule: xmlSchedule
+        };
+    }
+
+    // 2. Fallback for specialty channels without an XMLTV feed
     const templates = getNetworkEPGTemplates(ch);
 
     // Find all active/upcoming real sports events assigned to this channel (strictly excluding FINISHED matches)
@@ -5327,7 +5864,10 @@ export async function getAllChannelsEPG(
     publicBaseUrl: string,
     filters?: { lang?: string; category?: string; channelId?: string; query?: string }
 ): Promise<ChannelEPG[]> {
-    await getLiveSportEvents(publicBaseUrl).catch(() => {});
+    await Promise.allSettled([
+        harvestOfficialXmltvEpg(),
+        getLiveSportEvents(publicBaseUrl)
+    ]);
 
     if (filters?.channelId) {
         const single = getChannelEPG(filters.channelId, publicBaseUrl);
@@ -6162,7 +6702,10 @@ export function startBackgroundStreamHealthMonitor(publicBaseUrl = 'http://local
 
     const runSweep = async () => {
         try {
-            await harvestDynamicSportsM3U();
+            await Promise.allSettled([
+                harvestDynamicSportsM3U(),
+                harvestOfficialXmltvEpg()
+            ]);
             await getLiveSportEvents(publicBaseUrl);
             const featuredChannels = CORE_SPORTS_CHANNELS.filter((c) => c.featured).slice(0, 18);
             for (const ch of featuredChannels) {
