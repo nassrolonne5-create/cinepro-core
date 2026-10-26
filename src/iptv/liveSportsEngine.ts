@@ -776,9 +776,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     // =========================================================================
     {
         id: 'ssc-sport-1-ar',
-        name: 'SSC Sport 1 / Saudi & AFC Sports 1 HD (Arabic)',
+        name: 'SSC Sport 1 / Saudi Riyadh Season & Big Time+ HD (Arabic)',
         shortName: 'SSC 1 AR',
-        network: 'SSC Sports',
+        network: 'SSC / Saudi Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
@@ -787,17 +787,17 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Saudi & AFC Champions League HD 1 (beIN / SSC Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium97/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'Alkass Sports HD 1/2 (Saudi & Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium782/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'Abu Dhabi Sports 1 HD (Gulf & Asian Football 1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Saudi Big Time+ / Riyadh Season Sports HD (iptv-org Official SA 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-big-time-plus/924283f994779a311c1389698ff7e736/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'SBC Saudi HD (iptv-org Official Saudi Super Cup & Events 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-sbc/90e09c0c28db26435799b4a14892a167/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Alkass Sports HD 1/2 (Gulf & Asian Football 1080p)', url: `${EDGE_CDN_BASE}/premium782/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
             { label: 'SSC Sport 1 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium614/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-sport-2-ar',
-        name: 'SSC Sport 2 / Saudi & AFC Sports 2 HD (Arabic)',
+        name: 'SSC Sport 2 / Saudi SBC Sports & Events HD (Arabic)',
         shortName: 'SSC 2 AR',
-        network: 'SSC Sports',
+        network: 'SSC / Saudi Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
@@ -806,17 +806,17 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Saudi & AFC Champions League HD 2 (beIN / SSC Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium98/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'Alkass Three HD (Saudi & Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium783/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'Abu Dhabi Sports 2 HD (Gulf & Asian Football 1080p)', url: `${EDGE_CDN_BASE}/premium601/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SBC Saudi HD (iptv-org Official Saudi Broadcast 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-sbc/90e09c0c28db26435799b4a14892a167/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Saudi Big Time+ / Riyadh Season HD (iptv-org Official SA 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-big-time-plus/924283f994779a311c1389698ff7e736/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Alkass Three HD (Gulf & Asian Football 1080p)', url: `${EDGE_CDN_BASE}/premium783/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
             { label: 'SSC Sport 2 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium615/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-sport-3-ar',
-        name: 'SSC Sport 3 / Saudi & AFC Sports 3 HD (Arabic)',
+        name: 'SSC Sport 3 / Al Saudiya Alaan Live Events HD (Arabic)',
         shortName: 'SSC 3 AR',
-        network: 'SSC Sports',
+        network: 'SSC / Saudi Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
@@ -825,17 +825,17 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Saudi & AFC Champions League HD 3 (beIN / SSC Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium99/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'Alkass Four HD (Saudi & Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium784/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'Dubai Sports 1 HD (Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium604/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Al Saudiya Alaan / KSA Now Live Events HD (iptv-org Official SA 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-ksa-now/71ed3aa814c643306c0a8bc4fcc7d17f/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Al Saudiya TV 1 HD (iptv-org Official SA 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-saudi-tv/2ad66056b51fd8c1b624854623112e43/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Alkass Four HD (Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium784/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
             { label: 'SSC Sport 3 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium616/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-extra-1-ar',
-        name: 'SSC Sport Extra 1 / Gulf & Serie A Sports HD (Arabic)',
+        name: 'SSC Sport Extra 1 / Bahrain Sports 1 HD (Gulf Football)',
         shortName: 'SSC Extra 1 AR',
-        network: 'SSC Sports',
+        network: 'SSC / Gulf Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
@@ -844,17 +844,17 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'STARZPLAY Sports 1 / AD Sports Premium 1 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'KTV Sport 1 HD (Official Gulf Football 1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'Dubai Sports 2 HD (Gulf Sports 1080p)', url: `${EDGE_CDN_BASE}/premium605/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Bahrain Sports 1 HD (iptv-org Official Gulf Football 1080p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'KTV Sport 1 HD (iptv-org Official Kuwait Sports 1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'STARZPLAY Sports 1 / AD Sports Premium 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
             { label: 'SSC Sport 4 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium617/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-extra-2-ar',
-        name: 'SSC Sport Extra 2 / Gulf & Serie A Sports HD (Arabic)',
+        name: 'SSC Sport Extra 2 / Oman Sports TV HD (Gulf Football)',
         shortName: 'SSC Extra 2 AR',
-        network: 'SSC Sports',
+        network: 'SSC / Gulf Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
@@ -863,17 +863,17 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'STARZPLAY Sports 2 / AD Sports Premium 2 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'KTV Sport Plus HD (Official Gulf Football 1080p)', url: 'https://kwtsplta.cdn.mangomolo.com/spl/smil:spl.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'Bahrain Sports 1 HD (Official Gulf Football 1080p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Oman Sports TV HD (iptv-org Official Gulf Football 1080p)', url: 'https://partneta.cdn.mgmlcdn.com/omsport/smil:omsport.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'KTV Sport Plus HD (iptv-org Official Gulf Football 1080p)', url: 'https://kwtsplta.cdn.mangomolo.com/spl/smil:spl.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'STARZPLAY Sports 2 / AD Sports Premium 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
             { label: 'SSC Sport 5 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium618/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-extra-3-ar',
-        name: 'SSC Sport Extra 3 / Gulf Football HD (Arabic)',
+        name: 'SSC Sport Extra 3 / Al Iraqia & Bahrain Sports 2 HD (Arabic)',
         shortName: 'SSC Extra 3 AR',
-        network: 'SSC Sports',
+        network: 'SSC / Gulf Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
@@ -882,9 +882,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Dubai Sports 3 HD (Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium606/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'Bahrain Sports 2 HD (Official Gulf Football 1080p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:bahrainsportstwo_all/playlist.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'Oman Sports TV HD (Official Gulf Football 1080p)', url: 'https://partneta.cdn.mgmlcdn.com/omsport/smil:omsport.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'Al Iraqia Sports HD (iptv-org Official Arab Football 1080p)', url: 'https://imn-live.esite-lab.com/hls/iraqia-sports-1.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Bahrain Sports 2 HD (iptv-org Official Gulf Football 1080p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:bahrainsportstwo_all/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Dubai Sports 3 HD (Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium606/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1282,7 +1282,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Rotana Cinema HD (1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx001/playlist.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'Rotana Cinema KSA HD (iptv-org Official 1080p)', url: 'https://rotana.hibridcdn.net/rotananet/cinema_net-7Y83PP5adWixDF93/playlist.m3u8', quality: '1080p', language: 'ar', headers: ROTANA_HEADERS },
+            { label: 'Rotana Cinema Egypt HD (iptv-org Official 1080p)', url: 'https://rotana.hibridcdn.net/rotananet/cinemamasr_net-7Y83PP5adWixDF93/playlist.m3u8', quality: '1080p', language: 'ar', headers: ROTANA_HEADERS },
+            { label: 'Shahid Aflam Backup HD (1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx001/playlist.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1298,7 +1300,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Rotana Drama HD (1080p)', url: 'https://rotana.hibridcdn.net/rotananet/drama_net-7Y83PP5adWixDF93/playlist.m3u8', quality: '1080p', language: 'ar', headers: ROTANA_HEADERS }
+            { label: 'Rotana Drama KSA HD (iptv-org Official 1080p)', url: 'https://rotana.hibridcdn.net/rotananet/drama_net-7Y83PP5adWixDF93/playlist.m3u8', quality: '1080p', language: 'ar', headers: ROTANA_HEADERS },
+            { label: 'Rotana Khalijia HD (iptv-org Official 1080p)', url: 'https://rotana.hibridcdn.net/rotananet/khaleejiya_net-7Y83PP5adWixDF93/playlist.m3u8', quality: '1080p', language: 'ar', headers: ROTANA_HEADERS }
         ]
     },
     {
@@ -1314,7 +1317,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Rotana Comedy HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-4/24f134f1cd63db9346439e96b86ca6ed/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'Rotana Comedy KSA HD (iptv-org Official 1080p)', url: 'https://rotana.hibridcdn.net/rotananet/comedy_net-7Y83PP5adWixDF93/playlist.m3u8', quality: '1080p', language: 'ar', headers: ROTANA_HEADERS },
+            { label: 'Rotana Classic HD (iptv-org Official 1080p)', url: 'https://rotana.hibridcdn.net/rotananet/classical_net-7Y83PP5adWixDF93/playlist.m3u8', quality: '1080p', language: 'ar', headers: ROTANA_HEADERS }
         ]
     },
     {
@@ -1330,7 +1334,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'MBC 1 HD (Primary 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-1/15cf99af5de54063fdabfefe66adc075/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'MBC 1 HD (iptv-org Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-1/15cf99af5de54063fdabfefe66adc075/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'MBC 1 Egypt HD (iptv-org 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-1-na/eec141533c90dd34722c503a296dd0d8/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1346,7 +1351,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'MBC 4 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-4/24f134f1cd63db9346439e96b86ca6ed/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'MBC 4 HD (iptv-org Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-4/24f134f1cd63db9346439e96b86ca6ed/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1362,7 +1367,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'MBC 5 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-5/ee6b000cee0629411b666ab26cb13e9b/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'MBC 5 HD (iptv-org Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-5/ee6b000cee0629411b666ab26cb13e9b/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1378,7 +1383,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'MBC Drama HD (Primary 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-drama/2c28a458e2f3253e678b07ac7d13fe71/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'MBC Drama HD (iptv-org Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-drama/2c28a458e2f3253e678b07ac7d13fe71/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'MBC Masr Drama HD (iptv-org Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr-drama/567b703c19ede6598222de81b0e4508b/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1394,7 +1400,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'MBC+ Drama HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-plus-drama/e37251ec2aac8f6c98f75cd0fa37cd28/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'MBC+ Drama HD (iptv-org Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-plus-drama/e37251ec2aac8f6c98f75cd0fa37cd28/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1410,7 +1416,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'MBC Masr 1 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr/956eac069c78a35d47245db6cdbb1575/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'MBC Masr 1 HD (iptv-org Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr/956eac069c78a35d47245db6cdbb1575/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1426,7 +1432,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'MBC Masr 2 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr-2/754931856515075b0aabf0e583495c68/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'MBC Masr 2 HD (iptv-org Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr-2/754931856515075b0aabf0e583495c68/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1442,13 +1448,13 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'MBC Iraq HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-5/ee6b000cee0629411b666ab26cb13e9b/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'MBC Iraq HD (iptv-org Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-iraq/e38c44b1b43474e1c39cb5b90203691e/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
         id: 'bab-al-hara-ar',
-        name: 'Shahid Series 24/7 HD (مسلسلات شاهد)',
-        shortName: 'Shahid Series',
+        name: 'Bab Al Hara & Shahid Series 24/7 HD (باب الحارة ومسلسلات شاهد)',
+        shortName: 'Bab Al Hara HD',
         network: 'Shahid Series',
         category: 'entertainment',
         language: 'ar',
@@ -1458,7 +1464,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Shahid Series 24/7 HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-drama/2c28a458e2f3253e678b07ac7d13fe71/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'Bab Al Hara 24/7 HD (iptv-org Official SA 1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx003/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Maraya Classic Comedy HD (iptv-org Official SA 1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx008/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'MBC Drama Backup HD (1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-drama/2c28a458e2f3253e678b07ac7d13fe71/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1858,7 +1866,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Fox Sports 1 US (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium39/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'Fox Sports 1 US (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium39/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Fox Sports 1 US (iptv-org Direct HD)', url: 'http://85.237.89.160:9590/usa-s/FOX-SPORTS-1/index.m3u8', quality: '1080p', language: 'en' }
         ]
     },
     {
@@ -1908,6 +1917,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         featured: true,
         streams: [
             { label: 'ESPN US (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium44/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'ESPN US (iptv-org Direct HD)', url: 'http://85.237.89.160:9590/usa-s/ESPN-HD/index.m3u8', quality: '1080p', language: 'en' },
             { label: 'ESPN US (Mirror 1080p)', url: 'http://stream.bottledesk.net/6500/index.m3u8', quality: '1080p', language: 'en' }
         ]
     },
@@ -1924,7 +1934,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'ESPN 2 US (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium45/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'ESPN 2 US (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium45/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'ESPN 2 US (iptv-org Direct HD)', url: 'http://85.237.89.160:9590/usa-s/ESPN-2-HD/index.m3u8', quality: '1080p', language: 'en' }
         ]
     },
     {
@@ -1940,7 +1951,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'ESPNU HD (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium316/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'ESPNU HD (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium316/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'ESPNU HD (iptv-org Direct HD)', url: 'http://85.237.89.160:9590/usa-s/ESPN-U-HD/index.m3u8', quality: '1080p', language: 'en' }
         ]
     },
     {
@@ -1956,7 +1968,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'CBS Sports Golazo Network HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium910/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'CBS Sports Golazo Network HD (iptv-org Official Google DAI 1080p)', url: 'https://dai.google.com/linear/hls/event/7f3Wv6f7QEKfQna22jHqLQ/master.m3u8', quality: '1080p', language: 'en' },
+            { label: 'CBS Sports Golazo Network HD (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium910/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
             { label: 'CBS Sports Network CBSSN HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium308/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
@@ -2006,7 +2019,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'NFL Network (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium405/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'NFL Network (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium405/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'NFL Channel HD (iptv-org Official 1080p)', url: 'https://jmp2.uk/plu-5ced7d5df64be98e07ed47b6.m3u8', quality: '1080p', language: 'en' }
         ]
     },
     {
@@ -2038,6 +2052,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
+            { label: 'NHL Network (iptv-org Official Amagi 1080p)', url: 'https://nhl-firetv.amagi.tv/playlist.m3u8', quality: '1080p', language: 'en' },
             { label: 'NHL Network (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium663/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
             { label: 'NHL Network (TVNow 1080p)', url: 'https://cache0.wonvt.st/live/0nkruul0d8pahi1pz4sjc/master.m3u8', quality: '1080p', language: 'en', headers: TVNOW_HEADERS }
         ]
@@ -2055,7 +2070,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'MLB Network (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium399/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'MLB Network (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium399/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'MLB Channel HD (iptv-org Official 1080p)', url: 'https://jmp2.uk/plu-5e66968a70f34c0007d050be.m3u8', quality: '1080p', language: 'en' }
         ]
     },
 
@@ -2535,7 +2551,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'DAZN 1 UK Boxing & Combat HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium230/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'DAZN Combat Official HD (iptv-org 1080p)', url: 'https://jmp2.uk/plu-64d626ac9b414d000820e2fc.m3u8', quality: '1080p', language: 'en' },
+            { label: 'DAZN 1 UK Boxing & Combat HD (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium230/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
             { label: 'Fight Network Combat HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium757/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
@@ -3569,7 +3586,8 @@ export function parseHlsMasterVariants(
 }
 
 // ============================================================================
-// PILLAR 3: EXPANDED DYNAMIC M3U HARVESTER & BACKGROUND HEALTH CRAWLER
+// PILLAR 3: OFFICIAL IPTV-ORG API (https://iptv-org.github.io/api/streams.json)
+// & DYNAMIC M3U HARVESTER (https://github.com/iptv-org/iptv)
 // ============================================================================
 let dynamicChannelCache: Map<
     string,
@@ -3578,38 +3596,248 @@ let dynamicChannelCache: Map<
 let lastHarvestTime = 0;
 const HARVEST_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
+interface IptvOrgApiStreamEntry {
+    channel?: string | null;
+    feed?: string | null;
+    title?: string | null;
+    url?: string | null;
+    referrer?: string | null;
+    user_agent?: string | null;
+    quality?: string | null;
+}
+
 /**
- * Harvests fresh M3U streams from 9 global IPTV-org & sports feeds in the background
- * Preserves #EXTVLCOPT Referer & User-Agent headers and maps strictly 1-to-1 per channel.
+ * Exact 1-to-1 and fallback mapping from our internal channel IDs to official `iptv-org` channel IDs
+ * (`tvg-id` / `channel` in https://iptv-org.github.io/api/streams.json and https://github.com/iptv-org/iptv).
+ */
+export const CHANNEL_TO_IPTV_ORG_IDS: Record<string, string[]> = {
+    // 1. Saudi SSC & Gulf Sports (SA, KW, BH, OM, IQ, QA, AE, EG, MA)
+    'ssc-sport-1-ar': ['SSCSport1.sa', 'SaudiSports1.sa', 'BigTimePlus.sa', 'SBC.sa'],
+    'ssc-sport-2-ar': ['SSCSport2.sa', 'SaudiSports2.sa', 'SBC.sa', 'BigTimePlus.sa'],
+    'ssc-sport-3-ar': ['SSCSport3.sa', 'SaudiSports3.sa', 'AlSaudiyaAlaan.sa', 'AlSaudiya.sa'],
+    'ssc-extra-1-ar': ['SSCSportExtra1.sa', 'SSCSport4.sa', 'BahrainSports1.bh', 'KTVSport.kw'],
+    'ssc-extra-2-ar': ['SSCSportExtra2.sa', 'SSCSport5.sa', 'OmanSportsTV.om', 'KTVSportPlus.kw'],
+    'ssc-extra-3-ar': ['SSCSportExtra3.sa', 'AlIraqiaSport.iq', 'BahrainSports2.bh'],
+    'starzplay-sports-1-ar': ['AbuDhabiSportsPremium1.ae', 'AbuDhabiSports1.ae'],
+    'starzplay-sports-2-ar': ['AbuDhabiSportsPremium2.ae', 'AbuDhabiSports2.ae'],
+    'alkass-1-ar': ['AlkassOne.qa', 'AlkassTwo.qa'],
+    'alkass-2-ar': ['AlkassThree.qa', 'AlkassTwo.qa'],
+    'alkass-3-ar': ['AlkassFour.qa', 'AlkassFive.qa'],
+    'ad-sports-1-ar': ['AbuDhabiSports1.ae', 'AbuDhabiSports2.ae'],
+    'ad-sports-2-ar': ['AbuDhabiSports2.ae', 'AbuDhabiSports1.ae'],
+    'dubai-sports-1-ar': ['DubaiSports1.ae', 'DubaiSports2.ae', 'DubaiSports3.ae'],
+    'ontime-sports-1-ar': ['OnTimeSports.eg', 'OnTimeSports1.eg', 'OnTimeSports2.eg'],
+    'ktv-sport-ar': ['KTVSport.kw', 'KTVSportPlus.kw'],
+    'arryadia-ar': ['Arryadia.ma'],
+
+    // 2. beIN Sports MENA, EN, FR, TR, USA
+    'bein-sports-open-ar': ['beINSports.qa', 'beINSportsNews.qa'],
+    'bein-sports-1-ar': ['beINSports1.qa'],
+    'bein-sports-2-ar': ['beINSports2.qa'],
+    'bein-sports-3-ar': ['beINSports3.qa'],
+    'bein-sports-4-ar': ['beINSports4.qa'],
+    'bein-sports-5-ar': ['beINSports5.qa'],
+    'bein-sports-6-ar': ['beINSports6.qa'],
+    'bein-sports-7-ar': ['beINSports7.qa'],
+    'bein-sports-8-ar': ['beINSports8.qa'],
+    'bein-sports-9-ar': ['beINSports9.qa'],
+    'bein-sports-xtra-1-ar': ['beINSportsXtra1.qa'],
+    'bein-sports-xtra-2-ar': ['beINSportsXtra2.qa'],
+    'bein-sports-xtra-3-ar': ['beINSportsXtra3.qa'],
+    'bein-sports-en-1': ['beINSportsEnglish1.qa', 'beINSports1English.qa', 'beINSports.us'],
+    'bein-sports-en-2': ['beINSportsEnglish2.qa', 'beINSports2English.qa'],
+    'bein-sports-en-3': ['beINSportsEnglish3.qa', 'beINSports3English.qa'],
+    'bein-sports-usa': ['beINSports.us', 'beINSportsXtra.us'],
+    'bein-sports-xtra-en': ['beINSportsXtra.us'],
+    'bein-sports-xtra-es': ['beINSportsEnEspanol.us', 'beINSportsXtraEnEspanol.us'],
+    'bein-sports-1-fr': ['beINSports1.fr'],
+    'bein-sports-2-fr': ['beINSports2.fr'],
+    'bein-sports-3-fr': ['beINSports3.fr'],
+    'bein-sports-1-tr': ['beINSports1.tr'],
+    'bein-sports-2-tr': ['beINSports2.tr'],
+    'bein-sports-3-tr': ['beINSports3.tr'],
+    'bein-sports-4-tr': ['beINSports4.tr'],
+    'bein-sports-5-tr': ['beINSports5.tr'],
+    'bein-sports-haber-tr': ['beINSportsHaber.tr', 'HTSporTV.tr', 'ASpor.tr', 'TRTSpor.tr'],
+
+    // 3. Arabic Movies, Rotana, Shahid & MBC (SA, EG, AE, IQ, MA)
+    'bein-movies-action-ar': ['MoviesAction.sa'],
+    'bein-movies-thriller-ar': ['MoviesThriller.sa'],
+    'bein-aflam-ar': ['RotanaCinemaKSA.sa', 'Maraya.sa'],
+    'rotana-cinema-ar': ['RotanaCinemaKSA.sa', 'RotanaCinemaEgypt.eg'],
+    'rotana-drama-ar': ['RotanaDrama.sa', 'RotanaKhalijia.sa'],
+    'rotana-comedy-ar': ['RotanaComedy.sa', 'RotanaClassic.sa'],
+    'mbc-1-ar': ['MBC1.ae', 'MBC1Egypt.eg', 'MBC1USA.us'],
+    'mbc-4-ar': ['MBC4.ae'],
+    'mbc-5-ar': ['MBC5.ae'],
+    'mbc-drama-ar': ['MBCDrama.ae', 'MBCMasrDrama.sa', 'MBCDramaUSA.us'],
+    'mbc-plus-drama-ar': ['MBCPlusDrama.sa'],
+    'mbc-masr-ar': ['MBCMasr.eg', 'MBCMasrUSA.us'],
+    'mbc-masr-2-ar': ['MBCMasr2.eg'],
+    'mbc-iraq-ar': ['MBCIraq.iq'],
+    'bab-al-hara-ar': ['BabAlHara.sa', 'Maraya.sa'],
+    'spacetoon-ar': ['Spacetoon.ae'],
+
+    // 4. UK, Europe & US Sports (Sky, TNT, Movistar, DAZN, ESPN, FOX, CBS, NHL, NFL, MLB)
+    'sky-sports-main-event': ['SkySportsMainEvent.uk'],
+    'sky-sports-premier-league': ['SkySportsPremierLeague.uk'],
+    'sky-sports-football': ['SkySportsFootball.uk'],
+    'sky-sports-f1': ['SkySportsF1.uk'],
+    'sky-sports-cricket': ['SkySportsCricket.uk'],
+    'sky-sports-golf': ['SkySportsGolf.uk'],
+    'sky-sports-tennis': ['SkySportsTennis.uk'],
+    'sky-sports-mix': ['SkySportsMix.uk'],
+    'sky-sports-arena': ['SkySportsPlus.uk', 'SkySportsAction.uk'],
+    'sky-sports-action': ['SkySportsAction.uk'],
+    'sky-sports-racing': ['SkySportsRacing.uk'],
+    'sky-sports-news': ['SkySportsNews.uk'],
+    'tnt-sports-1': ['TNTSports1.uk'],
+    'tnt-sports-2': ['TNTSports2.uk'],
+    'tnt-sports-3': ['TNTSports3.uk'],
+    'tnt-sports-4': ['TNTSports4.uk'],
+    'premier-sports-1': ['PremierSports1.uk'],
+    'premier-sports-2': ['PremierSports2.uk'],
+    'fox-sports-1': ['FoxSports1.us'],
+    'fox-sports-2': ['FoxSports2.us'],
+    'fox-sports-news': ['FoxSportsNews.au'],
+    'espn-hd': ['ESPN.us'],
+    'espn-2-hd': ['ESPN2.us'],
+    'espnu-hd': ['ESPNU.us'],
+    'espn-deportes-es': ['ESPNDeportes.us'],
+    'cbs-sports-golazo': ['CBSSportsGolazoNetwork.us', 'GolazoNetwork.us', 'CBSSportsNetwork.us'],
+    'nbc-sports-now': ['NBCSportsNOW.us', 'NBCSports.us'],
+    'nba-tv': ['NBATV.us'],
+    'nfl-network': ['NFLNetwork.us', 'NFLChannel.us'],
+    'nfl-redzone': ['NFLRedZone.us'],
+    'nhl-network': ['NHLNetwork.us'],
+    'mlb-network': ['MLBNetwork.us', 'MLB.us'],
+    'tennis-channel': ['TennisChannel.us', 'TennisChannelPlus.us'],
+    'real-madrid-tv': ['RealMadridTV.es'],
+    'lequipe-fr': ['LEquipe.fr'],
+    'fifa-plus-fr': ['FIFAPlus.fr'],
+    'fifa-plus-en': ['FIFAPlus.uk', 'FIFAPlus.us'],
+    'dazn-combat': ['DAZNCombat.uk', 'DAZN1.uk'],
+    'red-bull-tv': ['RedBullTV.at', 'RedBullTV.us']
+};
+
+/**
+ * Harvests fresh streams from the official `iptv-org` JSON API (`https://iptv-org.github.io/api/streams.json`)
+ * and 17 `iptv-org.github.io` M3U playlists in the background.
+ * Preserves Referer & User-Agent headers and maps strictly 1-to-1 per channel.
  */
 export async function harvestDynamicSportsM3U(): Promise<void> {
     if (Date.now() - lastHarvestTime < HARVEST_TTL_MS && dynamicChannelCache.size > 0) {
         return;
     }
 
-    const m3uFeeds = [
-        'https://raw.githubusercontent.com/doms9/iptv/default/M3U8/base.m3u8',
-        'https://iptv-org.github.io/iptv/categories/sports.m3u',
-        'https://raw.githubusercontent.com/iptv-org/iptv/master/streams/uk.m3u',
-        'https://raw.githubusercontent.com/iptv-org/iptv/master/streams/qa.m3u',
-        'https://raw.githubusercontent.com/iptv-org/iptv/master/streams/sa.m3u',
-        'https://raw.githubusercontent.com/iptv-org/iptv/master/streams/ae.m3u',
-        'https://raw.githubusercontent.com/iptv-org/iptv/master/streams/us.m3u',
-        'https://raw.githubusercontent.com/iptv-org/iptv/master/streams/fr.m3u',
-        'https://raw.githubusercontent.com/iptv-org/iptv/master/streams/es.m3u'
-    ];
-
     const harvested = new Map<
         string,
         Array<{ label: string; url: string; quality: string; headers?: Record<string, string> }>
     >();
 
-    await Promise.allSettled(
-        m3uFeeds.map(async (feedUrl) => {
+    // Reverse lookup index: lowercase iptv-org channel ID -> array of our internal channel objects
+    const iptvOrgIdToInternalChannels = new Map<string, Array<(typeof CORE_SPORTS_CHANNELS)[number]>>();
+    for (const ch of CORE_SPORTS_CHANNELS) {
+        const orgIds = CHANNEL_TO_IPTV_ORG_IDS[ch.id] || [];
+        for (const rawOrgId of orgIds) {
+            const normOrgId = rawOrgId.toLowerCase();
+            const list = iptvOrgIdToInternalChannels.get(normOrgId) || [];
+            list.push(ch);
+            iptvOrgIdToInternalChannels.set(normOrgId, list);
+        }
+    }
+
+    const addHarvestedStream = (
+        ch: (typeof CORE_SPORTS_CHANNELS)[number],
+        streamUrl: string,
+        quality: string,
+        optHeaders?: Record<string, string>,
+        sourceTag = 'iptv-org'
+    ) => {
+        if (
+            !streamUrl.startsWith('http') ||
+            streamUrl.endsWith('.mpd') ||
+            streamUrl.includes('primetv.cc.cd') ||
+            streamUrl.includes('andro.')
+        ) {
+            return;
+        }
+        const existing = harvested.get(ch.id) || [];
+        if (!existing.some((e) => e.url === streamUrl)) {
+            existing.push({
+                label: `${ch.shortName} (${sourceTag} ${quality})`,
+                url: streamUrl,
+                quality,
+                headers: optHeaders && Object.keys(optHeaders).length > 0 ? optHeaders : undefined
+            });
+            harvested.set(ch.id, existing);
+        }
+    };
+
+    // 1. Query Official iptv-org JSON API (https://iptv-org.github.io/api/streams.json)
+    const fetchIptvOrgApiPromise = (async () => {
+        try {
+            const res = await fetch('https://iptv-org.github.io/api/streams.json', {
+                headers: { 'User-Agent': DEFAULT_UA },
+                signal: AbortSignal.timeout(6500)
+            });
+            if (!res.ok) return;
+            const entries = (await res.json()) as IptvOrgApiStreamEntry[];
+            if (!Array.isArray(entries)) return;
+
+            for (const item of entries) {
+                const streamUrl = (item.url || '').trim();
+                if (!streamUrl.startsWith('http')) continue;
+                const rawChannelId = (item.channel || '').trim();
+                const baseChannelId = rawChannelId.split('@')[0].toLowerCase();
+                if (!baseChannelId) continue;
+
+                const matchedChannels = iptvOrgIdToInternalChannels.get(baseChannelId);
+                if (!matchedChannels || matchedChannels.length === 0) continue;
+
+                const optHeaders: Record<string, string> = {};
+                if (item.referrer) optHeaders['Referer'] = item.referrer.trim();
+                if (item.user_agent) optHeaders['User-Agent'] = item.user_agent.trim();
+                const quality = item.quality || '1080p';
+
+                for (const ch of matchedChannels) {
+                    addHarvestedStream(ch, streamUrl, quality, optHeaders, 'iptv-org API');
+                }
+            }
+        } catch {
+            // Ignore transient iptv-org API timeout
+        }
+    })();
+
+    // 2. Query Official iptv-org.github.io Category & Country M3U Playlists
+    const m3uFeeds = [
+        'https://iptv-org.github.io/iptv/categories/sports.m3u',
+        'https://iptv-org.github.io/iptv/countries/sa.m3u',
+        'https://iptv-org.github.io/iptv/countries/qa.m3u',
+        'https://iptv-org.github.io/iptv/countries/ae.m3u',
+        'https://iptv-org.github.io/iptv/countries/kw.m3u',
+        'https://iptv-org.github.io/iptv/countries/bh.m3u',
+        'https://iptv-org.github.io/iptv/countries/om.m3u',
+        'https://iptv-org.github.io/iptv/countries/eg.m3u',
+        'https://iptv-org.github.io/iptv/countries/ma.m3u',
+        'https://iptv-org.github.io/iptv/countries/iq.m3u',
+        'https://iptv-org.github.io/iptv/countries/jo.m3u',
+        'https://iptv-org.github.io/iptv/countries/uk.m3u',
+        'https://iptv-org.github.io/iptv/countries/es.m3u',
+        'https://iptv-org.github.io/iptv/countries/it.m3u',
+        'https://iptv-org.github.io/iptv/countries/fr.m3u',
+        'https://iptv-org.github.io/iptv/countries/tr.m3u',
+        'https://iptv-org.github.io/iptv/countries/us.m3u',
+        'https://raw.githubusercontent.com/doms9/iptv/default/M3U8/base.m3u8'
+    ];
+
+    await Promise.allSettled([
+        fetchIptvOrgApiPromise,
+        ...m3uFeeds.map(async (feedUrl) => {
             try {
                 const res = await fetch(feedUrl, {
                     headers: { 'User-Agent': DEFAULT_UA },
-                    signal: AbortSignal.timeout(4500)
+                    signal: AbortSignal.timeout(5000)
                 });
                 if (!res.ok) return;
                 const text = await res.text();
@@ -3631,19 +3859,23 @@ export async function harvestDynamicSportsM3U(): Promise<void> {
                         j++;
                     }
                     const streamUrl = (lines[j] || '').trim();
-                    if (
-                        !streamUrl.startsWith('http') ||
-                        streamUrl.endsWith('.mpd') ||
-                        streamUrl.includes('primetv.cc.cd') ||
-                        streamUrl.includes('andro.')
-                    ) {
-                        continue;
-                    }
+                    if (!streamUrl.startsWith('http')) continue;
 
                     const tvgId = (line.match(/tvg-id="([^"]+)"/i) || [])[1] || '';
+                    const baseTvgId = tvgId.split('@')[0].toLowerCase();
                     const title = (line.match(/,(.+)$/) || [])[1]?.trim() || tvgId;
                     const qualityMatch = title.match(/\b(4K|2160p|1080p|720p|576p|480p)\b/i);
-                    const quality = qualityMatch ? qualityMatch[1] : 'HD';
+                    const quality = qualityMatch ? qualityMatch[1] : '1080p';
+
+                    if (baseTvgId) {
+                        const directMatches = iptvOrgIdToInternalChannels.get(baseTvgId);
+                        if (directMatches && directMatches.length > 0) {
+                            for (const ch of directMatches) {
+                                addHarvestedStream(ch, streamUrl, quality, optHeaders, 'iptv-org M3U');
+                            }
+                            continue;
+                        }
+                    }
 
                     const key = `${tvgId} ${title}`.toLowerCase();
                     for (const ch of CORE_SPORTS_CHANNELS) {
@@ -3654,25 +3886,11 @@ export async function harvestDynamicSportsM3U(): Promise<void> {
                             const lang = matchBeinNum[2];
                             if (lang === 'ar' && key.includes(`beinsports${num}.qa`)) matched = true;
                             if (lang === 'tr' && key.includes(`beinsports${num}turk`)) matched = true;
-                        } else if (ch.id === 'bein-sports-xtra-en' && (key.includes('beinsportsxtra.us') || key.includes('bein.sports.xtra'))) {
+                        } else if (ch.id === 'ssc-sport-1-ar' && (key.includes('ssc1.sa') || key.includes('ssc sport 1') || key.includes('saudisports1.sa'))) {
                             matched = true;
-                        } else if (ch.id === 'sky-sports-main-event' && (key.includes('skysportsmainevent.uk') || key.includes('sky sports main event'))) {
+                        } else if (ch.id === 'ssc-sport-2-ar' && (key.includes('ssc2.sa') || key.includes('ssc sport 2') || key.includes('saudisports2.sa'))) {
                             matched = true;
-                        } else if (ch.id === 'sky-sports-premier-league' && (key.includes('skysportspremierleague.uk') || key.includes('sky sports premier league'))) {
-                            matched = true;
-                        } else if (ch.id === 'sky-sports-football' && (key.includes('skysportsfootball.uk') || key.includes('sky sports football'))) {
-                            matched = true;
-                        } else if (ch.id === 'sky-sports-f1' && (key.includes('skysportsf1.uk') || key.includes('sky sports f1'))) {
-                            matched = true;
-                        } else if (ch.id === 'sky-sports-news' && (key.includes('skysportsnews.uk') || key.includes('sky sports news'))) {
-                            matched = true;
-                        } else if (ch.id === 'tnt-sports-1' && (key.includes('tntsports1.uk') || key.includes('tnt sports 1'))) {
-                            matched = true;
-                        } else if (ch.id === 'tnt-sports-2' && (key.includes('tntsports2.uk') || key.includes('tnt sports 2'))) {
-                            matched = true;
-                        } else if (ch.id === 'ssc-sport-1-ar' && (key.includes('ssc1.sa') || key.includes('ssc sport 1'))) {
-                            matched = true;
-                        } else if (ch.id === 'ssc-sport-2-ar' && (key.includes('ssc2.sa') || key.includes('ssc sport 2'))) {
+                        } else if (ch.id === 'ssc-sport-3-ar' && (key.includes('ssc3.sa') || key.includes('ssc sport 3') || key.includes('saudisports3.sa'))) {
                             matched = true;
                         } else if (ch.id === 'alkass-1-ar' && (key.includes('alkass1.qa') || key.includes('alkass one'))) {
                             matched = true;
@@ -3691,16 +3909,7 @@ export async function harvestDynamicSportsM3U(): Promise<void> {
                         }
 
                         if (matched) {
-                            const existing = harvested.get(ch.id) || [];
-                            if (!existing.some((e) => e.url === streamUrl)) {
-                                existing.push({
-                                    label: `${ch.shortName} (Harvested Backup ${quality})`,
-                                    url: streamUrl,
-                                    quality,
-                                    headers: Object.keys(optHeaders).length > 0 ? optHeaders : undefined
-                                });
-                                harvested.set(ch.id, existing);
-                            }
+                            addHarvestedStream(ch, streamUrl, quality, optHeaders, 'iptv-org M3U');
                         }
                     }
                 }
@@ -3708,7 +3917,7 @@ export async function harvestDynamicSportsM3U(): Promise<void> {
                 // Ignore individual feed errors
             }
         })
-    );
+    ]);
 
     if (harvested.size > 0) {
         dynamicChannelCache = harvested;
