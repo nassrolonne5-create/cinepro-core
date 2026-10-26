@@ -485,8 +485,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 2 English (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium425/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 2 English (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium713/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 2 English MENA (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium90/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports USA English (Mirror 1080p)', url: `${EDGE_CDN_BASE}/premium425/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 1 English MENA (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium61/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -775,7 +776,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     // =========================================================================
     {
         id: 'ssc-sport-1-ar',
-        name: 'SSC Sport 1 HD (Saudi Roshn League & AFC Arabic)',
+        name: 'SSC Sport 1 / Saudi & AFC Sports 1 HD (Arabic)',
         shortName: 'SSC 1 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -786,12 +787,15 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SSC Sport 1 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium611/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Saudi & AFC Champions League HD 1 (beIN / SSC Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium97/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Alkass Sports HD 1/2 (Saudi & Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium782/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Abu Dhabi Sports 1 HD (Gulf & Asian Football 1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SSC Sport 1 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium614/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-sport-2-ar',
-        name: 'SSC Sport 2 HD (Saudi Roshn League & AFC Arabic)',
+        name: 'SSC Sport 2 / Saudi & AFC Sports 2 HD (Arabic)',
         shortName: 'SSC 2 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -802,12 +806,15 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SSC Sport 2 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium612/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Saudi & AFC Champions League HD 2 (beIN / SSC Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium98/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Alkass Three HD (Saudi & Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium783/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Abu Dhabi Sports 2 HD (Gulf & Asian Football 1080p)', url: `${EDGE_CDN_BASE}/premium601/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SSC Sport 2 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium615/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-sport-3-ar',
-        name: 'SSC Sport 3 HD (Saudi Roshn League & F1 Arabic)',
+        name: 'SSC Sport 3 / Saudi & AFC Sports 3 HD (Arabic)',
         shortName: 'SSC 3 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -818,12 +825,15 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SSC Sport 3 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium613/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Saudi & AFC Champions League HD 3 (beIN / SSC Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium99/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Alkass Four HD (Saudi & Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium784/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Dubai Sports 1 HD (Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium604/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SSC Sport 3 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium616/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-extra-1-ar',
-        name: 'SSC Sport Extra 1 HD (Saudi & Gulf Sports)',
+        name: 'SSC Sport Extra 1 / Gulf & Serie A Sports HD (Arabic)',
         shortName: 'SSC Extra 1 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -834,12 +844,15 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Extra 1 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium619/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'STARZPLAY Sports 1 / AD Sports Premium 1 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'KTV Sport 1 HD (Official Gulf Football 1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Dubai Sports 2 HD (Gulf Sports 1080p)', url: `${EDGE_CDN_BASE}/premium605/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'SSC Sport 4 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium617/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-extra-2-ar',
-        name: 'SSC Sport Extra 2 HD (Saudi & Gulf Sports)',
+        name: 'SSC Sport Extra 2 / Gulf & Serie A Sports HD (Arabic)',
         shortName: 'SSC Extra 2 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -850,12 +863,15 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Extra 2 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium620/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'STARZPLAY Sports 2 / AD Sports Premium 2 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'KTV Sport Plus HD (Official Gulf Football 1080p)', url: 'https://kwtsplta.cdn.mangomolo.com/spl/smil:spl.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Bahrain Sports 1 HD (Official Gulf Football 1080p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'SSC Sport 5 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium618/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-extra-3-ar',
-        name: 'SSC Sport Extra 3 HD (Saudi & Gulf Sports)',
+        name: 'SSC Sport Extra 3 / Gulf Football HD (Arabic)',
         shortName: 'SSC Extra 3 AR',
         network: 'SSC Sports',
         category: 'mena',
@@ -866,7 +882,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SSC Extra 3 HD (Arabic 1080p)', url: `${EDGE_CDN_BASE}/premium621/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Dubai Sports 3 HD (Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium606/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Bahrain Sports 2 HD (Official Gulf Football 1080p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:bahrainsportstwo_all/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Oman Sports TV HD (Official Gulf Football 1080p)', url: 'https://partneta.cdn.mgmlcdn.com/omsport/smil:omsport.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -882,7 +900,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'STARZPLAY Sports 1 / AD Sports Premium 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'STARZPLAY Sports 1 / AD Sports Premium 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Abu Dhabi Sports 1 HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -898,7 +917,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'STARZPLAY Sports 2 / AD Sports Premium 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'STARZPLAY Sports 2 / AD Sports Premium 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Abu Dhabi Sports 2 HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium601/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -914,7 +934,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Alkass Sports HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium782/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Alkass Sports HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium782/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Alkass Three HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium783/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -930,7 +951,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Alkass Three HD (1080p)', url: `${EDGE_CDN_BASE}/premium783/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Alkass Three HD (1080p)', url: `${EDGE_CDN_BASE}/premium783/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Alkass Four HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium784/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -946,7 +968,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Alkass Four HD (1080p)', url: `${EDGE_CDN_BASE}/premium784/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Alkass Four HD (1080p)', url: `${EDGE_CDN_BASE}/premium784/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Alkass Sports HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium782/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -962,7 +985,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Abu Dhabi Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Abu Dhabi Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'AD Sports Premium 1 HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -978,7 +1002,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Abu Dhabi Sports 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium601/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Abu Dhabi Sports 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium601/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'AD Sports Premium 2 HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -994,7 +1019,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Dubai Sports 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium604/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'Dubai Sports 1 HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium604/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Dubai Sports 2 HD (Mirror 1080p)', url: `${EDGE_CDN_BASE}/premium605/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Dubai Sports 3 HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium606/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1026,7 +1053,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'KTV Sport HD (Official 1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'KTV Sport 1 HD (Official 1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'KTV Sport Plus HD (Official 1080p)', url: 'https://kwtsplta.cdn.mangomolo.com/spl/smil:spl.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -1597,7 +1625,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Sky Sports Tennis UK (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium576/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'Sky Sports Tennis UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium46/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Sky Sport Tennis HD (Mirror 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium576/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1629,8 +1658,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Sky Sports News UK (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium575/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'Sky Sports News UK (Mirror 1080p)', url: `${EDGE_CDN_BASE}/premium577/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'Sky Sports News UK (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium366/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Sky Sports Mix UK (Mirror 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium449/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1758,7 +1787,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SuperSport Football HD (1080p)', url: `${EDGE_CDN_BASE}/premium413/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'SuperSport Football HD (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium56/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'SuperSport PSL / Football 2 HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium413/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1790,7 +1820,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'SuperSport Variety 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium420/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'SuperSport Variety 1 HD (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium416/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'SuperSport Action HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium420/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -1925,7 +1956,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'CBS Sports Network HD (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium308/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'CBS Sports Golazo Network HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium910/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'CBS Sports Network CBSSN HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium308/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -2503,7 +2535,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'DAZN Combat & Boxing HD (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium50/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'DAZN 1 UK Boxing & Combat HD (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium230/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'Fight Network Combat HD (Backup 1080p)', url: `${EDGE_CDN_BASE}/premium757/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -3681,6 +3714,375 @@ export async function harvestDynamicSportsM3U(): Promise<void> {
         dynamicChannelCache = harvested;
         lastHarvestTime = Date.now();
     }
+
+    // Run the Self-Healing Upstream Feed Directory Auto-Corrector in parallel
+    await harvestAndAutoCorrectUpstreamFeeds().catch(() => {});
+}
+
+// ============================================================================
+// PILLAR 3A-AUTO: SELF-HEALING UPSTREAM FEED CORRECTOR & CHANNEL IDENTITY VERIFIER
+// Automatically indexes the live upstream 900+ channel directories every 15 minutes,
+// detects 24h transponder ID shifts (premium<ID>), auto-binds newly shifted feeds to
+// the exact matching channel, and quarantines hijacked or dead transponders.
+// ============================================================================
+export interface AutoFeedCorrectionRecord {
+    channelId: string;
+    channelName: string;
+    action: 'AUTO_DISCOVERED_FEED' | 'QUARANTINED_HIJACKED_FEED' | 'DEAD_TRANSPONDER_FILTERED';
+    slug: string;
+    upstreamDirectoryName: string;
+    timestamp: string;
+}
+
+const UPSTREAM_DIRECTORY_SOURCES = [
+    'https://raw.githubusercontent.com/raselmia9/Daddylive_-channel/main/DaddyLive_Clean_Playlist.m3u',
+    'https://raw.githubusercontent.com/Nadjib-b/daddylive/main/daddylive-channels-data.json',
+    'https://dlhd.click/24-7-channels.php'
+];
+
+const upstreamDirectoryIdToName = new Map<number, string>();
+const autoDiscoveredChannelFeeds = new Map<
+    string,
+    Array<{ label: string; url: string; quality: string; headers?: Record<string, string>; upstreamId: number }>
+>();
+const quarantinedChannelSlugs = new Set<string>(); //Format: `${channelId}::premium${num}`
+const autoFeedCorrectionLog: AutoFeedCorrectionRecord[] = [];
+let lastAutoFeedCorrectTime = 0;
+let autoFeedCorrectPromise: Promise<void> | null = null;
+const AUTO_FEED_CORRECT_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+function logAutoFeedCorrection(record: AutoFeedCorrectionRecord): void {
+    const exists = autoFeedCorrectionLog.some(
+        (r) => r.channelId === record.channelId && r.slug === record.slug && r.action === record.action
+    );
+    if (!exists) {
+        autoFeedCorrectionLog.unshift(record);
+        if (autoFeedCorrectionLog.length > 80) {
+            autoFeedCorrectionLog.pop();
+        }
+    }
+}
+
+/**
+ * Determines whether a live upstream directory channel name matches our internal channel's exact identity.
+ */
+function doesUpstreamNameMatchChannelIdentity(ch: LiveChannel, rawUpstreamName: string): boolean {
+    const n = rawUpstreamName.toLowerCase().replace(/[^a-z0-9+]+/g, ' ').trim();
+    if (!n) return false;
+
+    // 1. beIN Sports Arabic 1-9 & Open/XTRA (strictly Arabic/MENA, never Malaysia/France/Turkey/USA)
+    const beinArMatch = ch.id.match(/^bein-sports-(\d+)-ar$/);
+    if (beinArMatch) {
+        const num = beinArMatch[1];
+        return (
+            new RegExp(`\\bbein\\s*sports?\\s*${num}\\b`).test(n) &&
+            (n.includes('arab') || n.includes('mena') || n.includes('qa')) &&
+            !n.includes('malaysia') &&
+            !n.includes('france') &&
+            !n.includes('turk')
+        );
+    }
+    if (ch.id === 'bein-sports-premium-1-ar') return /\bbein\s*sports?\s*(?:premium\s*)?1\b/.test(n) && (n.includes('arab') || n.includes('mena'));
+    if (ch.id === 'bein-sports-premium-2-ar') return /\bbein\s*sports?\s*(?:premium\s*)?2\b/.test(n) && (n.includes('arab') || n.includes('mena'));
+    if (ch.id === 'bein-sports-premium-3-ar') return /\bbein\s*sports?\s*(?:premium\s*)?3\b/.test(n) && (n.includes('arab') || n.includes('mena'));
+    if (ch.id === 'bein-sports-afc-ar') return /\bbein\s*sports?\s*(?:afc|7|8)\b/.test(n) && (n.includes('arab') || n.includes('mena'));
+
+    // 2. beIN Sports English 1-3
+    if (ch.id === 'bein-sports-en-1') return /\bbein\s*sports?\b/.test(n) && /\benglish\s*1\b|\ben\s*1\b/.test(n);
+    if (ch.id === 'bein-sports-en-2') return /\bbein\s*sports?\b/.test(n) && /\benglish\s*2\b|\ben\s*2\b/.test(n);
+
+    // 3. beIN Sports France 1-3 & MAX 4-10
+    const beinFrMatch = ch.id.match(/^bein-sports-fr-(\d+)$/);
+    if (beinFrMatch) {
+        const num = beinFrMatch[1];
+        return new RegExp(`\\bbein\\s*sports?\\s*${num}\\b`).test(n) && (n.includes('france') || n.includes('fr'));
+    }
+    const beinMaxFrMatch = ch.id.match(/^bein-sports-max-(\d+)-fr$/);
+    if (beinMaxFrMatch) {
+        const num = beinMaxFrMatch[1];
+        return new RegExp(`\\bbein\\s*sports?\\s*max\\s*${num}\\b`).test(n);
+    }
+
+    // 4. beIN Sports Turkey 1-5
+    const beinTrMatch = ch.id.match(/^bein-sports-(\d+)-tr$/);
+    if (beinTrMatch) {
+        const num = beinTrMatch[1];
+        return new RegExp(`\\bbein\\s*sports?\\s*${num}\\b`).test(n) && (n.includes('turk') || n.includes('tr'));
+    }
+
+    // 5. SSC Sports & MENA Arabic Channels
+    if (ch.id === 'ssc-sport-1-ar') return /\bssc\s*(?:sport\s*)?1\b|\bthmanyah\s*1\b|\bsaudi\s*sport\s*1\b/.test(n);
+    if (ch.id === 'ssc-sport-2-ar') return /\bssc\s*(?:sport\s*)?2\b|\bthmanyah\s*2\b|\bsaudi\s*sport\s*2\b/.test(n);
+    if (ch.id === 'ssc-sport-3-ar') return /\bssc\s*(?:sport\s*)?3\b|\bthmanyah\s*3\b|\bsaudi\s*sport\s*3\b/.test(n);
+    if (ch.id === 'ssc-extra-1-ar') return /\bssc\s*extra\s*1\b|\bssc\s*(?:sport\s*)?4\b/.test(n);
+    if (ch.id === 'ssc-extra-2-ar') return /\bssc\s*extra\s*2\b|\bssc\s*(?:sport\s*)?5\b/.test(n);
+    if (ch.id === 'ssc-extra-3-ar') return /\bssc\s*extra\s*3\b/.test(n);
+    if (ch.id === 'starzplay-sports-1-ar') return /\bstarzplay\s*(?:sport\s*)?1\b|\bad\s*sports?\s*premium\s*1\b/.test(n);
+    if (ch.id === 'starzplay-sports-2-ar') return /\bstarzplay\s*(?:sport\s*)?2\b|\bad\s*sports?\s*premium\s*2\b/.test(n);
+    if (ch.id === 'ad-sports-1-ar') return /\babu\s*dhabi\s*sports?\s*1\b|\bad\s*sports?\s*1\b/.test(n) && !n.includes('premium');
+    if (ch.id === 'ad-sports-2-ar') return /\babu\s*dhabi\s*sports?\s*2\b|\bad\s*sports?\s*2\b/.test(n) && !n.includes('premium');
+    if (ch.id === 'dubai-sports-1-ar') return /\bdubai\s*sports?\s*1\b/.test(n);
+    if (ch.id === 'alkass-1-ar') return /\balkass\s*(?:one|two|1|2)\b/.test(n);
+    if (ch.id === 'alkass-2-ar') return /\balkass\s*(?:three|3)\b/.test(n);
+    if (ch.id === 'alkass-3-ar') return /\balkass\s*(?:four|4)\b/.test(n);
+    if (ch.id === 'ontime-sports-1-ar') return /\bontime\s*sports?\b|\bon\s*time\s*sports?\b/.test(n);
+
+    // 6. Sky Sports UK & TNT Sports UK (strictly UK, never DE/IT/CZ)
+    const notDeOrIt = !/\b(de|germany|austria|ital|italia|cz|sk)\b/.test(n);
+    if (ch.id === 'sky-sports-main-event') return /\bsky\s*sports?\s*main\s*event\b/.test(n) && notDeOrIt;
+    if (ch.id === 'sky-sports-premier-league') return /\bsky\s*sports?\s*premier\s*league\b/.test(n) && notDeOrIt;
+    if (ch.id === 'sky-sports-football') return /\bsky\s*sports?\s*football\b/.test(n) && !n.includes('super') && notDeOrIt;
+    if (ch.id === 'sky-sports-action') return /\bsky\s*sports?\s*(?:action|nfl)\b/.test(n) && notDeOrIt;
+    if (ch.id === 'sky-sports-f1') return /\bsky\s*sports?\s*f1\b/.test(n) && notDeOrIt;
+    if (ch.id === 'sky-sports-cricket') return /\bsky\s*sports?\s*cricket\b/.test(n) && notDeOrIt;
+    if (ch.id === 'sky-sports-golf') return /\bsky\s*sports?\s*golf\b/.test(n) && notDeOrIt;
+    if (ch.id === 'sky-sports-tennis') return /\bsky\s*sports?\s*tennis\b/.test(n) && notDeOrIt;
+    if (ch.id === 'sky-sports-mix') return /\bsky\s*sports?\s*mix\b/.test(n) && notDeOrIt;
+    if (ch.id === 'sky-sports-news') return /\bsky\s*sports?\s*news\b/.test(n) && notDeOrIt;
+    if (ch.id === 'sky-sports-racing') return /\bsky\s*sports?\s*racing\b/.test(n) && notDeOrIt;
+    if (ch.id === 'tnt-sports-1') return /\btnt\s*sports?\s*1\b/.test(n);
+    if (ch.id === 'tnt-sports-2') return /\btnt\s*sports?\s*2\b/.test(n);
+    if (ch.id === 'tnt-sports-3') return /\btnt\s*sports?\s*3\b/.test(n);
+    if (ch.id === 'tnt-sports-4') return /\btnt\s*sports?\s*4\b/.test(n);
+    if (ch.id === 'premier-sports-1') return /\bpremier\s*sports?\s*1\b/.test(n) && notDeOrIt;
+    if (ch.id === 'premier-sports-2') return /\bpremier\s*sports?\s*2\b/.test(n) && notDeOrIt;
+
+    // 7. SuperSport South Africa
+    if (ch.id === 'supersport-premier-league') return /\bsupersport\s*premier\s*league\b/.test(n);
+    if (ch.id === 'supersport-grandstand') return /\bsupersport\s*grandstand\b/.test(n);
+    if (ch.id === 'supersport-football') return /\bsupersport\s*football\b/.test(n);
+    if (ch.id === 'supersport-laliga') return /\bsupersport\s*laliga\b/.test(n);
+    if (ch.id === 'supersport-variety-1') return /\bsupersport\s*variety\s*1\b/.test(n);
+
+    // 8. Spain Movistar & DAZN LaLiga
+    if (ch.id === 'movistar-laliga-es') return /\bmovistar\s*laliga\b|\bm+\s*laliga\b/.test(n);
+    if (ch.id === 'dazn-laliga-es') return /\bdazn\s*laliga\s*1?\b/.test(n);
+    if (ch.id === 'laliga-hypermotion-es') return /\blaliga\s*(?:tv\s*)?hypermotion\b|\blaliga\s*smartbank\b/.test(n);
+    if (ch.id === 'movistar-liga-de-campeones-es') return /\bmovistar\s*liga\s*de\s*campeones\b/.test(n);
+    if (ch.id === 'movistar-deportes-es') return /\bmovistar\s*deportes\b/.test(n) && !n.includes('2') && !n.includes('3');
+    if (ch.id === 'dazn-f1-es') return /\bdazn\s*f1\b/.test(n) && (n.includes('es') || n.includes('spain'));
+
+    // 9. Italy Serie A DAZN & Sky Sport Italia
+    if (ch.id === 'dazn-1-it') return /\bzona\s*dazn\b|\bdazn\s*1\s*it/.test(n);
+    if (ch.id === 'sky-sport-calcio-it') return /\bsky\s*sport\s*calcio\b/.test(n);
+    if (ch.id === 'sky-sport-uno-it') return /\bsky\s*sport\s*uno\b/.test(n);
+    if (ch.id === 'sky-sport-arena-it') return /\bsky\s*sport\s*arena\b/.test(n);
+    if (ch.id === 'sky-sport-max-it') return /\bsky\s*sport\s*max\b/.test(n);
+    if (ch.id === 'sky-sport-24-it') return /\bsky\s*sport\s*24\b/.test(n);
+
+    // 10. US Sports
+    if (ch.id === 'cbs-sports-golazo') return /\bcbs\s*sports?\s*golazo\b/.test(n);
+    if (ch.id === 'espn-hd') return /^espn\s*(?:us|usa|hd)?$/.test(n);
+    if (ch.id === 'espn-2-hd') return /^espn\s*2\s*(?:us|usa|hd)?$/.test(n);
+    if (ch.id === 'espn-deportes-es') return /\bespn\s*deportes\b/.test(n);
+    if (ch.id === 'fox-sports-1') return /\bfox\s*sports?\s*1\b|\bfs1\b/.test(n) && !n.includes('arg') && !n.includes('mx');
+    if (ch.id === 'fox-sports-2') return /\bfox\s*sports?\s*2\b|\bfs2\b/.test(n) && !n.includes('arg') && !n.includes('mx');
+
+    return false;
+}
+
+/**
+ * Detects whether a `premium<ID>` transponder has been reassigned by the upstream provider
+ * to an unrelated or foreign channel (e.g., Arena Tenis Serbia on 612, Newsmax USA on 613, DSports on 619-621, Polsat on 50).
+ */
+function isUpstreamTransponderHijacked(ch: LiveChannel, rawUpstreamName: string): boolean {
+    const n = rawUpstreamName.toLowerCase();
+    if (!n) return false;
+
+    // Non-sports news/political channels hijacking a sports transponder
+    if (/\b(newsmax|msnbc|fox\s*news|cnn|cnbc|bbc\s*news|c-span|weather\s*channel)\b/i.test(n)) {
+        return true;
+    }
+
+    // Arabic / MENA sports channels must NEVER resolve to Serbian, Polish, South American, Greek, or Portuguese channels
+    if (ch.language === 'ar' && ch.category !== 'movies' && ch.category !== 'entertainment') {
+        if (
+            /\b(arena\s*sport|serbia|croatia|polsat|poland|eleven\s*sport|dsports|directv|tyc\s*sport|win\s*sport|sport\s*tv\s*portugal|cosmote|nova\s*sport|ziggo|viaplay|supersport\s*albania|sky\s*sport\s*austria|sky\s*sport\s*de)\b/i.test(
+                n
+            )
+        ) {
+            return true;
+        }
+        // OnTime Sports Egypt belongs strictly to ontime-sports-1-ar, not SSC Sports
+        if (ch.id.startsWith('ssc-') && /\bontime\b/i.test(n)) {
+            return true;
+        }
+    }
+
+    // Specific UK/European channel protections
+    if (ch.id === 'sky-sports-news' && /\b(motogp|f1\s*italy|calcio|bundesliga)\b/i.test(n)) {
+        return true;
+    }
+    if (ch.id === 'dazn-combat' && /\b(polsat|eleven\s*sport|arena\s*sport)\b/i.test(n)) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Crawls the live upstream provider directories, indexes all 900+ `premium<ID>` transponders,
+ * quarantines any hijacked transponders, and auto-binds shifted channel IDs to their matching channel.
+ */
+export async function harvestAndAutoCorrectUpstreamFeeds(): Promise<void> {
+    if (Date.now() - lastAutoFeedCorrectTime < AUTO_FEED_CORRECT_TTL_MS && upstreamDirectoryIdToName.size > 0) {
+        return;
+    }
+    if (autoFeedCorrectPromise) {
+        return autoFeedCorrectPromise;
+    }
+
+    autoFeedCorrectPromise = (async () => {
+        const nextIdToName = new Map<number, string>();
+
+        await Promise.allSettled(
+            UPSTREAM_DIRECTORY_SOURCES.map(async (sourceUrl) => {
+                try {
+                    const res = await fetch(sourceUrl, {
+                        headers: { 'User-Agent': DEFAULT_UA },
+                        signal: AbortSignal.timeout(7000)
+                    });
+                    if (!res.ok) return;
+                    const body = await res.text();
+
+                    if (sourceUrl.endsWith('.m3u')) {
+                        const lines = body.split(/\r?\n/);
+                        for (let i = 0; i < lines.length; i++) {
+                            const line = lines[i].trim();
+                            if (!line.startsWith('#EXTINF')) continue;
+                            const nameMatch = line.match(/,(.+)$/);
+                            const chName = (nameMatch?.[1] || '').trim();
+                            if (!chName) continue;
+                            for (let j = i + 1; j < Math.min(i + 6, lines.length); j++) {
+                                const u = lines[j].trim();
+                                const m =
+                                    u.match(/\/premium(\d+)\//i) ||
+                                    u.match(/[?&]id=(\d+)/i) ||
+                                    u.match(/stream-(\d+)\.php/i);
+                                if (m) {
+                                    const num = Number(m[1]);
+                                    if (num > 0) nextIdToName.set(num, chName);
+                                    break;
+                                }
+                            }
+                        }
+                    } else if (sourceUrl.endsWith('.json')) {
+                        const parsed = JSON.parse(body);
+                        if (Array.isArray(parsed)) {
+                            for (const item of parsed) {
+                                const num = Number(item?.id);
+                                const chName = String(item?.name || '').trim();
+                                if (num > 0 && chName && !nextIdToName.has(num)) {
+                                    nextIdToName.set(num, chName);
+                                }
+                            }
+                        } else if (parsed && typeof parsed === 'object') {
+                            for (const [chName, entry] of Object.entries(parsed as Record<string, any>)) {
+                                if (chName === 'GLOBAL_OPTIONS' || !entry || typeof entry !== 'object') continue;
+                                const urlCandidate = String(entry.channel_url || entry.stream_url || '');
+                                const m =
+                                    urlCandidate.match(/stream-(\d+)\.php/i) ||
+                                    urlCandidate.match(/\/premium(\d+)\//i) ||
+                                    urlCandidate.match(/[?&]id=(\d+)/i);
+                                if (m) {
+                                    const num = Number(m[1]);
+                                    if (num > 0 && !nextIdToName.has(num)) {
+                                        nextIdToName.set(num, chName.trim());
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        const linkRegex = /stream-(\d+)\.php[^>]*>([^<]+)</gi;
+                        let m: RegExpExecArray | null;
+                        while ((m = linkRegex.exec(body)) !== null) {
+                            const num = Number(m[1]);
+                            const chName = m[2].replace(/\s+/g, ' ').trim();
+                            if (num > 0 && chName && !nextIdToName.has(num)) {
+                                nextIdToName.set(num, chName);
+                            }
+                        }
+                    }
+                } catch {
+                    // Ignore single directory mirror timeout
+                }
+            })
+        );
+
+        if (nextIdToName.size > 0) {
+            upstreamDirectoryIdToName.clear();
+            for (const [k, v] of nextIdToName.entries()) {
+                upstreamDirectoryIdToName.set(k, v);
+            }
+
+            // Inspect all 142 channels against the live upstream directory
+            for (const ch of CORE_SPORTS_CHANNELS) {
+                // 1. Check existing configured streams for hijacked transponders
+                for (const st of ch.streams) {
+                    const m = st.url.match(/\/premium(\d+)\/index\.m3u8/i);
+                    if (!m) continue;
+                    const num = Number(m[1]);
+                    const upstreamName = upstreamDirectoryIdToName.get(num);
+                    if (upstreamName && isUpstreamTransponderHijacked(ch, upstreamName)) {
+                        const slug = `premium${num}`;
+                        quarantinedChannelSlugs.add(`${ch.id}::${slug}`);
+                        logAutoFeedCorrection({
+                            channelId: ch.id,
+                            channelName: ch.name,
+                            action: 'QUARANTINED_HIJACKED_FEED',
+                            slug,
+                            upstreamDirectoryName: upstreamName,
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                }
+
+                // 2. Scan the entire upstream directory for any newly shifted transponder matching this channel's exact identity
+                const discoveredForChannel: Array<{
+                    label: string;
+                    url: string;
+                    quality: string;
+                    headers?: Record<string, string>;
+                    upstreamId: number;
+                }> = [];
+
+                for (const [num, upstreamName] of upstreamDirectoryIdToName.entries()) {
+                    if (doesUpstreamNameMatchChannelIdentity(ch, upstreamName)) {
+                        const slug = `premium${num}`;
+                        if (quarantinedChannelSlugs.has(`${ch.id}::${slug}`)) continue;
+                        const candidateUrl = `${EDGE_CDN_BASE}/${slug}/index.m3u8`;
+                        const alreadyInStatic = ch.streams.some((s) => s.url === candidateUrl);
+                        if (!alreadyInStatic) {
+                            discoveredForChannel.push({
+                                label: `${ch.shortName} (Auto-Corrected Feed #${num}: ${upstreamName} 1080p)`,
+                                url: candidateUrl,
+                                quality: '1080p',
+                                headers: DEMBED_HEADERS,
+                                upstreamId: num
+                            });
+                            logAutoFeedCorrection({
+                                channelId: ch.id,
+                                channelName: ch.name,
+                                action: 'AUTO_DISCOVERED_FEED',
+                                slug,
+                                upstreamDirectoryName: upstreamName,
+                                timestamp: new Date().toISOString()
+                            });
+                        }
+                    }
+                }
+
+                if (discoveredForChannel.length > 0) {
+                    autoDiscoveredChannelFeeds.set(ch.id, discoveredForChannel);
+                }
+            }
+
+            lastAutoFeedCorrectTime = Date.now();
+        }
+        autoFeedCorrectPromise = null;
+    })();
+
+    return autoFeedCorrectPromise;
 }
 
 // ============================================================================
@@ -4113,6 +4515,34 @@ async function probeStreamLiveness(
             };
         }
         const chunk = await res.text();
+        const finalUrlLower = (res.url || resolved.url || '').toLowerCase();
+        const isDeadTransponder =
+            finalUrlLower.includes('unknown%20channel') ||
+            finalUrlLower.includes('unknown_channel') ||
+            chunk.toLowerCase().includes('/unknown%20channel/') ||
+            chunk.toLowerCase().includes('unknown channel');
+
+        if (isDeadTransponder) {
+            const slugMatch = url.match(/\/(premium\d+)\//i);
+            if (slugMatch && channelId) {
+                logAutoFeedCorrection({
+                    channelId,
+                    channelName: channelId,
+                    action: 'DEAD_TRANSPONDER_FILTERED',
+                    slug: slugMatch[1],
+                    upstreamDirectoryName: 'Offline Satellite Transponder (unknown channel)',
+                    timestamp: new Date().toISOString()
+                });
+            }
+            const updated = recordStreamHealthResult(url, false, latencyMs, channelId, 'dead_transponder_unknown_channel');
+            return {
+                ok: false,
+                latencyMs,
+                healthScore: updated.healthScore,
+                circuitState: updated.circuitState
+            };
+        }
+
         const hasExtM3U = chunk.includes('#EXTM3U') || chunk.includes('#EXT-X-');
         const hasMediaLine = chunk.split(/\r?\n/).some((l) => {
             const t = l.trim();
@@ -4252,6 +4682,7 @@ export async function resolveChannelStreams(
 }> {
     await Promise.allSettled([
         harvestDynamicSportsM3U(),
+        harvestAndAutoCorrectUpstreamFeeds(),
         harvestOfficialXmltvEpg(),
         Date.now() - lastEventsFetchTime >= EVENTS_TTL_MS ? getLiveSportEvents(publicBaseUrl) : Promise.resolve([])
     ]);
@@ -4279,10 +4710,43 @@ export async function resolveChannelStreams(
             : undefined
     };
 
-    // Merge curated streams + dynamically harvested M3U backups strictly for this exact channel ID
+    // 1. Add curated streams while filtering out any transponder quarantined as hijacked in the 24h upstream directory
+    const candidateStreams: Array<{
+        label: string;
+        url: string;
+        quality: string;
+        language: LiveChannel['language'];
+        headers?: Record<string, string>;
+    }> = [];
+
+    for (const st of channel.streams) {
+        const slugMatch = st.url.match(/\/(premium\d+)\//i);
+        if (slugMatch && quarantinedChannelSlugs.has(`${channel.id}::${slugMatch[1].toLowerCase()}`)) {
+            continue;
+        }
+        if (!candidateStreams.some((s) => s.url === st.url)) {
+            candidateStreams.push(st);
+        }
+    }
+
+    // 2. Append any newly shifted / auto-discovered upstream transponders for this exact channel
+    const autoDiscovered = autoDiscoveredChannelFeeds.get(channel.id) || [];
+    for (const disc of autoDiscovered) {
+        if (!candidateStreams.some((s) => s.url === disc.url)) {
+            candidateStreams.push({
+                label: disc.label,
+                url: disc.url,
+                quality: disc.quality,
+                language: channel.language,
+                headers: disc.headers
+            });
+        }
+    }
+
+    const curatedCount = candidateStreams.length;
+
+    // 3. Merge dynamically harvested M3U backups strictly for this exact channel ID
     const dynamicBackups = dynamicChannelCache.get(channel.id) || [];
-    const curatedCount = channel.streams.length;
-    const candidateStreams = [...channel.streams];
     for (const dyn of dynamicBackups) {
         if (!candidateStreams.some((s) => s.url === dyn.url)) {
             candidateStreams.push({
@@ -6843,8 +7307,9 @@ export function startBackgroundStreamHealthMonitor(publicBaseUrl = 'http://local
 
     const runSweep = async () => {
         try {
-            await Promise.allSettled([
+        await Promise.allSettled([
                 harvestDynamicSportsM3U(),
+                harvestAndAutoCorrectUpstreamFeeds(),
                 harvestOfficialXmltvEpg()
             ]);
             await getLiveSportEvents(publicBaseUrl);
@@ -6881,12 +7346,19 @@ export function getLiveEngineHealthStats() {
         updatedAt: new Date().toISOString(),
         totalChannels: CORE_SPORTS_CHANNELS.length,
         dynamicHarvestedChannels: dynamicChannelCache.size,
+        autoFeedCorrector: {
+            upstreamDirectoryChannelsIndexed: upstreamDirectoryIdToName.size,
+            autoDiscoveredChannelRebinds: autoDiscoveredChannelFeeds.size,
+            quarantinedHijackedFeedsCount: quarantinedChannelSlugs.size,
+            lastAutoAuditAt: lastAutoFeedCorrectTime ? new Date(lastAutoFeedCorrectTime).toISOString() : null,
+            recentCorrections: autoFeedCorrectionLog.slice(0, 25)
+        },
         segmentCache: {
             cachedSegments: unwrappedSegmentCache.size,
             maxSegments: MAX_CACHED_SEGMENTS,
             cachedBytes: currentCachedBytes,
             cachedMegabytes: Number((currentCachedBytes / (1024 * 1024)).toFixed(2)),
-            maxMegabytes: 64,
+            maxMegabytes: 96,
             cacheHits: totalCacheHits,
             cacheMisses: totalCacheMisses,
             hitRatePct: totalRequests > 0 ? Math.round((totalCacheHits / totalRequests) * 100) : 0,
