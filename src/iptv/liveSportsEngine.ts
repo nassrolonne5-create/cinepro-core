@@ -70,6 +70,8 @@ export interface LiveChannel {
         | 'espn'
         | 'sky'
         | 'europe'
+        | 'canal'
+        | 'algeria'
         | 'mena'
         | 'usa'
         | 'combat'
@@ -1487,6 +1489,257 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     },
 
     // =========================================================================
+    // 5C. ALGERIA TV — التلفزيون الجزائري وقنوات الجزائر (iptv-org DZ Lineup)
+    // =========================================================================
+    {
+        id: 'algeria-tv1-entv',
+        name: 'TV1 Algérie — Programme National ENTV HD (الوطنية الجزائرية الأولى)',
+        shortName: 'TV1 Algérie',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'العربية / Français (Algeria)',
+        country: 'DZ',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/TV1_Alg%C3%A9rie_logo.png/512px-TV1_Alg%C3%A9rie_logo.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'TV1 Algérie ENTV HD (TDA Official Algeria 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'AL24 Algérie HD (iptv-org EasyBroadcast 1080p)', url: 'https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Maghreb Sports & National HD (TDA Backup 1080p)', url: 'http://185.9.2.18/chid_218/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'algeria-tv2-canal',
+        name: 'TV2 Canal Algérie HD (كنال ألجيري — التلفزيون الجزائري 2)',
+        shortName: 'Canal Algérie TV2',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'fr',
+        languageLabel: 'Français / العربية (Algeria)',
+        country: 'DZ',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Canal_Alg%C3%A9rie_logo.png/512px-Canal_Alg%C3%A9rie_logo.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Canal Algérie TV2 HD (iptv-org Official TDA 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'fr' },
+            { label: 'AL24 News Algérie HD (iptv-org Backup 1080p)', url: 'https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/playlist.m3u8', quality: '1080p', language: 'fr' }
+        ]
+    },
+    {
+        id: 'algeria-tv3-news',
+        name: 'TV3 Algérie A3 HD (الجزائرية الثالثة الإخبارية)',
+        shortName: 'TV3 Algérie A3',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic - Algeria)',
+        country: 'DZ',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/TV3_Alg%C3%A9rie_logo.png/512px-TV3_Alg%C3%A9rie_logo.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Algérie News HD (iptv-org EasyBroadcast 1080p)', url: 'https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'TV3 / Canal Algérie TDA HD (iptv-org 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'AL24 Algérie Direct Stream (iptv-org)', url: 'https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/corp/66_al24_u4yga6h_240p/chunks.m3u8', quality: '720p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'algeria-tv4-tamazight',
+        name: 'TV4 Tamazight TV Algérie HD (القناة الأمازيغية الرابعة)',
+        shortName: 'TV4 Tamazight DZ',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'Tamazight / العربية (Algeria)',
+        country: 'DZ',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/TV4_Alg%C3%A9rie_logo.png/512px-TV4_Alg%C3%A9rie_logo.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'TV4 Tamazight / TDA Algérie HD (iptv-org 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Tamazight Maghreb HD (iptv-org Backup 1080p)', url: 'http://185.9.2.18/chid_203/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'AL24 Algérie HD (iptv-org Backup 1080p)', url: 'https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'algeria-tv6-youth',
+        name: 'TV6 Algérie الشبابية HD (الجزائرية السادسة — الرياضة والشباب)',
+        shortName: 'TV6 Algérie Sport',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic - Algeria)',
+        country: 'DZ',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/TV6_Alg%C3%A9rie_logo.png/512px-TV6_Alg%C3%A9rie_logo.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'TV6 Algérie TDA HD (iptv-org Algeria 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Maghreb Sports HD (iptv-org TDA 1080p)', url: 'http://185.9.2.18/chid_218/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'beIN Sports 6 CAF & Maghreb Football HD (1080p)', url: `${EDGE_CDN_BASE}/premium96/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'algeria-el-heddaf-tv',
+        name: 'El Heddaf TV Algérie Sport HD (قناة الهداف الرياضية الجزائرية)',
+        shortName: 'El Heddaf TV DZ',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic - Algeria)',
+        country: 'DZ',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'El Heddaf / TDA Algérie HD (iptv-org Algeria 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Maghreb Football & Ligue 1 Mobilis HD (iptv-org 1080p)', url: 'http://185.9.2.18/chid_218/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'beIN Sports Open Arabic Football HD (1080p)', url: `${EDGE_CDN_BASE}/premium90/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'El Heddaf TV Official Direct (iptv-org dz.m3u)', url: 'https://live.elheddaftv.com:8081/elheddaftv/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'algeria-al24-news',
+        name: 'AL24 News Algérie HD (قناة الجزائر الدولية AL24)',
+        shortName: 'AL24 News DZ',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'العربية / Français (Algeria)',
+        country: 'DZ',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'AL24 News Algérie Official Master HD (iptv-org dz.m3u 1080p)', url: 'https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'AL24 News Algérie Direct Chunks (iptv-org dz.m3u)', url: 'https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/corp/66_al24_u4yga6h_240p/chunks.m3u8', quality: '720p', language: 'ar' },
+            { label: 'Canal Algérie TDA Backup HD (iptv-org 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'algeria-echorouk-tv',
+        name: 'Echorouk TV Algérie HD (قناة الشروق العامة الجزائرية)',
+        shortName: 'Echorouk TV DZ',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic - Algeria)',
+        country: 'DZ',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Echorouk / Algérie TDA HD (iptv-org Algeria 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'MBC 5 Maghreb & Algérie HD (iptv-org 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-5/ee6b000cee0629411b666ab26cb13e9b/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'AL24 Algérie HD (iptv-org 1080p)', url: 'https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'algeria-echorouk-news',
+        name: 'Echorouk News Algérie HD (قناة الشروق نيوز الإخبارية)',
+        shortName: 'Echorouk News DZ',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic - Algeria)',
+        country: 'DZ',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Algérie News Live HD (iptv-org EasyBroadcast 1080p)', url: 'https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Canal Algérie TDA HD (iptv-org 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'algeria-ennahar-tv',
+        name: 'Ennahar TV Algérie HD (قناة النهار الجزائرية)',
+        shortName: 'Ennahar TV DZ',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic - Algeria)',
+        country: 'DZ',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Algérie News & Ennahar Feed HD (iptv-org 1080p)', url: 'https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'TDA Algérie HD (iptv-org 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'algeria-el-bilad-tv',
+        name: 'El Bilad TV Algérie HD (قناة البلاد الجزائرية)',
+        shortName: 'El Bilad TV DZ',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic - Algeria)',
+        country: 'DZ',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'El Bilad / TDA Algérie HD (iptv-org 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'AL24 News Algérie HD (iptv-org 1080p)', url: 'https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'algeria-samira-tv',
+        name: 'Samira TV Algérie HD (قناة سميرة الجزائرية للطبخ والأسرة)',
+        shortName: 'Samira TV DZ',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic - Algeria)',
+        country: 'DZ',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Samira / Maghreb Family HD (iptv-org 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-5/ee6b000cee0629411b666ab26cb13e9b/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'TDA Algérie HD (iptv-org 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'algeria-elwatania-tv',
+        name: 'Elwatania TV Algérie HD (قناة الوطنية الجزائرية)',
+        shortName: 'Elwatania TV DZ',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic - Algeria)',
+        country: 'DZ',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Elwatania / TDA Algérie HD (iptv-org 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'AL24 Algérie HD (iptv-org 1080p)', url: 'https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Elwatania Direct Stream (iptv-org dz.m3u)', url: 'https://livesstream.work.gd:5443/WebRTCApp/streams/stream.m3u8', quality: '720p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'algeria-amou-yazid-tv',
+        name: 'Amou Yazid TV Algérie HD (قناة عمو يزيد الجزائرية للأطفال والأسرة)',
+        shortName: 'Amou Yazid TV DZ',
+        network: 'Algeria TV',
+        category: 'algeria',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic - Algeria)',
+        country: 'DZ',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Amou Yazid TV Algérie Official Live (iptv-org dz.m3u)', url: 'http://mkstream.servehttp.com:1940/AmouYazid/ay1/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'TDA Algérie Backup HD (iptv-org 1080p)', url: 'http://185.9.2.18/chid_347/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+
+    // =========================================================================
     // 6. UK & ENGLISH PREMIER LEAGUE SPORTS (Sky Sports 1-12, TNT Sports 1-4, SuperSport EPL, Premier Sports, USA Network)
     // =========================================================================
     {
@@ -2115,24 +2368,233 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         ]
     },
     {
-        id: 'canal-plus-foot-fr',
-        name: 'Canal+ Foot France HD',
-        shortName: 'Canal+ Foot FR',
+        id: 'canal-plus-fr',
+        name: 'Canal+ France HD (Ligue 1, UEFA Champions League, Top 14 & Cinéma)',
+        shortName: 'Canal+ FR',
         network: 'Canal+',
-        category: 'europe',
+        category: 'canal',
         language: 'fr',
         languageLabel: 'Français (French)',
         country: 'FR',
-        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Canal+ Foot France (1080p)', url: `${EDGE_CDN_BASE}/premium463/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'Canal+ France Official HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium121/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Sport France Mirror HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium122/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'canal-plus-sport-fr',
+        name: 'Canal+ Sport France HD (Premier League, UEFA Champions League & Rugby)',
+        shortName: 'Canal+ Sport FR',
+        network: 'Canal+',
+        category: 'canal',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Canal+ Sport France HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium122/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Foot France Mirror HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium463/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'canal-plus-foot-fr',
+        name: 'Canal+ Foot France HD (UEFA Champions League, Premier League & Europa)',
+        shortName: 'Canal+ Foot FR',
+        network: 'Canal+',
+        category: 'canal',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Canal+ Foot France HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium463/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Sport France Backup HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium122/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'canal-plus-sport-360-fr',
+        name: 'Canal+ Sport 360 France HD (MotoGP, Ligue 1, WRC & Boxe)',
+        shortName: 'Canal+ Sport 360 FR',
+        network: 'Canal+',
+        category: 'canal',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Canal+ Sport 360 France HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium464/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'Canal+ 360 HD (iptv-org Official 1080p)', url: 'http://92.114.85.87:8019/play/a003/index.m3u8', quality: '1080p', language: 'fr' },
+            { label: 'Canal+ Sport France Backup HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium122/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'canal-plus-f1-fr',
+        name: 'Canal+ Formula 1 France HD (24/7 F1 Grand Prix & Paddock)',
+        shortName: 'Canal+ F1 FR',
+        network: 'Canal+',
+        category: 'canal',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Canal+ Formula 1 France HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium273/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Sport 360 France Mirror HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium464/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'canal-plus-motogp-fr',
+        name: 'Canal+ MotoGP France HD (24/7 MotoGP World Championship)',
+        shortName: 'Canal+ MotoGP FR',
+        network: 'Canal+',
+        category: 'canal',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Canal+ MotoGP France HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium271/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Sport 360 France Mirror HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium464/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'canal-plus-afrique-1',
+        name: 'Canal+ Sport 1 Afrique HD (Premier League, Ligue 1 & CAF Champions League)',
+        shortName: 'Canal+ Sport 1 AF',
+        network: 'Canal+',
+        category: 'canal',
+        language: 'fr',
+        languageLabel: 'Français (Afrique)',
+        country: 'FR',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Canal+ Sport 1 Francophone HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium122/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Foot Francophone HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium463/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Sport 1 Afrique Direct (1080p)', url: `${EDGE_CDN_BASE}/premium486/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'canal-plus-afrique-2',
+        name: 'Canal+ Sport 2 Afrique HD (UEFA Champions League, LaLiga & Serie A)',
+        shortName: 'Canal+ Sport 2 AF',
+        network: 'Canal+',
+        category: 'canal',
+        language: 'fr',
+        languageLabel: 'Français (Afrique)',
+        country: 'FR',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Canal+ Foot & UEFA Francophone HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium463/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'Canal+ France HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium121/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Sport 2 Afrique Direct (1080p)', url: `${EDGE_CDN_BASE}/premium487/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'canal-plus-extra-1',
+        name: 'Canal+ Extra 1 HD (UEFA Champions League Multiplex 1)',
+        shortName: 'Canal+ Extra 1',
+        network: 'Canal+',
+        category: 'canal',
+        language: 'multi',
+        languageLabel: 'European / Multi-Audio',
+        country: 'FR',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Canal+ Extra 1 UEFA Champions League HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium983/index.m3u8`, quality: '1080p', language: 'multi', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Foot Backup HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium463/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'canal-plus-extra-2',
+        name: 'Canal+ Extra 2 HD (UEFA Champions League Multiplex 2)',
+        shortName: 'Canal+ Extra 2',
+        network: 'Canal+',
+        category: 'canal',
+        language: 'multi',
+        languageLabel: 'European / Multi-Audio',
+        country: 'FR',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Canal+ Extra 2 UEFA Champions League HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium984/index.m3u8`, quality: '1080p', language: 'multi', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Sport Backup HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium122/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'canal-plus-sport-1-eu',
+        name: 'Canal+ Sport 1 Europe HD (Premier League, LaLiga & ATP Tennis)',
+        shortName: 'Canal+ Sport 1 EU',
+        network: 'Canal+',
+        category: 'canal',
+        language: 'multi',
+        languageLabel: 'European / Multi-Audio',
+        country: 'FR',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Canal+ Sport 1 Europe HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium48/index.m3u8`, quality: '1080p', language: 'multi', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Sport 5 Europe HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium75/index.m3u8`, quality: '1080p', language: 'multi', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'canal-plus-sport-2-eu',
+        name: 'Canal+ Sport 2 Europe HD (European Football & NBA)',
+        shortName: 'Canal+ Sport 2 EU',
+        network: 'Canal+',
+        category: 'canal',
+        language: 'multi',
+        languageLabel: 'European / Multi-Audio',
+        country: 'FR',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Canal+ Sport 2 Europe HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium73/index.m3u8`, quality: '1080p', language: 'multi', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Sport 3 Europe HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium259/index.m3u8`, quality: '1080p', language: 'multi', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'canal-plus-premium-hd',
+        name: 'Canal+ Premium & Box Office HD (Cinéma, Séries & Grand Match)',
+        shortName: 'Canal+ Premium HD',
+        network: 'Canal+',
+        category: 'canal',
+        language: 'fr',
+        languageLabel: 'Français / Multi-Audio',
+        country: 'FR',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Canal%2B.svg/512px-Canal%2B.svg.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'Canal+ Premium HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium566/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'Canal+ Family HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium567/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'Canal+ 360 Official (iptv-org 1080p)', url: 'http://92.114.85.87:8019/play/a003/index.m3u8', quality: '1080p', language: 'fr' }
         ]
     },
     {
         id: 'rmc-sport-1-fr',
-        name: 'RMC Sport 1 France HD',
+        name: 'RMC Sport 1 France HD (UEFA & UFC)',
         shortName: 'RMC Sport 1 FR',
         network: 'RMC Sport',
         category: 'europe',
@@ -2143,7 +2605,25 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'RMC Sport 1 France (1080p)', url: `${EDGE_CDN_BASE}/premium119/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'RMC Sport 1 France (1080p)', url: `${EDGE_CDN_BASE}/premium119/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'RMC Sport 2 France Backup (1080p)', url: `${EDGE_CDN_BASE}/premium120/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'rmc-sport-2-fr',
+        name: 'RMC Sport 2 France HD (Football, Combat & Basketball)',
+        shortName: 'RMC Sport 2 FR',
+        network: 'RMC Sport',
+        category: 'europe',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'RMC Sport 2 France HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium120/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'RMC Sport 1 France Mirror HD (1080p 50fps)', url: `${EDGE_CDN_BASE}/premium119/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -3717,12 +4197,45 @@ export const CHANNEL_TO_IPTV_ORG_IDS: Record<string, string[]> = {
     'fifa-plus-fr': ['FIFAPlus.fr'],
     'fifa-plus-en': ['FIFAPlus.uk', 'FIFAPlus.us'],
     'dazn-combat': ['DAZNCombat.uk', 'DAZN1.uk'],
-    'red-bull-tv': ['RedBullTV.at', 'RedBullTV.us']
+    'red-bull-tv': ['RedBullTV.at', 'RedBullTV.us'],
+
+    // 5. Algeria TV (DZ — https://iptv-org.github.io/iptv/countries/dz.m3u)
+    'algeria-tv1-entv': ['TV1.dz', 'TV2.dz'],
+    'algeria-tv2-canal': ['TV2.dz', 'CanalAlgerie.dz'],
+    'algeria-tv3-news': ['TV3.dz', 'AL24News.dz'],
+    'algeria-tv4-tamazight': ['TV4.dz', 'TV2.dz'],
+    'algeria-tv6-youth': ['TV6.dz', 'ElHeddafTV.dz', 'TV2.dz'],
+    'algeria-el-heddaf-tv': ['ElHeddafTV.dz', 'TV6.dz', 'TV2.dz'],
+    'algeria-al24-news': ['AL24News.dz', 'TV3.dz'],
+    'algeria-echorouk-tv': ['EchoroukTV.dz', 'TV2.dz'],
+    'algeria-echorouk-news': ['EchoroukNews.dz', 'AL24News.dz'],
+    'algeria-ennahar-tv': ['EnnaharTV.dz', 'AL24News.dz'],
+    'algeria-el-bilad-tv': ['ElBiladTV.dz', 'TV2.dz'],
+    'algeria-samira-tv': ['SamiraTV.dz', 'TV2.dz'],
+    'algeria-elwatania-tv': ['ElwataniaTV.dz', 'TV2.dz'],
+    'algeria-amou-yazid-tv': ['AmouYazidTV.dz', 'TV2.dz'],
+
+    // 6. Canal+ (FR / EU / AF — https://iptv-org.github.io/iptv/countries/fr.m3u)
+    'canal-plus-fr': ['CanalPlus.fr', 'CANALPlusPremium.pl'],
+    'canal-plus-sport-fr': ['CanalPlusSport.fr', 'CANALPlusSport.pl'],
+    'canal-plus-foot-fr': ['CanalPlusFoot.fr', 'CanalPlusSport.fr'],
+    'canal-plus-sport-360-fr': ['CanalPlusSport360.fr', 'CANALPlus360.pl'],
+    'canal-plus-f1-fr': ['CanalPlusFormula1.fr', 'CanalPlusSport360.fr'],
+    'canal-plus-motogp-fr': ['CanalPlusMotoGP.fr', 'CanalPlusSport360.fr'],
+    'canal-plus-afrique-1': ['CanalPlusSport1.af', 'CanalPlusSport.fr'],
+    'canal-plus-afrique-2': ['CanalPlusSport2.af', 'CanalPlusFoot.fr'],
+    'canal-plus-extra-1': ['CANALPlusExtra1.pl', 'CanalPlusFoot.fr'],
+    'canal-plus-extra-2': ['CANALPlusExtra2.pl', 'CanalPlusSport.fr'],
+    'canal-plus-sport-1-eu': ['CANALPlusSport.pl', 'CANALPlusSport5.pl'],
+    'canal-plus-sport-2-eu': ['CANALPlusSport2.pl', 'CANALPlusSport3.pl'],
+    'canal-plus-premium-hd': ['CANALPlusPremium.pl', 'CANALPlus360.pl', 'CanalPlusDomo.pl'],
+    'rmc-sport-1-fr': ['RMCSport1.fr'],
+    'rmc-sport-2-fr': ['RMCSport2.fr']
 };
 
 /**
  * Harvests fresh streams from the official `iptv-org` JSON API (`https://iptv-org.github.io/api/streams.json`)
- * and 17 `iptv-org.github.io` M3U playlists in the background.
+ * and 19 `iptv-org.github.io` M3U playlists in the background.
  * Preserves Referer & User-Agent headers and maps strictly 1-to-1 per channel.
  */
 export async function harvestDynamicSportsM3U(): Promise<void> {
@@ -3812,6 +4325,7 @@ export async function harvestDynamicSportsM3U(): Promise<void> {
     // 2. Query Official iptv-org.github.io Category & Country M3U Playlists
     const m3uFeeds = [
         'https://iptv-org.github.io/iptv/categories/sports.m3u',
+        'https://iptv-org.github.io/iptv/countries/dz.m3u',
         'https://iptv-org.github.io/iptv/countries/sa.m3u',
         'https://iptv-org.github.io/iptv/countries/qa.m3u',
         'https://iptv-org.github.io/iptv/countries/ae.m3u',
@@ -3826,6 +4340,7 @@ export async function harvestDynamicSportsM3U(): Promise<void> {
         'https://iptv-org.github.io/iptv/countries/es.m3u',
         'https://iptv-org.github.io/iptv/countries/it.m3u',
         'https://iptv-org.github.io/iptv/countries/fr.m3u',
+        'https://iptv-org.github.io/iptv/countries/pl.m3u',
         'https://iptv-org.github.io/iptv/countries/tr.m3u',
         'https://iptv-org.github.io/iptv/countries/us.m3u',
         'https://raw.githubusercontent.com/doms9/iptv/default/M3U8/base.m3u8'
@@ -4086,6 +4601,20 @@ function doesUpstreamNameMatchChannelIdentity(ch: LiveChannel, rawUpstreamName: 
     if (ch.id === 'espn-deportes-es') return /\bespn\s*deportes\b/.test(n);
     if (ch.id === 'fox-sports-1') return /\bfox\s*sports?\s*1\b|\bfs1\b/.test(n) && !n.includes('arg') && !n.includes('mx');
     if (ch.id === 'fox-sports-2') return /\bfox\s*sports?\s*2\b|\bfs2\b/.test(n) && !n.includes('arg') && !n.includes('mx');
+
+    // 11. Canal+ France, Afrique & Europe
+    if (ch.id === 'canal-plus-fr') return /^canal\+\s*(?:france|fr|hd)?$/.test(n);
+    if (ch.id === 'canal-plus-sport-fr') return /^canal\+\s*sport\s*(?:france|fr|hd)?$/.test(n);
+    if (ch.id === 'canal-plus-foot-fr') return /\bcanal\+\s*foot\b/.test(n);
+    if (ch.id === 'canal-plus-sport-360-fr') return /\bcanal\+\s*(?:sport\s*)?360\b/.test(n);
+    if (ch.id === 'canal-plus-f1-fr') return /\bcanal\+\s*(?:formula\s*1|f1)\b/.test(n);
+    if (ch.id === 'canal-plus-motogp-fr') return /\bcanal\+\s*moto\s*gp\b/.test(n);
+    if (ch.id === 'canal-plus-extra-1') return /\bcanal\+\s*extra\s*1\b/.test(n);
+    if (ch.id === 'canal-plus-extra-2') return /\bcanal\+\s*extra\s*2\b/.test(n);
+    if (ch.id === 'canal-plus-sport-1-eu') return /\bcanal\+\s*sport\s*1?\s*(?:poland|pl)\b/.test(n);
+    if (ch.id === 'canal-plus-sport-2-eu') return /\bcanal\+\s*sport\s*2\s*(?:poland|pl)\b/.test(n);
+    if (ch.id === 'rmc-sport-1-fr') return /\brmc\s*sport\s*1\b/.test(n);
+    if (ch.id === 'rmc-sport-2-fr') return /\brmc\s*sport\s*2\b/.test(n);
 
     return false;
 }
@@ -4442,9 +4971,22 @@ export const CHANNEL_TO_XMLTV_IDS: Record<string, string[]> = {
     'bein-sports-max-7-fr': ['beIN SPORTS MAX 7.fr'],
     'bein-sports-max-9-fr': ['beIN SPORTS MAX 9.fr'],
     'bein-sports-max-10-fr': ['beIN SPORTS MAX 10.fr'],
+    'canal-plus-fr': ['Canal+.fr', 'Canal+ Foot.fr'],
+    'canal-plus-sport-fr': ['Canal+ Sport.fr', 'Canal+ Foot.fr'],
     'canal-plus-foot-fr': ['Canal+ Foot.fr', 'Canal+ Sport.fr'],
+    'canal-plus-sport-360-fr': ['Canal+ Sport 360.fr', 'Canal+ Sport.fr'],
+    'canal-plus-f1-fr': ['Canal+ Formula 1.fr', 'Canal+ Sport 360.fr', 'Canal+ Sport.fr'],
+    'canal-plus-motogp-fr': ['Canal+ Moto GP.fr', 'Canal+ Sport 360.fr'],
+    'canal-plus-afrique-1': ['Canal+ Sport.fr', 'Canal+ Foot.fr'],
+    'canal-plus-afrique-2': ['Canal+ Foot.fr', 'Canal+ Sport.fr'],
+    'canal-plus-extra-1': ['Canal+ Foot.fr', 'Canal+ Sport.fr'],
+    'canal-plus-extra-2': ['Canal+ Sport.fr', 'Canal+ Foot.fr'],
+    'canal-plus-sport-1-eu': ['Canal+ Sport.fr'],
+    'canal-plus-sport-2-eu': ['Canal+ Foot.fr'],
+    'canal-plus-premium-hd': ['Canal+.fr'],
     'dazn-ligue1-fr': ['Canal+ Ligue 1.fr', 'Canal+ Foot.fr'],
     'rmc-sport-1-fr': ['RMC Sport 1.fr', 'RMC Sport 2.fr'],
+    'rmc-sport-2-fr': ['RMC Sport 2.fr', 'RMC Sport 1.fr'],
     'lequipe-fr': ["L'Equipe.fr"],
 
     // 10. Turkey beIN Sports TR (turkey1.xml)
@@ -4833,14 +5375,20 @@ export function getLiveChannels(
     }
 
     if (filters?.category && filters.category !== 'all') {
-        const catLower = filters.category.toLowerCase();
+        const catLower = filters.category.toLowerCase().replace(/\s+/g, '');
         list = list.filter(
             (c) =>
                 c.category === catLower ||
-                (catLower !== 'sky' && c.network.toLowerCase().includes(catLower)) ||
+                (catLower === 'algeriatv' && c.category === 'algeria') ||
+                (catLower === 'dz' && c.country === 'DZ') ||
+                ((catLower === 'canal+' || catLower === 'canalplus') && c.category === 'canal') ||
+                (catLower !== 'sky' && c.network.toLowerCase().replace(/\s+/g, '').includes(catLower)) ||
                 c.id.toLowerCase().includes(catLower) ||
-                (catLower === 'europe' && (c.id.startsWith('tnt-sports') || c.id.startsWith('premier-sports'))) ||
-                (catLower === 'motorsport' && c.id === 'sky-sports-f1')
+                (catLower === 'europe' &&
+                    (c.category === 'canal' || c.id.startsWith('tnt-sports') || c.id.startsWith('premier-sports'))) ||
+                (catLower === 'mena' && c.category === 'algeria') ||
+                (catLower === 'motorsport' &&
+                    (c.id === 'sky-sports-f1' || c.id === 'canal-plus-f1-fr' || c.id === 'canal-plus-motogp-fr'))
         );
     }
 
@@ -5238,7 +5786,7 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
     'uefa.champions': {
         ar: ['bein-sports-1-ar', 'bein-sports-2-ar', 'bein-sports-3-ar', 'bein-sports-4-ar', 'bein-sports-5-ar', 'bein-sports-6-ar'],
         en: ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4', 'cbs-sports-golazo', 'supersport-grandstand', 'supersport-football', 'bein-sports-en-1', 'bein-sports-en-2', 'bein-sports-en-3', 'premier-sports-1'],
-        fr: ['canal-plus-foot-fr', 'rmc-sport-1-fr', 'bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-fr-3', 'bein-sports-max-4-fr', 'bein-sports-max-5-fr', 'bein-sports-max-6-fr'],
+        fr: ['canal-plus-foot-fr', 'canal-plus-fr', 'canal-plus-sport-fr', 'canal-plus-extra-1', 'canal-plus-extra-2', 'canal-plus-afrique-2', 'rmc-sport-1-fr', 'bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-fr-3', 'bein-sports-max-4-fr', 'bein-sports-max-5-fr', 'bein-sports-max-6-fr'],
         it: ['sky-sport-uno-it', 'sky-sport-arena-it', 'sky-sport-max-it', 'sky-sport-252-it'],
         es: ['movistar-liga-de-campeones-es', 'movistar-plus-es', 'movistar-vamos-es', 'espn-deportes-es'],
         tr: ['bein-sports-1-tr', 'bein-sports-2-tr', 'bein-sports-3-tr']
@@ -5246,7 +5794,7 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
     'uefa.europa': {
         ar: ['bein-sports-1-ar', 'bein-sports-2-ar', 'bein-sports-3-ar', 'bein-sports-4-ar', 'bein-sports-5-ar', 'bein-sports-6-ar'],
         en: ['tnt-sports-1', 'tnt-sports-2', 'tnt-sports-3', 'tnt-sports-4', 'cbs-sports-golazo', 'supersport-football', 'bein-sports-en-1', 'bein-sports-en-2'],
-        fr: ['canal-plus-foot-fr', 'rmc-sport-1-fr', 'bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-max-4-fr'],
+        fr: ['canal-plus-foot-fr', 'canal-plus-sport-360-fr', 'canal-plus-sport-fr', 'rmc-sport-1-fr', 'bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-max-4-fr'],
         it: ['sky-sport-uno-it', 'sky-sport-arena-it', 'sky-sport-252-it'],
         es: ['movistar-liga-de-campeones-es', 'movistar-vamos-es', 'espn-deportes-es'],
         tr: ['bein-sports-1-tr', 'bein-sports-2-tr']
@@ -5254,7 +5802,7 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
     'uefa.europa.conf': {
         ar: ['bein-sports-3-ar', 'bein-sports-4-ar', 'bein-sports-5-ar', 'bein-sports-6-ar'],
         en: ['tnt-sports-3', 'tnt-sports-4', 'cbs-sports-golazo', 'premier-sports-1', 'bein-sports-en-3'],
-        fr: ['canal-plus-foot-fr', 'bein-sports-max-5-fr', 'bein-sports-max-6-fr'],
+        fr: ['canal-plus-foot-fr', 'canal-plus-sport-360-fr', 'bein-sports-max-5-fr', 'bein-sports-max-6-fr'],
         it: ['sky-sport-arena-it', 'sky-sport-max-it'],
         es: ['movistar-liga-de-campeones-es', 'movistar-vamos-es']
     },
@@ -5263,7 +5811,7 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
     'eng.1': {
         ar: ['bein-sports-1-ar', 'bein-sports-2-ar'],
         en: ['sky-sports-premier-league', 'sky-sports-main-event', 'tnt-sports-1', 'supersport-premier-league', 'supersport-grandstand', 'usa-network-hd', 'nbc-sports-now', 'bein-sports-en-1', 'bein-sports-en-2'],
-        fr: ['canal-plus-foot-fr'],
+        fr: ['canal-plus-foot-fr', 'canal-plus-fr', 'canal-plus-sport-fr', 'canal-plus-sport-360-fr', 'canal-plus-afrique-1'],
         it: ['sky-sport-uno-it', 'sky-sport-max-it'],
         es: ['movistar-liga-de-campeones-es', 'movistar-vamos-es']
     },
@@ -5290,7 +5838,7 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
     'esp.1': {
         ar: ['bein-sports-4-ar', 'bein-sports-2-ar', 'bein-sports-1-ar'],
         en: ['premier-sports-1', 'premier-sports-2', 'supersport-laliga', 'espn-hd', 'espn-2-hd', 'bein-sports-en-1'],
-        fr: ['bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-max-4-fr'],
+        fr: ['bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-max-4-fr', 'canal-plus-afrique-2', 'canal-plus-sport-1-eu'],
         es: ['movistar-laliga-es', 'dazn-laliga-es', 'movistar-plus-es', 'espn-deportes-es', 'movistar-vamos-es', 'bein-sports-xtra-es', 'real-madrid-tv']
     },
     'esp.2': {
@@ -5305,7 +5853,7 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
         ar: ['starzplay-sports-1-ar', 'starzplay-sports-2-ar', 'ad-sports-1-ar', 'ad-sports-2-ar'],
         it: ['dazn-1-it', 'dazn-2-it', 'sky-sport-calcio-it', 'sky-sport-uno-it', 'sky-sport-arena-it', 'sky-sport-max-it', 'sky-sport-252-it'],
         en: ['tnt-sports-2', 'tnt-sports-3', 'tnt-sports-1', 'tnt-sports-4', 'cbs-sports-golazo', 'supersport-football', 'supersport-variety-1'],
-        fr: ['lequipe-fr', 'bein-sports-fr-2', 'bein-sports-fr-3', 'bein-sports-max-4-fr']
+        fr: ['lequipe-fr', 'bein-sports-fr-2', 'bein-sports-fr-3', 'bein-sports-max-4-fr', 'canal-plus-afrique-2']
     },
 
     // German Bundesliga (MENA: NEVER beIN Sports AR! Only Dubai Sports 1 AR for FTA; UK: Sky Sports; US: ESPN; FR: beIN Sports FR)
@@ -5320,7 +5868,7 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
     'fra.1': {
         ar: ['bein-sports-3-ar', 'bein-sports-2-ar'],
         en: ['bein-sports-en-2', 'bein-sports-en-3', 'bein-sports-xtra-en', 'tnt-sports-3'],
-        fr: ['dazn-ligue1-fr', 'bein-sports-fr-1', 'canal-plus-foot-fr']
+        fr: ['dazn-ligue1-fr', 'bein-sports-fr-1', 'canal-plus-foot-fr', 'canal-plus-fr', 'canal-plus-afrique-1']
     },
     'fra.2': {
         ar: ['bein-sports-4-ar', 'bein-sports-6-ar'],
@@ -5328,23 +5876,23 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
         fr: ['bein-sports-fr-2', 'bein-sports-max-4-fr', 'bein-sports-max-5-fr']
     },
 
-    // CAF Champions League & Confederation Cup (MENA: Exclusively beIN Sports 6 AR)
+    // CAF Champions League & Confederation Cup (MENA: beIN Sports 6 AR & Algeria TV Sports; FR: Canal+ Afrique & beIN FR)
     'caf.champions': {
-        ar: ['bein-sports-6-ar', 'bein-sports-5-ar'],
+        ar: ['bein-sports-6-ar', 'bein-sports-5-ar', 'algeria-el-heddaf-tv', 'algeria-tv6-youth'],
         en: ['supersport-football', 'bein-sports-en-3'],
-        fr: ['bein-sports-fr-2', 'bein-sports-max-4-fr']
+        fr: ['canal-plus-afrique-1', 'canal-plus-afrique-2', 'bein-sports-fr-2', 'bein-sports-max-4-fr']
     },
     'caf.confed': {
-        ar: ['bein-sports-6-ar', 'bein-sports-5-ar'],
+        ar: ['bein-sports-6-ar', 'bein-sports-5-ar', 'algeria-el-heddaf-tv', 'algeria-tv6-youth'],
         en: ['supersport-football', 'bein-sports-en-3'],
-        fr: ['bein-sports-fr-3', 'bein-sports-max-5-fr']
+        fr: ['canal-plus-afrique-1', 'bein-sports-fr-3', 'bein-sports-max-5-fr']
     },
 
-    // Roshn Saudi League (MENA: Exclusively SSC Sports — NEVER beIN Sports AR!; US: Fox Sports; FR: Canal+ Foot)
+    // Roshn Saudi League (MENA: Exclusively SSC Sports — NEVER beIN Sports AR!; US: Fox Sports; FR: Canal+ Foot & Sport 360)
     'ksa.1': {
         ar: ['ssc-sport-1-ar', 'ssc-sport-2-ar', 'ssc-sport-3-ar', 'ssc-extra-1-ar', 'ssc-extra-2-ar', 'ssc-extra-3-ar'],
         en: ['fox-sports-2', 'fox-sports-1'],
-        fr: ['canal-plus-foot-fr']
+        fr: ['canal-plus-foot-fr', 'canal-plus-sport-360-fr', 'canal-plus-sport-fr']
     },
 
     // AFC Champions League Elite
@@ -5366,7 +5914,7 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
     'nba': {
         ar: ['bein-sports-8-ar'],
         en: ['nba-tv', 'espn-hd', 'espn-2-hd', 'tnt-sports-1', 'tnt-sports-2', 'bein-sports-en-1', 'bein-sports-xtra-en'],
-        fr: ['bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-max-4-fr']
+        fr: ['bein-sports-fr-1', 'bein-sports-fr-2', 'bein-sports-max-4-fr', 'canal-plus-sport-2-eu']
     },
 
     // NFL Football
@@ -5394,14 +5942,14 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
     'ufc': {
         ar: ['ad-sports-2-ar', 'ad-sports-1-ar'],
         en: ['dazn-combat', 'tnt-sports-1', 'tnt-sports-2', 'espn-hd', 'espn-2-hd'],
-        fr: ['rmc-sport-1-fr']
+        fr: ['rmc-sport-1-fr', 'rmc-sport-2-fr']
     },
 
     // Formula 1
     'f1': {
         ar: ['ssc-sport-3-ar', 'bein-sports-8-ar'],
         en: ['sky-sports-f1', 'red-bull-tv', 'espn-2-hd'],
-        fr: ['canal-plus-foot-fr'],
+        fr: ['canal-plus-f1-fr', 'canal-plus-sport-360-fr', 'canal-plus-sport-fr', 'canal-plus-fr'],
         es: ['dazn-f1-es']
     },
 
@@ -5409,7 +5957,7 @@ export const SCRAPER_LEAGUE_CHANNEL_POOLS: Record<
     'atp': {
         ar: ['bein-sports-7-ar', 'bein-sports-8-ar', 'bein-sports-9-ar'],
         en: ['sky-sports-tennis', 'tennis-channel', 'eurosport-1', 'eurosport-2'],
-        fr: ['bein-sports-fr-3', 'bein-sports-max-4-fr'],
+        fr: ['bein-sports-fr-3', 'bein-sports-max-4-fr', 'canal-plus-sport-1-eu'],
         es: ['movistar-deportes-es', 'movistar-vamos-es']
     }
 };
@@ -6329,6 +6877,113 @@ function getNetworkEPGTemplates(ch: LiveChannel): EPGTemplateSlot[] {
                 subtitle: 'Exclusive behind-the-scenes access and fighter interviews',
                 description: 'All-access coverage leading up to the next championship card.',
                 category: ch.category === 'combat' ? 'MMA / Boxing' : 'Racing'
+            }
+        ];
+    }
+
+    // 8. Algeria TV (التلفزيون الجزائري وقنوات الجزائر — ENTV, Canal Algérie, El Heddaf, Echorouk, Ennahar, AL24)
+    if (ch.category === 'algeria' || ch.country === 'DZ') {
+        if (id.includes('heddaf') || id.includes('tv6')) {
+            return [
+                {
+                    title: 'استوديو الرابطة المحترفة الجزائرية الأولى والمنتخب الوطني (Ligue 1 Mobilis & Les Verts Studio)',
+                    subtitle: `${ch.name} • تغطية مباشرة لمباريات البطولة الجزائرية والخضر`,
+                    description: 'تغطية شاملة لمباريات الرابطة المحترفة الجزائرية الأولى موبيليس، كأس الجزائر، وأخبار المنتخب الوطني الجزائري.',
+                    category: 'Algerian Football Studio',
+                    sport: 'soccer',
+                    league: 'Algerian Ligue 1 Mobilis'
+                },
+                {
+                    title: 'برنامج بالمكشوف والفريق الدولي (Algerian Football Talk Show)',
+                    subtitle: 'نقاشات حصرية مع نجوم الكرة الجزائرية والمحترفين في أوروبا',
+                    description: 'تحليل فني معمق لمنافسات الكرة الجزائرية ودوري أبطال أفريقيا.',
+                    category: 'Sports Talk Show',
+                    sport: 'soccer'
+                }
+            ];
+        }
+        if (id.includes('al24') || id.includes('news') || id.includes('ennahar') || id.includes('bilad')) {
+            return [
+                {
+                    title: 'نشرة الأخبار الجزائرية والمغاربية والدولية (Journal Télévisé Algérie Live)',
+                    subtitle: `${ch.name} • تغطية إخبارية متواصلة من الجزائر العاصمة`,
+                    description: 'متابعة حية ومباشرة لأهم المستجدات الوطنية الجزائرية، المغاربية، والدولية على مدار الساعة.',
+                    category: 'Algeria Live News'
+                },
+                {
+                    title: 'حوار الساعة والملف السياسي والاقتصادي (Débat & Actualités Algérie)',
+                    subtitle: 'نقاشات تحليلية وتقارير ميدانية من مختلف ولايات الجزائر',
+                    description: 'قراءة معمقة في الأحداث الوطنية والدولية عبر قنوات التلفزيون الجزائري.',
+                    category: 'News & Debate'
+                }
+            ];
+        }
+        return [
+            {
+                title: `البث المباشر للتلفزيون الجزائري - ${ch.shortName} (Direct Algérie TV HD)`,
+                subtitle: `${ch.name} • برامج وطنية، دراما جزائرية، ورياضة`,
+                description: `متابعة مباشرة للبرامج التلفزيونية الجزائرية، المسلسلات، ونشرات الأخبار عبر ${ch.name}.`,
+                category: 'Algeria TV'
+            },
+            {
+                title: `سهرة العائلة الجزائرية والمجلة الرياضية - ${ch.shortName}`,
+                subtitle: 'التلفزيون الجزائري الرسمي • بث عالي الجودة 1080p HD',
+                description: 'تغطية يومية شاملة للثقافة، الترفيه، والرياضة في الجزائر.',
+                category: 'Algeria Entertainment'
+            }
+        ];
+    }
+
+    // 9. Canal+ (Canal+ France, Canal+ Foot, Canal+ Sport, Canal+ Sport 360, Canal+ F1, MotoGP, Afrique, Extra)
+    if (ch.category === 'canal' || net.includes('canal+')) {
+        if (id.includes('f1')) {
+            return [
+                {
+                    title: 'Formula 1 Grand Prix Direct & La Grille F1 - Canal+ Formula 1',
+                    subtitle: 'Canal+ F1 HD • Essais, Qualifications, Course & Debrief F1',
+                    description: 'Intégralité du Championnat du Monde de Formule 1 en direct et en exclusivité sur Canal+ F1.',
+                    category: 'Formula 1 Live',
+                    sport: 'motorsport',
+                    league: 'Formula 1'
+                },
+                {
+                    title: 'Formula One, Le Mag & On Board F1',
+                    subtitle: 'Analyses techniques et caméras embarquées',
+                    description: 'Tous les coulisses des paddocks de Formule 1 avec les experts Canal+.',
+                    category: 'Motorsport Magazine',
+                    sport: 'motorsport',
+                    league: 'Formula 1'
+                }
+            ];
+        }
+        if (id.includes('motogp')) {
+            return [
+                {
+                    title: 'MotoGP World Championship Direct & Sprint Race - Canal+ MotoGP',
+                    subtitle: 'Canal+ MotoGP HD • Essais, Qualifications & Grand Prix MotoGP',
+                    description: 'Suivez tous les Grands Prix de MotoGP, Moto2 et Moto3 en direct intégral sur Canal+ MotoGP.',
+                    category: 'MotoGP Live',
+                    sport: 'motorsport',
+                    league: 'MotoGP'
+                }
+            ];
+        }
+        return [
+            {
+                title: `Canal Football Club & Soirée UEFA Champions League - ${ch.shortName}`,
+                subtitle: `${ch.name} • Direct UEFA Champions League, Premier League & Top 14`,
+                description: `Grandes affiches de l'UEFA Champions League, Premier League anglaise, Ligue 1 et Top 14 en direct sur ${ch.name}.`,
+                category: 'Canal+ Live Sport',
+                sport: 'soccer',
+                league: 'UEFA Champions League'
+            },
+            {
+                title: `Canal Champions Club & Late Sport Club - ${ch.shortName}`,
+                subtitle: 'Tous les buts, résumés et analyses avec les consultants Canal+',
+                description: 'Debrief complet des soirées européennes et des grands championnats sur Canal+.',
+                category: 'Canal+ Football Studio',
+                sport: 'soccer',
+                league: 'English Premier League'
             }
         ];
     }
