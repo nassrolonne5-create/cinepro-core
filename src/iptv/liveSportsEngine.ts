@@ -200,6 +200,10 @@ const TVNOW_HEADERS: Record<string, string> = {
 const ROTANA_HEADERS: Record<string, string> = {
     Referer: 'https://rotana.net/'
 };
+const ALOULA_HEADERS: Record<string, string> = {
+    Origin: 'https://aloula.sba.sa',
+    Referer: 'https://aloula.sba.sa/'
+};
 
 /**
  * Curated Core Sports, beIN Sports & Movies/Entertainment Channel Matrix (AR / EN / FR / ES / TR + MENA + Global)
@@ -778,115 +782,116 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     // =========================================================================
     {
         id: 'ssc-sport-1-ar',
-        name: 'SSC Sport 1 / Saudi Riyadh Season & Big Time+ HD (Arabic)',
+        name: 'SSC Sport 1 / KSA Sports 1 HD — الرياضية السعودية 1 (Arabic)',
         shortName: 'SSC 1 AR',
         network: 'SSC / Saudi Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
         country: 'SA',
-        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        logo: 'https://aloula.faulio.com/storage/mediagallery/36/f0/fullhd_7b5a1c62d4c0785dff72d85e41ade22b9478258b.png',
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Saudi Big Time+ / Riyadh Season Sports HD (iptv-org Official SA 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-big-time-plus/924283f994779a311c1389698ff7e736/index.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'SBC Saudi HD (iptv-org Official Saudi Super Cup & Events 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-sbc/90e09c0c28db26435799b4a14892a167/index.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'Alkass Sports HD 1/2 (Gulf & Asian Football 1080p)', url: `${EDGE_CDN_BASE}/premium782/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC Sport 1 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium614/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'KSA Sports 1 HD — الرياضية السعودية 1 (Official SBA Live 1080p)', url: 'https://live.kwikmotion.com/ksasports1live/ksasports1.smil/playlist_dvr.m3u8', quality: '1080p', language: 'ar', headers: ALOULA_HEADERS },
+            { label: 'Abu Dhabi Sports 1 HD — أبوظبي الرياضية 1 (Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'KTV Sport 1 HD — الكويت الرياضية 1 (iptv-org Official 1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Oman Sports TV HD — عمان الرياضية (iptv-org Official 1080p)', url: 'https://partneta.cdn.mgmlcdn.com/omsport/smil:omsport.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
         id: 'ssc-sport-2-ar',
-        name: 'SSC Sport 2 / Saudi SBC Sports & Events HD (Arabic)',
+        name: 'SSC Sport 2 / KSA Sports 2 HD — الرياضية السعودية 2 (Arabic)',
         shortName: 'SSC 2 AR',
         network: 'SSC / Saudi Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
         country: 'SA',
-        logo: 'https://i.imgur.com/vUJZSvs.png',
+        logo: 'https://aloula.faulio.com/storage/mediagallery/57/09/fullhd_470ef56d4e496e82df1d74aca7edeef597b2e541.png',
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'SBC Saudi HD (iptv-org Official Saudi Broadcast 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-sbc/90e09c0c28db26435799b4a14892a167/index.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'Saudi Big Time+ / Riyadh Season HD (iptv-org Official SA 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-big-time-plus/924283f994779a311c1389698ff7e736/index.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'Alkass Three HD (Gulf & Asian Football 1080p)', url: `${EDGE_CDN_BASE}/premium783/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC Sport 2 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium615/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'KSA Sports 2 HD — الرياضية السعودية 2 (Official SBA Live 1080p)', url: 'https://live.kwikmotion.com/ksasports2live/ksasports2.smil/playlist_dvr.m3u8', quality: '1080p', language: 'ar', headers: ALOULA_HEADERS },
+            { label: 'Abu Dhabi Sports 2 HD — أبوظبي الرياضية 2 (Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium601/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'KTV Sport Plus HD — الكويت الرياضية بلس (iptv-org Official 1080p)', url: 'https://kwtsplta.cdn.mangomolo.com/spl/smil:spl.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Bahrain Sports 1 HD — البحرين الرياضية 1 (iptv-org Official 1080p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
         id: 'ssc-sport-3-ar',
-        name: 'SSC Sport 3 / Al Saudiya Alaan Live Events HD (Arabic)',
+        name: 'SSC Sport 3 / KSA Sports 3 HD — الرياضية السعودية 3 (Arabic)',
         shortName: 'SSC 3 AR',
         network: 'SSC / Saudi Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
         country: 'SA',
-        logo: 'https://i.imgur.com/UYSMao3.png',
+        logo: 'https://aloula.faulio.com/storage/mediagallery/2d/ee/fullhd_f1d461237592b4d46c44a6f300df1d97051f7c55.png',
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Al Saudiya Alaan / KSA Now Live Events HD (iptv-org Official SA 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-ksa-now/71ed3aa814c643306c0a8bc4fcc7d17f/index.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'Al Saudiya TV 1 HD (iptv-org Official SA 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-saudi-tv/2ad66056b51fd8c1b624854623112e43/index.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'Alkass Four HD (Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium784/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC Sport 3 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium616/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'KSA Sports 3 HD — الرياضية السعودية 3 (Official SBA Live 1080p)', url: 'https://live.kwikmotion.com/ksasports3live/ksasports3.smil/playlist_dvr.m3u8', quality: '1080p', language: 'ar', headers: ALOULA_HEADERS },
+            { label: 'Jordan Sport HD — الأردن الرياضية (iptv-org Official 1080p)', url: 'https://jrtv-live.ercdn.net/jordansporthd/jordansporthd.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Dubai Sports 1 HD — دبي الرياضية 1 (Gulf Sports 1080p)', url: `${EDGE_CDN_BASE}/premium604/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'Bahrain Sports 2 HD — البحرين الرياضية 2 (iptv-org Official 1080p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:bahrainsportstwo_all/playlist.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
         id: 'ssc-extra-1-ar',
-        name: 'SSC Sport Extra 1 / Bahrain Sports 1 HD (Gulf Football)',
+        name: 'SSC Sport Extra 1 / KSA Sports Extra 1 HD — الرياضية السعودية إكسترا 1',
         shortName: 'SSC Extra 1 AR',
-        network: 'SSC / Gulf Sports',
+        network: 'SSC / Saudi Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
         country: 'SA',
-        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        logo: 'https://aloula.faulio.com/storage/mediagallery/36/f0/fullhd_7b5a1c62d4c0785dff72d85e41ade22b9478258b.png',
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Bahrain Sports 1 HD (iptv-org Official Gulf Football 1080p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'KTV Sport 1 HD (iptv-org Official Kuwait Sports 1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'STARZPLAY Sports 1 / AD Sports Premium 1 HD (1080p)', url: `${EDGE_CDN_BASE}/premium609/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC Sport 4 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium617/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'KSA Sports 1 HD — الرياضية السعودية 1 (Official SBA Extra Feed 1080p)', url: 'https://live.kwikmotion.com/ksasports1live/ksasports1.smil/playlist_dvr.m3u8', quality: '1080p', language: 'ar', headers: ALOULA_HEADERS },
+            { label: 'Bahrain Sports 1 HD — البحرين الرياضية 1 (iptv-org Official Gulf Football 1080p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'KTV Sport 1 HD — الكويت الرياضية 1 (iptv-org Official 1080p)', url: 'https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Abu Dhabi Sports 1 HD — أبوظبي الرياضية 1 (1080p)', url: `${EDGE_CDN_BASE}/premium600/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-extra-2-ar',
-        name: 'SSC Sport Extra 2 / Oman Sports TV HD (Gulf Football)',
+        name: 'SSC Sport Extra 2 / KSA Sports Extra 2 HD — الرياضية السعودية إكسترا 2',
         shortName: 'SSC Extra 2 AR',
-        network: 'SSC / Gulf Sports',
+        network: 'SSC / Saudi Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
         country: 'SA',
-        logo: 'https://i.imgur.com/vUJZSvs.png',
+        logo: 'https://aloula.faulio.com/storage/mediagallery/57/09/fullhd_470ef56d4e496e82df1d74aca7edeef597b2e541.png',
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Oman Sports TV HD (iptv-org Official Gulf Football 1080p)', url: 'https://partneta.cdn.mgmlcdn.com/omsport/smil:omsport.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'KTV Sport Plus HD (iptv-org Official Gulf Football 1080p)', url: 'https://kwtsplta.cdn.mangomolo.com/spl/smil:spl.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'STARZPLAY Sports 2 / AD Sports Premium 2 HD (1080p)', url: `${EDGE_CDN_BASE}/premium610/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'SSC Sport 5 Satellite Transponder (Auto-Probed 1080p)', url: `${EDGE_CDN_BASE}/premium618/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'KSA Sports 2 HD — الرياضية السعودية 2 (Official SBA Extra Feed 1080p)', url: 'https://live.kwikmotion.com/ksasports2live/ksasports2.smil/playlist_dvr.m3u8', quality: '1080p', language: 'ar', headers: ALOULA_HEADERS },
+            { label: 'Oman Sports TV HD — عمان الرياضية (iptv-org Official Gulf Football 1080p)', url: 'https://partneta.cdn.mgmlcdn.com/omsport/smil:omsport.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'KTV Sport Plus HD — الكويت الرياضية بلس (iptv-org Official 1080p)', url: 'https://kwtsplta.cdn.mangomolo.com/spl/smil:spl.stream.smil/chunklist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Abu Dhabi Sports 2 HD — أبوظبي الرياضية 2 (1080p)', url: `${EDGE_CDN_BASE}/premium601/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
         id: 'ssc-extra-3-ar',
-        name: 'SSC Sport Extra 3 / Al Iraqia & Bahrain Sports 2 HD (Arabic)',
+        name: 'SSC Sport Extra 3 / KSA Sports Extra 3 HD — الرياضية السعودية إكسترا 3',
         shortName: 'SSC Extra 3 AR',
-        network: 'SSC / Gulf Sports',
+        network: 'SSC / Saudi Sports',
         category: 'mena',
         language: 'ar',
         languageLabel: 'العربية (Arabic)',
         country: 'SA',
-        logo: 'https://i.imgur.com/UYSMao3.png',
+        logo: 'https://aloula.faulio.com/storage/mediagallery/2d/ee/fullhd_f1d461237592b4d46c44a6f300df1d97051f7c55.png',
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'Al Iraqia Sports HD (iptv-org Official Arab Football 1080p)', url: 'https://imn-live.esite-lab.com/hls/iraqia-sports-1.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'Bahrain Sports 2 HD (iptv-org Official Gulf Football 1080p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:bahrainsportstwo_all/playlist.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'Dubai Sports 3 HD (Gulf Football 1080p)', url: `${EDGE_CDN_BASE}/premium606/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'KSA Sports 3 HD — الرياضية السعودية 3 (Official SBA Extra Feed 1080p)', url: 'https://live.kwikmotion.com/ksasports3live/ksasports3.smil/playlist_dvr.m3u8', quality: '1080p', language: 'ar', headers: ALOULA_HEADERS },
+            { label: 'Al Iraqia Sports HD — العراقية الرياضية (iptv-org Official Arab Football 1080p)', url: 'https://imn-live.esite-lab.com/hls/iraqia-sports-1.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Jordan Sport HD — الأردن الرياضية (iptv-org Official Arab Sports 1080p)', url: 'https://jrtv-live.ercdn.net/jordansporthd/jordansporthd.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Bahrain Sports 2 HD — البحرين الرياضية 2 (iptv-org Official Gulf Football 1080p)', url: 'https://5c7b683162943.streamlock.net/live/ngrp:bahrainsportstwo_all/playlist.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -3136,8 +3141,82 @@ async function getEdgePlaylistToken(slug: string, forceRefresh = false): Promise
     }
 }
 
+const aloulaSignedHlsCache = new Map<number, { signedUrl: string; expiresAt: number }>();
+const aloulaSignedHlsInFlight = new Map<number, Promise<string | null>>();
+
 /**
- * If a URL targets edge.cowedd4855ws.sbs/premium<ID>/index.m3u8, attaches a fresh `t=<token>&_=<ts>`
+ * Resolves a fresh 24-hour `hdntl=` signed 1080p HLS `chunks.m3u8` media playlist URL from the official
+ * Saudi Broadcasting Authority Aloula Faulio API (`https://aloula.faulio.com/api/v1.1/channels/{id}/player`)
+ * for KSA Sports 1, 2, 3 (`الرياضية السعودية 1, 2, 3`).
+ */
+async function getAloulaSignedHlsUrl(aloulaChannelId: number, forceRefresh = false): Promise<string | null> {
+    const cached = aloulaSignedHlsCache.get(aloulaChannelId);
+    if (!forceRefresh && cached && Date.now() < cached.expiresAt) {
+        return cached.signedUrl;
+    }
+
+    if (!forceRefresh) {
+        const existing = aloulaSignedHlsInFlight.get(aloulaChannelId);
+        if (existing) return existing;
+    }
+
+    const flight = (async () => {
+        for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+                const res = await fetch(`https://aloula.faulio.com/api/v1.1/channels/${aloulaChannelId}/player`, {
+                    headers: {
+                        'User-Agent': DEFAULT_UA,
+                        ...ALOULA_HEADERS
+                    },
+                    signal: AbortSignal.timeout(4500)
+                });
+                if (!res.ok) continue;
+                const data = (await res.json()) as { streams?: { hls?: string } };
+                const rawHlsUrl = data?.streams?.hls;
+                if (!rawHlsUrl || !rawHlsUrl.startsWith('http')) continue;
+
+                // Use live `playlist.m3u8` instead of `playlist_dvr.m3u8` to get the 1080p live `chunks.m3u8` with a 24-hour `hdntl=` token
+                const masterUrl = rawHlsUrl.replace('playlist_dvr.m3u8', 'playlist.m3u8');
+                const masterRes = await fetch(masterUrl, {
+                    headers: {
+                        'User-Agent': DEFAULT_UA,
+                        ...ALOULA_HEADERS
+                    },
+                    signal: AbortSignal.timeout(4500)
+                });
+                if (masterRes.ok) {
+                    const masterText = await masterRes.text();
+                    const firstSubRel = masterText
+                        .split(/\r?\n/)
+                        .map((l) => l.trim())
+                        .find((l) => l.length > 0 && !l.startsWith('#'));
+                    if (firstSubRel) {
+                        const chunksUrl = new URL(firstSubRel, masterUrl).toString();
+                        aloulaSignedHlsCache.set(aloulaChannelId, {
+                            signedUrl: chunksUrl,
+                            expiresAt: Date.now() + 2 * 60 * 60 * 1000 // 24h hdntl token; refresh every 2 hours
+                        });
+                        return chunksUrl;
+                    }
+                }
+            } catch {
+                // Retry once on transient network blip
+            }
+        }
+        return cached?.signedUrl || null;
+    })();
+
+    aloulaSignedHlsInFlight.set(aloulaChannelId, flight);
+    try {
+        return await flight;
+    } finally {
+        aloulaSignedHlsInFlight.delete(aloulaChannelId);
+    }
+}
+
+/**
+ * If a URL targets edge.cowedd4855ws.sbs/premium<ID>/index.m3u8 or live.kwikmotion.com/ksasports<1-3>live,
+ * attaches a fresh signed token automatically.
  */
 async function resolveDynamicManifestUrl(
     rawUrl: string,
@@ -3159,6 +3238,21 @@ async function resolveDynamicManifestUrl(
             ? `${baseClean}?t=${encodeURIComponent(token)}&_=${Date.now()}`
             : `${baseClean}?_=${Date.now()}`;
         return { url: finalUrl, headers: mergedHeaders, edgeSlug: slug };
+    }
+
+    const ksaMatch = rawUrl.match(/live\.kwikmotion\.com\/ksasports([123])live\/ksasports[123]\.smil\/playlist_dvr\.m3u8/i);
+    if (ksaMatch) {
+        Object.assign(mergedHeaders, ALOULA_HEADERS);
+        const hasToken = rawUrl.includes('hdnts=');
+        if (!hasToken || forceRefreshToken) {
+            const num = Number(ksaMatch[1]);
+            const aloulaChannelId = num === 1 ? 9 : num === 2 ? 10 : 16;
+            const signedUrl = await getAloulaSignedHlsUrl(aloulaChannelId, forceRefreshToken);
+            if (signedUrl) {
+                return { url: signedUrl, headers: mergedHeaders };
+            }
+        }
+        return { url: rawUrl, headers: mergedHeaders };
     }
 
     return { url: rawUrl, headers: mergedHeaders };
@@ -4091,13 +4185,13 @@ interface IptvOrgApiStreamEntry {
  * (`tvg-id` / `channel` in https://iptv-org.github.io/api/streams.json and https://github.com/iptv-org/iptv).
  */
 export const CHANNEL_TO_IPTV_ORG_IDS: Record<string, string[]> = {
-    // 1. Saudi SSC & Gulf Sports (SA, KW, BH, OM, IQ, QA, AE, EG, MA)
-    'ssc-sport-1-ar': ['SSCSport1.sa', 'SaudiSports1.sa', 'BigTimePlus.sa', 'SBC.sa'],
-    'ssc-sport-2-ar': ['SSCSport2.sa', 'SaudiSports2.sa', 'SBC.sa', 'BigTimePlus.sa'],
-    'ssc-sport-3-ar': ['SSCSport3.sa', 'SaudiSports3.sa', 'AlSaudiyaAlaan.sa', 'AlSaudiya.sa'],
+    // 1. Saudi SSC & Gulf Sports (SA, KW, BH, OM, IQ, JO, QA, AE, EG, MA — strictly pure sports channels)
+    'ssc-sport-1-ar': ['SSCSport1.sa', 'SaudiSports1.sa', 'KTVSport.kw'],
+    'ssc-sport-2-ar': ['SSCSport2.sa', 'SaudiSports2.sa', 'KTVSportPlus.kw'],
+    'ssc-sport-3-ar': ['SSCSport3.sa', 'SaudiSports3.sa', 'JordanSport.jo'],
     'ssc-extra-1-ar': ['SSCSportExtra1.sa', 'SSCSport4.sa', 'BahrainSports1.bh', 'KTVSport.kw'],
     'ssc-extra-2-ar': ['SSCSportExtra2.sa', 'SSCSport5.sa', 'OmanSportsTV.om', 'KTVSportPlus.kw'],
-    'ssc-extra-3-ar': ['SSCSportExtra3.sa', 'AlIraqiaSport.iq', 'BahrainSports2.bh'],
+    'ssc-extra-3-ar': ['SSCSportExtra3.sa', 'AlIraqiaSport.iq', 'JordanSport.jo', 'BahrainSports2.bh'],
     'starzplay-sports-1-ar': ['AbuDhabiSportsPremium1.ae', 'AbuDhabiSports1.ae'],
     'starzplay-sports-2-ar': ['AbuDhabiSportsPremium2.ae', 'AbuDhabiSports2.ae'],
     'alkass-1-ar': ['AlkassOne.qa', 'AlkassTwo.qa'],
@@ -4459,17 +4553,33 @@ export interface AutoFeedCorrectionRecord {
 }
 
 const UPSTREAM_DIRECTORY_SOURCES = [
+    'https://dlstreams.st/24-7-channels.php',
     'https://raw.githubusercontent.com/raselmia9/Daddylive_-channel/main/DaddyLive_Clean_Playlist.m3u',
-    'https://raw.githubusercontent.com/Nadjib-b/daddylive/main/daddylive-channels-data.json',
-    'https://dlhd.click/24-7-channels.php'
+    'https://raw.githubusercontent.com/Nadjib-b/daddylive/main/daddylive-channels-data.json'
 ];
+
+// Transponders 614-618 are dead ("unknown channel") and 619-621 are hijacked by Spanish DSports (Directv Sports)
+// despite the upstream directory still labeling them "SSC Sport 1..5 / SSC Sport Extra 1..3".
+const PERMANENTLY_QUARANTINED_SSC_TRANSPONDERS = new Set<number>([614, 615, 616, 617, 618, 619, 620, 621]);
 
 const upstreamDirectoryIdToName = new Map<number, string>();
 const autoDiscoveredChannelFeeds = new Map<
     string,
     Array<{ label: string; url: string; quality: string; headers?: Record<string, string>; upstreamId: number }>
 >();
-const quarantinedChannelSlugs = new Set<string>(); //Format: `${channelId}::premium${num}`
+const quarantinedChannelSlugs = new Set<string>([
+    'ssc-sport-1-ar::premium614',
+    'ssc-sport-2-ar::premium615',
+    'ssc-sport-3-ar::premium616',
+    'ssc-extra-1-ar::premium617',
+    'ssc-extra-2-ar::premium618',
+    'ssc-extra-1-ar::premium619',
+    'ssc-extra-2-ar::premium620',
+    'ssc-extra-3-ar::premium621',
+    'ssc-sport-1-ar::premium619',
+    'ssc-sport-2-ar::premium620',
+    'ssc-sport-3-ar::premium621'
+]); // Format: `${channelId}::premium${num}`
 const autoFeedCorrectionLog: AutoFeedCorrectionRecord[] = [];
 let lastAutoFeedCorrectTime = 0;
 let autoFeedCorrectPromise: Promise<void> | null = null;
@@ -4731,11 +4841,15 @@ export async function harvestAndAutoCorrectUpstreamFeeds(): Promise<void> {
                             }
                         }
                     } else {
-                        const linkRegex = /stream-(\d+)\.php[^>]*>([^<]+)</gi;
+                        const linkRegex = /(?:stream-(\d+)\.php|watch\.php\?id=(\d+))[^>]*>([\s\S]*?)<\/a>/gi;
                         let m: RegExpExecArray | null;
                         while ((m = linkRegex.exec(body)) !== null) {
-                            const num = Number(m[1]);
-                            const chName = m[2].replace(/\s+/g, ' ').trim();
+                            const num = Number(m[1] || m[2]);
+                            const chName = m[3]
+                                .replace(/<[^>]+>/g, ' ')
+                                .replace(/\bID:\s*\d+\b/gi, '')
+                                .replace(/\s+/g, ' ')
+                                .trim();
                             if (num > 0 && chName && !nextIdToName.has(num)) {
                                 nextIdToName.set(num, chName);
                             }
@@ -4753,7 +4867,7 @@ export async function harvestAndAutoCorrectUpstreamFeeds(): Promise<void> {
                 upstreamDirectoryIdToName.set(k, v);
             }
 
-            // Inspect all 142 channels against the live upstream directory
+            // Inspect all channels against the live upstream directory
             for (const ch of CORE_SPORTS_CHANNELS) {
                 // 1. Check existing configured streams for hijacked transponders
                 for (const st of ch.streams) {
@@ -4761,7 +4875,8 @@ export async function harvestAndAutoCorrectUpstreamFeeds(): Promise<void> {
                     if (!m) continue;
                     const num = Number(m[1]);
                     const upstreamName = upstreamDirectoryIdToName.get(num);
-                    if (upstreamName && isUpstreamTransponderHijacked(ch, upstreamName)) {
+                    const isSscHijacked = ch.id.startsWith('ssc-') && PERMANENTLY_QUARANTINED_SSC_TRANSPONDERS.has(num);
+                    if (isSscHijacked || (upstreamName && isUpstreamTransponderHijacked(ch, upstreamName))) {
                         const slug = `premium${num}`;
                         quarantinedChannelSlugs.add(`${ch.id}::${slug}`);
                         logAutoFeedCorrection({
@@ -4769,7 +4884,9 @@ export async function harvestAndAutoCorrectUpstreamFeeds(): Promise<void> {
                             channelName: ch.name,
                             action: 'QUARANTINED_HIJACKED_FEED',
                             slug,
-                            upstreamDirectoryName: upstreamName,
+                            upstreamDirectoryName: isSscHijacked
+                                ? `${upstreamName || slug} (Hijacked by Spanish DSports / Offline)`
+                                : upstreamName || slug,
                             timestamp: new Date().toISOString()
                         });
                     }
@@ -4785,6 +4902,10 @@ export async function harvestAndAutoCorrectUpstreamFeeds(): Promise<void> {
                 }> = [];
 
                 for (const [num, upstreamName] of upstreamDirectoryIdToName.entries()) {
+                    // Never auto-bind 614-621 to SSC channels (614-618 are dead; 619-621 broadcast Spanish DSports)
+                    if (ch.id.startsWith('ssc-') && PERMANENTLY_QUARANTINED_SSC_TRANSPONDERS.has(num)) {
+                        continue;
+                    }
                     if (doesUpstreamNameMatchChannelIdentity(ch, upstreamName)) {
                         const slug = `premium${num}`;
                         if (quarantinedChannelSlugs.has(`${ch.id}::${slug}`)) continue;
@@ -4869,12 +4990,12 @@ export const CHANNEL_TO_XMLTV_IDS: Record<string, string[]> = {
     'alkass-3-ar': ['2023 Alkass 3.qa', '2023 Alkass 7.qa'],
 
     // 3. Saudi SSC, STARZPLAY, AD Sports, Dubai Sports, Arab Sports (saudiarabia2.xml, egypt1.xml, morocco1.xml)
-    'ssc-sport-1-ar': ['stc tv sports 1 HD.sa', 'Saudi Sports 1.sa'],
-    'ssc-sport-2-ar': ['stc tv sports HD.sa', 'Saudi Sports 2.sa'],
+    'ssc-sport-1-ar': ['Saudi Sports 1.sa', 'SSC News.sa'],
+    'ssc-sport-2-ar': ['Saudi Sports 2.sa', 'SSC News.sa'],
     'ssc-sport-3-ar': ['Saudi Sports 3.sa', 'SSC News.sa'],
-    'ssc-extra-1-ar': ['stc tv sports 1 HD.sa', 'Sport 24.sa'],
-    'ssc-extra-2-ar': ['stc tv sports HD.sa', 'Saudi Sports 2.sa'],
-    'ssc-extra-3-ar': ['SSC News.sa', 'Saudi Sports 3.sa'],
+    'ssc-extra-1-ar': ['Saudi Sports 1.sa', 'Sport 24.sa'],
+    'ssc-extra-2-ar': ['Saudi Sports 2.sa', 'Sport 24.sa'],
+    'ssc-extra-3-ar': ['Saudi Sports 3.sa', 'SSC News.sa'],
     'starzplay-sports-1-ar': ['AD Sports Premium 1.sa', 'STARZPLAY Sports.sa', 'DAZN 1.it', 'stc tv sports 1 HD.sa'],
     'starzplay-sports-2-ar': ['AD Sports Premium 2.sa', 'STARZPLAY Sports.sa', 'DAZN 2.it'],
     'ad-sports-1-ar': ['AD Sports 1.sa'],
@@ -5122,7 +5243,10 @@ export async function harvestOfficialXmltvEpg(): Promise<void> {
                             !title ||
                             /in HD on 50\d/i.test(title) ||
                             /^nessun evento in onda$/i.test(title) ||
-                            /^dazn\s*[12]$/i.test(title)
+                            /^dazn\s*[12]$/i.test(title) ||
+                            /^saudi\s*sports?\s*[123]?$/i.test(title) ||
+                            /^ssc\s*news$/i.test(title) ||
+                            /^sport\s*24$/i.test(title)
                         ) {
                             continue;
                         }
@@ -5307,13 +5431,13 @@ async function probeStreamLiveness(
 
         if (isM3U && publicBaseUrl && cacheKey) {
             const finalBase = res.url || resolved.url;
-            const rewritten = rewriteLiveHlsManifest(chunk, finalBase, publicBaseUrl, headers, channelId);
+            const rewritten = rewriteLiveHlsManifest(chunk, finalBase, publicBaseUrl, resolved.headers, channelId);
             lastGoodManifestCache.set(cacheKey, {
                 content: rewritten,
                 updatedAt: Date.now()
             });
-            prefetchLatestSegment(chunk, finalBase, headers, channelId);
-            const extracted = parseHlsMasterVariants(chunk, finalBase, publicBaseUrl, headers, channelId);
+            prefetchLatestSegment(chunk, finalBase, resolved.headers, channelId);
+            const extracted = parseHlsMasterVariants(chunk, finalBase, publicBaseUrl, resolved.headers, channelId);
             parsedVariants = extracted.variants;
             parsedAudio = extracted.audioTracks;
             streamVariantsCache.set(cacheKey, {
