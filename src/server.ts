@@ -526,6 +526,15 @@ async function main() {
             category: query.category,
             query: query.q
         });
+        const groups: Record<string, { count: number; channelIds: string[] }> = {};
+        for (const ch of channels) {
+            const grp = ch.group || ch.network;
+            if (!groups[grp]) {
+                groups[grp] = { count: 0, channelIds: [] };
+            }
+            groups[grp].count += 1;
+            groups[grp].channelIds.push(ch.id);
+        }
         return reply.code(200).send({
             status: 'ok',
             count: channels.length,
@@ -536,6 +545,7 @@ async function main() {
                 category: query.category || 'all',
                 q: query.q || ''
             },
+            groups,
             channels
         });
     });
