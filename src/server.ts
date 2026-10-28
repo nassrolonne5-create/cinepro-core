@@ -779,7 +779,7 @@ async function main() {
     app.get('/v1/live/playlist.m3u8', async (request: any, reply: any) => {
         const baseUrl = getRequestPublicBaseUrl(request);
         const query = (request.query || {}) as { lang?: string; category?: string; proxy?: string };
-        const useProxy = query.proxy === 'true' || query.proxy === '1';
+        const useProxy = query.proxy !== 'false' && query.proxy !== '0';
         await getLiveSportEvents(baseUrl).catch(() => {});
         const m3u = generateSportsM3UPlaylist(baseUrl, {
             lang: query.lang,

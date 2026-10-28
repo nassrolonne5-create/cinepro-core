@@ -693,14 +693,53 @@ export function setupThreePillarArchitecture(server: any) {
         }
     }
 
+    const isLiveChannelRequest = (id: string): boolean => {
+        const str = String(id || '').trim().toLowerCase();
+        return !/^\d{1,20}$/.test(str);
+    };
+
+    const resolveDirectIptvSource = async (type: 'movie' | 'tv', id: string) => {
+        const publicBaseUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
+        const iptvProvider = sourceService.registry.getProviders().find((p: any) => p.id === 'iptvsports');
+        if (!iptvProvider) {
+            throw OMSSErrors.invalidTmdbId(id);
+        }
+        const mediaObj = {
+            tmdbId: id,
+            imdbId: '',
+            title: id,
+            type,
+            year: new Date().getFullYear(),
+            season: 1,
+            episode: 1,
+            s: 1,
+            e: 1
+        };
+        const res = type === 'movie'
+            ? await iptvProvider.getMovieSources(mediaObj)
+            : await iptvProvider.getTVSources(mediaObj);
+        if (!res || !Array.isArray(res.sources) || res.sources.length === 0) {
+            throw OMSSErrors.noSourcesAvailable(id, 1);
+        }
+        const built = sourceService.buildResponse([res]);
+        built.sources = formatAndNamespaceSources(built.sources, publicBaseUrl);
+        return built;
+    };
+
     // Override getMovieSources
     sourceService.getMovieSources = async function (tmdbId: string) {
+        if (isLiveChannelRequest(tmdbId)) {
+            return await resolveDirectIptvSource('movie', tmdbId);
+        }
         await sourceService.tmdbValidator.validateMovie(tmdbId);
         return await executeThreePillars('movie', tmdbId);
     };
 
     // Override getTVSources
     sourceService.getTVSources = async function (tmdbId: string, season: number, episode: number) {
+        if (isLiveChannelRequest(tmdbId)) {
+            return await resolveDirectIptvSource('tv', tmdbId);
+        }
         await sourceService.tmdbValidator.validateTVEpisode(tmdbId, season, episode);
         return await executeThreePillars('tv', tmdbId, season, episode);
     };

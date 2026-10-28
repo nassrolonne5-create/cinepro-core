@@ -190,7 +190,10 @@ export interface LiveSportEvent {
 }
 
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36';
-const EDGE_CDN_BASE = 'https://edge.cowedd4855ws.sbs';
+const EDGE_CDN_BASE = 'https://edge.wedd48c.top';
+let activeEdgeCdnBase = EDGE_CDN_BASE;
+let lastEdgeHostDiscoveryAt = 0;
+let edgeHostDiscoveryFlight: Promise<string> | null = null;
 const DEMBED_HEADERS: Record<string, string> = {
     Origin: 'https://dembed.st',
     Referer: 'https://dembed.st/'
@@ -3967,7 +3970,51 @@ const edgeTokenCache = new Map<string, { token: string; expiresAt: number; stale
 const edgeTokenInFlight = new Map<string, Promise<string | null>>();
 
 /**
- * Fetches or reuses a short-lived playlist token for edge.cowedd4855ws.sbs/premium<ID>/index.m3u8
+ * Dynamically discovers the active Edge CDN base domain from dembed.st/premiumtv/daddy.php
+ * so if edge.wedd48c.top rotates in the future, all 300+ Edge streams self-heal automatically.
+ */
+async function getActiveEdgeCdnBase(forceRefresh = false): Promise<string> {
+    if (!forceRefresh && Date.now() - lastEdgeHostDiscoveryAt < 15 * 60 * 1000 && activeEdgeCdnBase) {
+        return activeEdgeCdnBase;
+    }
+    if (!forceRefresh && edgeHostDiscoveryFlight) {
+        return edgeHostDiscoveryFlight;
+    }
+
+    edgeHostDiscoveryFlight = (async () => {
+        try {
+            const res = await fetch('https://dembed.st/premiumtv/daddy.php?id=91', {
+                headers: {
+                    'User-Agent': DEFAULT_UA,
+                    Referer: 'https://thedaddy.pk/'
+                },
+                signal: AbortSignal.timeout(4500)
+            });
+            if (res.ok) {
+                const html = await res.text();
+                const edgeVarMatch =
+                    html.match(/const\s+EDGE\s*=\s*["'](https?:\/\/edge\.[a-z0-9.-]+)["']/i) ||
+                    html.match(/const\s+SRC\s*=\s*["'](https?:\/\/edge\.[a-z0-9.-]+)\/premium\d+\/index\.m3u8["']/i);
+                if (edgeVarMatch?.[1]) {
+                    activeEdgeCdnBase = edgeVarMatch[1].replace(/\/$/, '');
+                    lastEdgeHostDiscoveryAt = Date.now();
+                }
+            }
+        } catch {
+            // Keep last known activeEdgeCdnBase
+        }
+        return activeEdgeCdnBase;
+    })();
+
+    try {
+        return await edgeHostDiscoveryFlight;
+    } finally {
+        edgeHostDiscoveryFlight = null;
+    }
+}
+
+/**
+ * Fetches or reuses a short-lived playlist token for edge.wedd48c.top/premium<ID>/index.m3u8
  * Uses a proactive 20s refresh window and 3 socket retries so tokens never expire mid-playback (~42s mark).
  */
 async function getEdgePlaylistToken(slugKey: string, forceRefresh = false): Promise<string | null> {
@@ -3987,13 +4034,14 @@ async function getEdgePlaylistToken(slugKey: string, forceRefresh = false): Prom
     const flight = (async () => {
         for (let attempt = 0; attempt < 3; attempt++) {
             try {
-                const res = await fetch(`${EDGE_CDN_BASE}/api/playlist-token?slug=${encodeURIComponent(cleanSlug)}`, {
+                const edgeBase = attempt > 0 ? await getActiveEdgeCdnBase(true) : await getActiveEdgeCdnBase(false);
+                const res = await fetch(`${edgeBase}/api/playlist-token?slug=${encodeURIComponent(cleanSlug)}`, {
                     headers: {
                         'User-Agent': DEFAULT_UA,
                         ...DEMBED_HEADERS,
                         ...(attempt > 0 || slugKey.includes('::') ? { Connection: 'close' } : {})
                     },
-                    signal: AbortSignal.timeout(4500)
+                    signal: AbortSignal.timeout(3500)
                 });
                 if (!res.ok) {
                     await new Promise((r) => setTimeout(r, 120 * (attempt + 1)));
@@ -4171,14 +4219,15 @@ async function resolveDynamicManifestUrl(
         ...(headers || {})
     };
 
-    const edgeMatch = rawUrl.match(/edge\.cowedd4855ws\.sbs\/(premium\d+)\/index\.m3u8/i);
+    const edgeMatch = rawUrl.match(/https?:\/\/edge\.[a-z0-9.-]+\/(premium\d+)\/index\.m3u8/i);
     if (edgeMatch) {
         const slug = edgeMatch[1];
         const isBackupSlot = rawUrl.includes('backup=2');
         const tokenCacheKey = isBackupSlot ? `${slug}::b2` : slug;
         Object.assign(mergedHeaders, DEMBED_HEADERS);
         const token = await getEdgePlaylistToken(tokenCacheKey, forceRefreshToken);
-        const baseClean = `${EDGE_CDN_BASE}/${slug}/index.m3u8`;
+        const edgeBase = await getActiveEdgeCdnBase(false);
+        const baseClean = `${edgeBase}/${slug}/index.m3u8`;
         const finalUrl = token
             ? `${baseClean}?t=${encodeURIComponent(token)}&_=${Date.now()}`
             : `${baseClean}?_=${Date.now()}`;
@@ -6686,16 +6735,25 @@ export function getLiveChannels(
     }
 
     return list.map((ch) => {
-        const primaryStream = ch.streams[0];
+        const validStreams = ch.streams.filter(
+            (st) => !st.url.includes('primetv.cc.cd') && !st.url.includes('andro.mangeinde4.lat')
+        );
+        const effectiveStreams = validStreams.length > 0 ? validStreams : ch.streams;
+        const primaryStream = effectiveStreams[0];
         const dynBackups = dynamicChannelCache.get(ch.id) || [];
         return {
             ...ch,
+            streams: effectiveStreams.map((st) => ({
+                ...st,
+                rawUrl: st.url,
+                url: buildLiveProxyUrl(st.url, publicBaseUrl, st.headers, ch.id)
+            })),
             streamEndpoint: `${publicBaseUrl}/v1/live/stream/${ch.id}`,
             masterPlaylistUrl: `${publicBaseUrl}/v1/live/master/${ch.id}.m3u8`,
             defaultProxyUrl: primaryStream
                 ? buildLiveProxyUrl(primaryStream.url, publicBaseUrl, primaryStream.headers, ch.id)
                 : '',
-            backupServerCount: Math.max(2, ch.streams.length + dynBackups.length)
+            backupServerCount: Math.max(2, effectiveStreams.length + dynBackups.length)
         };
     });
 }
@@ -6755,6 +6813,9 @@ export async function resolveChannelStreams(
     }> = [];
 
     for (const st of channel.streams) {
+        if (st.url.includes('primetv.cc.cd') || st.url.includes('andro.mangeinde4.lat')) {
+            continue;
+        }
         const slugMatch = st.url.match(/\/(premium\d+)\//i);
         if (slugMatch && quarantinedChannelSlugs.has(`${channel.id}::${slugMatch[1].toLowerCase()}`)) {
             continue;
@@ -8769,15 +8830,17 @@ export function generateSportsM3UPlaylist(
         category: options?.category
     });
 
+    const useProxy = options?.useProxy !== false;
     const epgXmlUrl = `${publicBaseUrl}/v1/live/epg.xml`;
     const lines: string[] = [`#EXTM3U url-tvg="${epgXmlUrl}" x-tvg-url="${epgXmlUrl}"`];
     for (const ch of channels) {
         const nowTitle = ch.epg?.nowPlaying?.title ? ` — ${ch.epg.nowPlaying.title}` : '';
         const groupTitle = getChannelGroupTitle(ch);
         for (const st of ch.streams) {
-            const targetUrl = options?.useProxy
-                ? buildLiveProxyUrl(st.url, publicBaseUrl, st.headers, ch.id)
-                : st.url;
+            const rawTarget = (st as any).rawUrl || st.url;
+            const targetUrl = useProxy
+                ? (st.url.includes('/v1/live/proxy') ? st.url : buildLiveProxyUrl(rawTarget, publicBaseUrl, st.headers, ch.id))
+                : rawTarget;
             lines.push(
                 `#EXTINF:-1 tvg-id="${ch.id}" tvg-name="${ch.name}" tvg-logo="${ch.logo}" tvg-language="${ch.languageLabel}" group-title="${groupTitle}",${st.label} [${st.quality}]${nowTitle}`
             );
@@ -8849,7 +8912,7 @@ export function rewriteLiveHlsManifest(
         }
     };
 
-    const isEdgeParent = /edge\.cowedd4855ws\.sbs/i.test(baseUrl);
+    const isEdgeParent = /https?:\/\/edge\.[a-z0-9.-]+/i.test(baseUrl);
 
     const wrapProxy = (targetUrl: string, isSubManifest: boolean): string => {
         const isTiktokSegment = /tiktokcdn/i.test(targetUrl) || targetUrl.includes('.image');
@@ -9008,7 +9071,7 @@ function prefetchLatestSegment(
 
     // Pre-fetch the last 3 segments (staggered by 70ms so 4MB 1080p50 segments don't saturate a single CDN edge socket)
     const targetLines = mediaLines.slice(-3);
-    const isEdgeParent = /edge\.cowedd4855ws\.sbs/i.test(baseUrl);
+    const isEdgeParent = /https?:\/\/edge\.[a-z0-9.-]+/i.test(baseUrl);
 
     for (let idx = 0; idx < targetLines.length; idx++) {
         const segRel = targetLines[idx];
