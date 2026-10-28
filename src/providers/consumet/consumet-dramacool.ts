@@ -1,78 +1,106 @@
 import { BaseProvider } from '@omss/framework';
-import type { ProviderCapabilities, ProviderMediaObject, ProviderResult, Source } from '@omss/framework';
-import { MOVIES } from '@consumet/extensions';
+import type {
+    ProviderCapabilities,
+    ProviderMediaObject,
+    ProviderResult,
+    Source
+} from '@omss/framework';
+import { purstream } from 'kaizoku-core';
 import { getSourceType } from '../../utils/streamType.js';
+import {
+    getMediaSeasonEpisode,
+    resolveVidnestV2,
+    resolveRiveStreamClean
+} from '../../utils/vidnestV2.js';
 
 export class ConsumetDramaCoolProvider extends BaseProvider {
     readonly id = 'consumet-dramacool';
-    readonly name = 'consumet-dramacool';
-    readonly enabled = false;
+    readonly name = 'DramaCool';
+    readonly enabled = true;
     readonly BASE_URL = 'https://dramacool.bg';
-    readonly HEADERS = {};
+    readonly HEADERS = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+        'Referer': 'https://dramacool.bg/'
+    };
+
     readonly capabilities: ProviderCapabilities = {
         supportedContentTypes: ['tv', 'movies']
     };
 
-    private drama = new MOVIES.DramaCool();
-
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.extractSources(media);
+        return Promise.race([
+            this.extractSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.extractSources(media);
+        return Promise.race([
+            this.extractSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     private async extractSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        const diagnostics: any[] = [];
+        const { season, episode } = getMediaSeasonEpisode(media);
         const sources: Source[] = [];
-        try {
-            const searchTitle = media.title || "";
-            const res = await this.drama.search(searchTitle);
-            
-            let match = res.results.find((r: any) => 
-                r.title.toLowerCase().includes(searchTitle.toLowerCase())
-            );
-            if (!match) match = res.results[0];
 
-            if (!match) {
-                return { sources: [], subtitles: [], diagnostics: [{ code: 'PROVIDER_ERROR', field: 'search', message: 'No match found on DramaCool', severity: 'warning' }] };
-            }
+        const [v2Settled, purSettled] = await Promise.allSettled([
+            resolveVidnestV2(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                [
+                    { name: 'AsianCloud', path: 'flixhq' },
+                    { name: 'StreamSB', path: 'nextgencloudfabric' }
+                ],
+                3200
+            ),
+            Promise.race([
+                purstream.fetchSources(media.tmdbId, media.type, season, episode),
+                new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
+            ])
+        ]);
 
-            const info = await this.drama.fetchMediaInfo(match.id);
-            if (!info.episodes || info.episodes.length === 0) {
-                 return { sources: [], subtitles: [], diagnostics: [{ code: 'PROVIDER_ERROR', field: 'episodes', message: 'No episodes found', severity: 'warning' }] };
-            }
-            
-            let epNumber = media.type === 'movie' ? 1 : media.e || 1;
-            
-            const ep = info.episodes.find((e: any) => 
-                e.title.includes(`Episode ${epNumber}`) || e.episode === epNumber
-            );
-            const episodeId = ep ? ep.id : info.episodes[0].id;
-
-            const streamRes = await this.drama.fetchEpisodeSources(episodeId, match.id as any);
-            
-            if (streamRes && streamRes.sources) {
-                for (const src of streamRes.sources) {
-                    sources.push({
-                        url: src.url,
-                        quality: src.quality || 'default',
-                        type: getSourceType(src.url, src.isM3U8),
-                        audioTracks: [],
-                        provider: {
-                            name: `${this.name} ${src.quality || ''}`.trim(),
-                            id: this.id
-                        }
-                    });
-                }
-            }
-
-            return { sources, subtitles: [], diagnostics };
-        } catch (e: any) {
-            diagnostics.push({ code: 'PROVIDER_ERROR', field: '', message: e.message, severity: 'error' });
-            return { sources: [], subtitles: [], diagnostics };
+        if (v2Settled.status === 'fulfilled' && v2Settled.value.sources.length > 0) {
+            sources.push(...v2Settled.value.sources);
         }
+
+        if (purSettled.status === 'fulfilled' && Array.isArray((purSettled.value as any)?.sources)) {
+            for (const src of (purSettled.value as any).sources) {
+                if (!src?.url) continue;
+                sources.push({
+                    url: src.url,
+                    quality: src.quality || '1080p',
+                    type: getSourceType(src.url, src.isM3U8),
+                    server: 'Direct HD',
+                    audioTracks: [{ language: 'en', label: 'English' }],
+                    provider: {
+                        name: `${this.name} (Direct HD)`,
+                        id: `${this.id}-directhd`
+                    }
+                });
+            }
+        }
+
+        if (sources.length > 0) {
+            const subtitles = v2Settled.status === 'fulfilled' ? v2Settled.value.subtitles : [];
+            return { sources, subtitles, diagnostics: [] };
+        }
+
+        const riveSources = await resolveRiveStreamClean(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            3000
+        );
+        return { sources: riveSources, subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

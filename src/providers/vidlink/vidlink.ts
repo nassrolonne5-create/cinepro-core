@@ -1,3 +1,4 @@
+import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type {
     ProviderCapabilities,
@@ -6,16 +7,22 @@ import type {
     Source,
     Subtitle
 } from '@omss/framework';
+import {
+    getMediaSeasonEpisode,
+    resolveVidnestV2,
+    resolveRiveStreamClean
+} from '../../utils/vidnestV2.js';
 
-export class VidLinkProvider extends BaseProvider {
+export class VidlinkProvider extends BaseProvider {
     readonly id = 'vidlink';
     readonly name = 'VidLink';
     readonly enabled = true;
     readonly BASE_URL = 'https://vidlink.pro';
+    readonly ENC_URL = 'https://enc-dec.app/api/enc-vidlink';
     readonly HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
-        'Origin': 'https://vidlink.pro',
-        'Referer': 'https://vidlink.pro/'
+        'Referer': 'https://vidlink.pro/',
+        'Origin': 'https://vidlink.pro'
     };
 
     readonly capabilities: ProviderCapabilities = {
@@ -23,78 +30,129 @@ export class VidLinkProvider extends BaseProvider {
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        const { season, episode } = getMediaSeasonEpisode(media);
+        const sources: Source[] = [];
+        const subtitles: Subtitle[] = [];
+
+        // 1. Primary native VidLink API (enc-vidlink -> vidlink.pro/api/b/)
         try {
-            // 1. Get encryption token from enc-dec.app API
-            const encRes = await fetch(`https://enc-dec.app/api/enc-vidlink?text=${encodeURIComponent(media.tmdbId)}`, {
-                signal: AbortSignal.timeout(8000)
-            });
-            if (!encRes.ok) return { sources: [], subtitles: [], diagnostics: [] };
-            
-            const encData = await encRes.json() as any;
-            if (encData.status !== 200 || !encData.result) {
-                return { sources: [], subtitles: [], diagnostics: [] };
-            }
-
-            // 2. Fetch stream from VidLink API
-            const endpoint = media.type === 'tv'
-                ? `${this.BASE_URL}/api/b/tv/${encData.result}/${media.s || 1}/${media.e || 1}`
-                : `${this.BASE_URL}/api/b/movie/${encData.result}`;
-
-            const res = await fetch(endpoint, {
+            const encRes = await fetch(`${this.ENC_URL}?text=${media.tmdbId}`, {
                 headers: this.HEADERS,
-                signal: AbortSignal.timeout(10000)
+                signal: AbortSignal.timeout(3000)
             });
-            if (!res.ok) return { sources: [], subtitles: [], diagnostics: [] };
+            if (encRes.ok) {
+                const encData = (await encRes.json()) as any;
+                const encId = encData?.result;
+                if (encId) {
+                    const endpoint = media.type === 'tv'
+                        ? `${this.BASE_URL}/api/b/tv/${encId}/${season}/${episode}`
+                        : `${this.BASE_URL}/api/b/movie/${encId}`;
 
-            const data = await res.json() as any;
-            const sources: Source[] = [];
-            const subtitles: Subtitle[] = [];
-
-            if (data?.stream?.qualities) {
-                const qualities = data.stream.qualities;
-                const sortedKeys = Object.keys(qualities).sort((a, b) => Number(b) - Number(a));
-                for (const q of sortedKeys) {
-                    const item = qualities[q];
-                    if (item?.url) {
-                        const isM3U8 = item.type === 'hls' || item.url.includes('.m3u8');
-                        sources.push({
-                            url: item.url,
-                            quality: `${q}p`,
-                            type: isM3U8 ? 'hls' : 'mp4',
-                            audioTracks: [{ language: 'en', label: 'English' }],
-                            provider: {
-                                name: this.name,
-                                id: this.id
+                    const streamRes = await fetch(endpoint, {
+                        headers: this.HEADERS,
+                        signal: AbortSignal.timeout(3500)
+                    });
+                    if (streamRes.ok) {
+                        const data = (await streamRes.json()) as any;
+                        if (data?.stream?.qualities && typeof data.stream.qualities === 'object') {
+                            for (const [q, details] of Object.entries(data.stream.qualities) as [string, any][]) {
+                                if (details?.url) {
+                                    const qLabel = q.includes('p') ? q : `${q}p`;
+                                    sources.push({
+                                        url: details.url,
+                                        quality: qLabel,
+                                        type: getSourceType(details.url, details.type === 'hls' || details.url.includes('.m3u8')),
+                                        server: `Direct ${qLabel}`,
+                                        audioTracks: [{ language: 'en', label: 'English' }],
+                                        provider: {
+                                            name: `${this.name} (${qLabel})`,
+                                            id: `${this.id}-${qLabel.toLowerCase()}`
+                                        }
+                                    });
+                                }
                             }
-                        });
+                        }
+
+                        if (data?.stream?.playlist && typeof data.stream.playlist === 'string') {
+                            const plUrl = data.stream.playlist;
+                            const proxied = this.createProxyUrl(plUrl, this.HEADERS);
+                            sources.push({
+                                url: proxied,
+                                quality: '1080p',
+                                type: 'hls',
+                                server: 'HLS Master',
+                                audioTracks: [{ language: 'en', label: 'English' }],
+                                provider: {
+                                    name: `${this.name} (HLS Master)`,
+                                    id: `${this.id}-hls`
+                                }
+                            });
+                        }
+
+                        if (Array.isArray(data?.stream?.captions)) {
+                            for (const sub of data.stream.captions) {
+                                if (sub?.url) {
+                                    subtitles.push({
+                                        url: sub.url,
+                                        language: (sub.language || 'en').slice(0, 2).toLowerCase(),
+                                        label: sub.language || 'English',
+                                        format: sub.type === 'srt' || sub.url.endsWith('.srt') ? 'srt' : 'vtt'
+                                    } as Subtitle);
+                                }
+                            }
+                        }
                     }
                 }
             }
+        } catch {}
 
-            if (Array.isArray(data?.stream?.captions)) {
-                for (const cap of data.stream.captions) {
-                    if (cap?.url) {
-                        subtitles.push({
-                            url: cap.url,
-                            label: cap.language || 'English',
-                            format: cap.type === 'vtt' || cap.url.includes('.vtt') ? 'vtt' : 'srt'
-                        });
-                    }
-                }
-            }
-
+        if (sources.length > 0) {
             return { sources, subtitles, diagnostics: [] };
-        } catch (e) {
-            return { sources: [], subtitles: [], diagnostics: [] };
         }
+
+        // 2. Fallback: VidNest v2 (Beta HD & Zeta Cloud)
+        const v2 = await resolveVidnestV2(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            [
+                { name: 'Hexa HD', path: 'flixhq' },
+                { name: 'Zeta Cloud', path: 'nextgencloudfabric' }
+            ],
+            3200
+        );
+        if (v2.sources.length > 0) {
+            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
+        }
+
+        // 3. Fallback: Clean RiveStream
+        const riveSources = await resolveRiveStreamClean(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            3000
+        );
+        return { sources: riveSources, subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

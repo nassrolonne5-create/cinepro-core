@@ -6,6 +6,10 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
+import {
+    resolveVidnestV2,
+    resolveRiveStreamClean
+} from '../../utils/vidnestV2.js';
 
 const BASE_URL = 'https://vidcore.io';
 const REFERER = 'https://watchflix.bz/';
@@ -194,64 +198,34 @@ export class WatchflixProvider extends BaseProvider {
     }
 
     private async fallbackVidVault(media: ProviderMediaObject, season: number, episode: number): Promise<ProviderResult> {
-        const sources: Source[] = [];
-        try {
-            const bodyPayload = media.type === 'tv'
-                ? { type: 'tv', tmdbId: Number(media.tmdbId), season: Number(season), episode: Number(episode) }
-                : { type: 'movie', tmdbId: Number(media.tmdbId) };
+        (media as any).season = season;
+        (media as any).episode = episode;
+        (media as any).s = season;
+        (media as any).e = episode;
 
-            const tokenRes = await fetch('https://vidvault.to/api/get-token', {
-                headers: { 'User-Agent': HEADERS['User-Agent'], 'Referer': 'https://vidvault.ru/' },
-                signal: AbortSignal.timeout(4000)
-            });
-            if (tokenRes.ok) {
-                const tokenJson = (await tokenRes.json()) as any;
-                if (tokenJson?.t) {
-                    const streamRes = await fetch('https://vidvault.to/api/download-proxy', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-request-token': tokenJson.t,
-                            'User-Agent': HEADERS['User-Agent'],
-                            'Referer': 'https://vidvault.ru/'
-                        },
-                        body: JSON.stringify(bodyPayload),
-                        signal: AbortSignal.timeout(5000)
-                    });
-                    if (streamRes.ok) {
-                        const streamData = (await streamRes.json()) as any;
-                        const candidates = [
-                            ...(streamData?.mkvV2Data?.url ? [{ ...streamData.mkvV2Data, label: 'Master HD' }] : []),
-                            ...(streamData?.mkvData?.url ? [{ ...streamData.mkvData, label: 'Direct HD' }] : []),
-                            ...(Array.isArray(streamData?.mp4Data?.links) ? streamData.mp4Data.links.map((l: any) => ({ ...l, label: 'Fast MP4' })) : [])
-                        ];
-                        for (const item of candidates) {
-                            if (!item.url) continue;
-                            const proxyData = JSON.stringify({
-                                url: item.url,
-                                headers: { 'User-Agent': HEADERS['User-Agent'], 'Referer': 'https://vidvault.ru/' }
-                            });
-                            const proxiedUrl = `http://localhost:3000/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.mp4`;
-                            const quality = item.quality ? String(item.quality).replace(/p$/i, '') + 'p' : '1080p';
-                            const fbSrc: any = {
-                                url: proxiedUrl,
-                                quality,
-                                type: 'mp4',
-                                server: item.label || 'Master HD',
-                                audioTracks: [{ language: 'en', label: 'English' }],
-                                provider: {
-                                    name: `${this.name} (${item.label || 'Master HD'})`,
-                                    id: this.id
-                                }
-                            };
-                            sources.push(fbSrc as Source);
-                        }
-                    }
-                }
-            }
-        } catch {}
+        const v2 = await resolveVidnestV2(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            [
+                { name: 'Supreme HD', path: 'flixhq' },
+                { name: 'Prime Cloud', path: 'nextgencloudfabric' }
+            ],
+            3200
+        );
+        if (v2.sources.length > 0) {
+            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
+        }
 
-        return { sources, subtitles: [], diagnostics: [] };
+        const riveSources = await resolveRiveStreamClean(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            3000
+        );
+        return { sources: riveSources, subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

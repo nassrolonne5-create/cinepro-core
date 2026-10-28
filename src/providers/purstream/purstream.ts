@@ -16,7 +16,9 @@ export class PurstreamProvider extends BaseProvider {
     
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
-            const data = await purstream.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const season = Number((media as any).season || (media as any).s || 1);
+            const episode = Number((media as any).episode || (media as any).e || 1);
+            const data = await purstream.fetchSources(media.tmdbId, media.type, season, episode);
             const headers = data.headers || this.HEADERS;
             const sources: Source[] = [];
             for (const src of data.sources) {

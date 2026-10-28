@@ -205,6 +205,10 @@ const ALOULA_HEADERS: Record<string, string> = {
     Origin: 'https://aloula.sba.sa',
     Referer: 'https://aloula.sba.sa/'
 };
+const WIDEIPTV_HEADERS: Record<string, string> = {
+    Origin: 'https://wideiptv.top',
+    Referer: 'https://wideiptv.top/'
+};
 
 /**
  * Curated Core Sports, beIN Sports & Movies/Entertainment Channel Matrix (AR / EN / FR / ES / TR + MENA + Global)
@@ -227,8 +231,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 1 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium91/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 1 AR (Backup Relay 1080p 50fps — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium91/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 1 AR (Server 1 — Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium91/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 1 AR (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINAR/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 1 AR (Server 3 — Backup Relay 1080p 50fps — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium91/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 1 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd11/tracks-v1a1/mono.tbin.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -244,7 +250,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 2 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium92/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 2 AR (Server 1 — Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium92/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 2 AR (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINAR2/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 2 AR (Server 3 — Backup Relay 1080p 50fps — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium92/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 2 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd22/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -260,7 +269,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 3 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium93/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 3 AR (Server 1 — Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium93/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 3 AR (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINAR3/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 3 AR (Server 3 — Backup Relay 1080p 50fps — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium93/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 3 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd33/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -276,7 +288,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 4 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium94/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 4 AR (Server 1 — Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium94/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 4 AR (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINAR4/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 4 AR (Server 3 — Backup Relay 1080p 50fps — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium94/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 4 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd44/tracks-v1a1/mono.tbin.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -292,7 +307,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 5 AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium95/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 5 AR (Server 1 — Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium95/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 5 AR (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINAR5/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 5 AR (Server 3 — Backup Relay 1080p 50fps — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium95/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 5 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd55/tracks-v1a1/mono.tbin.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -308,7 +326,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports 6 AR (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium96/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 6 AR (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium96/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 6 AR (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINAR6/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 6 AR (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium96/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 6 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd66/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -324,7 +345,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports 7 AR (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium97/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 7 AR (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium97/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 7 AR (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINAR7/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 7 AR (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium97/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 7 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd77/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -340,7 +364,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports 8 AR (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium98/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 8 AR (Server 1 — WideIPTV Bluetier HD Primary)', url: 'https://wideiptv.top/player/beINAR8/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 8 AR (Server 2 — Edge CDN 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium98/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 8 AR (Server 3 — Edge Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium98/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 8 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd88/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -356,7 +383,28 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports 9 AR (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium99/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 9 AR (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium99/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 9 AR (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINAR9/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 9 AR (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium99/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 9 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd99/tracks-v1a1/mono.tbin.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'bein-sports-xtra-1-ar',
+        name: 'beIN Sports XTRA 1 HD (MENA)',
+        shortName: 'beIN XTRA 1 MENA',
+        network: 'beIN Sports',
+        category: 'bein',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'QA',
+        logo: 'https://i.ibb.co/HT49GPmB/XTRA-2.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'beIN Sports XTRA 1 MENA (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium100/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports XTRA 1 MENA (Server 2 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium100/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports XTRA 1 MENA (Server 3 — iptv-org 1080p)', url: 'http://primetv.cc.cd/beinxtrafhd11/tracks-v1a1/mono.tbin.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -372,7 +420,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports HD Qatar (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium578/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports HD Qatar (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium578/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports HD Qatar (Server 2 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium578/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports News MENA (Server 3 — iptv-org Kwikmotion)', url: 'https://live.kwikmotion.com/beinsportsnewslive/beinsportsnews.smil/playlist.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -388,7 +438,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Premium 1 AR (1080p)', url: `${EDGE_CDN_BASE}/premium91/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Premium 1 AR (Server 1 — Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium91/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Premium 1 AR (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINAR/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Premium 1 AR (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium91/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Premium 1 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd11/tracks-v1a1/mono.tbin.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -404,7 +457,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Premium 2 AR (1080p)', url: `${EDGE_CDN_BASE}/premium92/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Premium 2 AR (Server 1 — Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium92/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Premium 2 AR (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINAR2/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Premium 2 AR (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium92/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Premium 2 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd22/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -420,7 +476,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Premium 3 AR (1080p)', url: `${EDGE_CDN_BASE}/premium93/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Premium 3 AR (Server 1 — Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium93/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Premium 3 AR (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINAR3/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Premium 3 AR (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium93/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Premium 3 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd33/index.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -436,7 +495,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports AFC AR (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium97/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports AFC AR (Server 1 — Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium97/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports AFC AR (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINAR7/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports AFC AR (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium97/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
 
@@ -456,8 +517,14 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN XTRA English (Amagi 1080p)', url: 'https://bein-xtra-bein.amagi.tv/playlist.m3u8', quality: '1080p', language: 'en' },
-            { label: 'beIN XTRA English (LocalNow CDN)', url: 'https://amg01334-beinsportsllc-beinxtra-localnow-kcy6r.amagi.tv/playlist.m3u8', quality: '1080p', language: 'en' }
+            { label: 'beIN XTRA English (Server 1 — iptv-org Amagi 1080p)', url: 'https://bein-xtra-bein.amagi.tv/playlist.m3u8', quality: '1080p', language: 'en' },
+            { label: 'beIN XTRA English (Server 2 — iptv-org FireTV Amagi 1080p)', url: 'https://bein-beinxtrasports-firetv.amagi.tv/playlist.m3u8', quality: '1080p', language: 'en' },
+            { label: 'beIN XTRA English (Server 3 — iptv-org CloudFront 1080p)', url: 'https://d9ssxzmclhfo4.cloudfront.net/bein_sports.m3u8', quality: '1080p', language: 'en' },
+            { label: 'beIN XTRA English (Server 4 — iptv-org Xumo Amagi 1080p)', url: 'https://bein-xtra-xumo.amagi.tv/playlist.m3u8', quality: '1080p', language: 'en' },
+            { label: 'beIN XTRA English (Server 5 — iptv-org Tubi CloudFront 720p)', url: 'https://aegis-cloudfront-1.tubi.video/651ee7d3-e75b-4748-be86-422d43ff24b6/playlist.m3u8', quality: '720p', language: 'en' },
+            { label: 'beIN XTRA English (Server 6 — Edge CDN 1080p)', url: `${EDGE_CDN_BASE}/premium100/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN XTRA English (Server 7 — Edge Backup Relay 1080p)', url: `${EDGE_CDN_BASE}/premium100/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN XTRA English (Server 8 — LocalNow CDN 1080p)', url: 'https://amg01334-beinsportsllc-beinxtra-localnow-kcy6r.amagi.tv/playlist.m3u8', quality: '1080p', language: 'en' }
         ]
     },
     {
@@ -473,8 +540,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 1 English MENA (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium61/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 1 English MENA (Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium61/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 1 English MENA (Server 1 — Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium61/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 1 English MENA (Server 2 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium61/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 1 English (Server 3 — International Feed 1080p)', url: `${EDGE_CDN_BASE}/premium712/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 1 English (Server 4 — Australia Feed 1080p)', url: `${EDGE_CDN_BASE}/premium491/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -490,8 +559,11 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 2 English MENA (Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium90/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 2 English MENA (Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium90/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 2 English (Server 1 — International Feed 1080p)', url: `${EDGE_CDN_BASE}/premium713/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 2 English (Server 2 — Australia Feed 1080p)', url: `${EDGE_CDN_BASE}/premium492/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 2 English (Server 3 — International Backup Relay 1080p)', url: `${EDGE_CDN_BASE}/premium713/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 2 English (Server 4 — Australia Backup Relay 1080p)', url: `${EDGE_CDN_BASE}/premium492/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 2 English MENA (Server 5 — MENA Transponder 1080p)', url: `${EDGE_CDN_BASE}/premium90/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -507,7 +579,79 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports 3 English (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium714/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 3 English (Server 1 — International Feed 1080p)', url: `${EDGE_CDN_BASE}/premium714/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 3 English (Server 2 — Australia Feed 1080p)', url: `${EDGE_CDN_BASE}/premium493/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 3 English (Server 3 — International Backup Relay 1080p)', url: `${EDGE_CDN_BASE}/premium714/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 3 English (Server 4 — Australia Backup Relay 1080p)', url: `${EDGE_CDN_BASE}/premium493/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-sports-usa',
+        name: 'beIN SPORTS USA HD (English)',
+        shortName: 'beIN USA EN',
+        network: 'beIN Sports',
+        category: 'bein',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'US',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'beIN SPORTS USA (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium425/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN SPORTS USA (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINSPORTSUS/index.m3u8', quality: '1080p', language: 'en', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN SPORTS USA (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium425/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-sports-au-1',
+        name: 'beIN SPORTS 1 Australia HD (English)',
+        shortName: 'beIN 1 AU EN',
+        network: 'beIN Sports',
+        category: 'bein',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'AU',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'beIN SPORTS 1 Australia (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium491/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN SPORTS 1 Australia (Server 2 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium491/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-sports-au-2',
+        name: 'beIN SPORTS 2 Australia HD (English)',
+        shortName: 'beIN 2 AU EN',
+        network: 'beIN Sports',
+        category: 'bein',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'AU',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'beIN SPORTS 2 Australia (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium492/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN SPORTS 2 Australia (Server 2 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium492/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-sports-au-3',
+        name: 'beIN SPORTS 3 Australia HD (English)',
+        shortName: 'beIN 3 AU EN',
+        network: 'beIN Sports',
+        category: 'bein',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'AU',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'beIN SPORTS 3 Australia (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium493/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN SPORTS 3 Australia (Server 2 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium493/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
 
@@ -527,7 +671,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 1 France (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium116/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 1 France (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium116/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 1 France (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/BEINSPORT1FR/index.m3u8', quality: '1080p', language: 'fr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 1 France (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium116/index.m3u8?backup=2`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -543,7 +689,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 2 France (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium117/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 2 France (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium117/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 2 France (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/BEINSPORT2FR/index.m3u8', quality: '1080p', language: 'fr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 2 France (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium117/index.m3u8?backup=2`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -559,7 +707,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 3 France (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium118/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 3 France (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium118/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 3 France (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/BEINSPORT3FR/index.m3u8', quality: '1080p', language: 'fr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 3 France (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium118/index.m3u8?backup=2`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -575,7 +725,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports MAX 4 France (1080p)', url: `${EDGE_CDN_BASE}/premium494/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports MAX 4 France (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium494/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports MAX 4 France (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINMAX4FR/index.m3u8', quality: '1080p', language: 'fr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports MAX 4 France (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium494/index.m3u8?backup=2`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -591,7 +743,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports MAX 5 France (1080p)', url: `${EDGE_CDN_BASE}/premium495/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports MAX 5 France (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium495/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports MAX 5 France (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINMAX5FR/index.m3u8', quality: '1080p', language: 'fr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports MAX 5 France (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium495/index.m3u8?backup=2`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -607,7 +761,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports MAX 6 France (1080p)', url: `${EDGE_CDN_BASE}/premium496/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports MAX 6 France (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium496/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports MAX 6 France (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINMAX6FR/index.m3u8', quality: '1080p', language: 'fr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports MAX 6 France (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium496/index.m3u8?backup=2`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -623,7 +779,27 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports MAX 7 France (1080p)', url: `${EDGE_CDN_BASE}/premium497/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports MAX 7 France (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium497/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports MAX 7 France (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINMAX7FR/index.m3u8', quality: '1080p', language: 'fr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports MAX 7 France (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium497/index.m3u8?backup=2`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+        ]
+    },
+    {
+        id: 'bein-sports-max-8-fr',
+        name: 'beIN Sports MAX 8 France HD (FR)',
+        shortName: 'beIN MAX 8 FR',
+        network: 'beIN Sports',
+        category: 'bein',
+        language: 'fr',
+        languageLabel: 'Français (French)',
+        country: 'FR',
+        logo: 'https://i.imgur.com/CaFEyVn.png',
+        quality: '1080p',
+        featured: false,
+        streams: [
+            { label: 'beIN Sports MAX 8 France (Server 1 — WideIPTV Bluetier HD Primary)', url: 'https://wideiptv.top/player/beINMAX8FR/index.m3u8', quality: '1080p', language: 'fr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports MAX 8 France (Server 2 — Edge CDN 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium498/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports MAX 8 France (Server 3 — Edge Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium498/index.m3u8?backup=2`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -639,7 +815,9 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports MAX 9 France (1080p)', url: `${EDGE_CDN_BASE}/premium499/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports MAX 9 France (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium499/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports MAX 9 France (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINMAX9FR/index.m3u8', quality: '1080p', language: 'fr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports MAX 9 France (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium499/index.m3u8?backup=2`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -655,7 +833,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports MAX 10 France (1080p)', url: `${EDGE_CDN_BASE}/premium500/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports MAX 10 France (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium500/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports MAX 10 France (Server 2 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium500/index.m3u8?backup=2`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
 
@@ -675,7 +854,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 1 Türkiye (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium62/index.m3u8`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 1 Türkiye (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium62/index.m3u8`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 1 Türkiye (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINSPORTS1TR/index.m3u8', quality: '1080p', language: 'tr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 1 Türkiye (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium62/index.m3u8?backup=2`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 1 Türkiye (Server 4 — iptv-org TR)', url: 'https://andro.mangeinde4.lat/checklist/androstreamlivebs1.m3u8', quality: '1080p', language: 'tr' }
         ]
     },
     {
@@ -691,7 +873,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports 2 Türkiye (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium63/index.m3u8`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 2 Türkiye (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium63/index.m3u8`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 2 Türkiye (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINSPORTS2TR/index.m3u8', quality: '1080p', language: 'tr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 2 Türkiye (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium63/index.m3u8?backup=2`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 2 Türkiye (Server 4 — iptv-org TR)', url: 'https://andro.mangeinde4.lat/checklist/androstreamlivebs2.m3u8', quality: '1080p', language: 'tr' }
         ]
     },
     {
@@ -707,7 +892,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports 3 Türkiye (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium64/index.m3u8`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 3 Türkiye (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium64/index.m3u8`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 3 Türkiye (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINSPORTS3TR/index.m3u8', quality: '1080p', language: 'tr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 3 Türkiye (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium64/index.m3u8?backup=2`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 3 Türkiye (Server 4 — iptv-org TR)', url: 'https://andro.mangeinde4.lat/checklist/androstreamlivebs3.m3u8', quality: '1080p', language: 'tr' }
         ]
     },
     {
@@ -723,7 +911,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports 4 Türkiye (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium67/index.m3u8`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 4 Türkiye (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium67/index.m3u8`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 4 Türkiye (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/BEINSPORT4TR/index.m3u8', quality: '1080p', language: 'tr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 4 Türkiye (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium67/index.m3u8?backup=2`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 4 Türkiye (Server 4 — iptv-org TR)', url: 'https://andro.mangeinde4.lat/checklist/androstreamlivebs4.m3u8', quality: '1080p', language: 'tr' }
         ]
     },
     {
@@ -739,7 +930,10 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports 5 Türkiye (Primary 1080p)', url: `${EDGE_CDN_BASE}/premium1010/index.m3u8`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 5 Türkiye (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium1010/index.m3u8`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 5 Türkiye (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINSPORTS5TR/index.m3u8', quality: '1080p', language: 'tr', headers: WIDEIPTV_HEADERS },
+            { label: 'beIN Sports 5 Türkiye (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium1010/index.m3u8?backup=2`, quality: '1080p', language: 'tr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 5 Türkiye (Server 4 — iptv-org TR)', url: 'https://andro.mangeinde4.lat/checklist/androstreamlivebs5.m3u8', quality: '1080p', language: 'tr' }
         ]
     },
     {
@@ -755,7 +949,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'HT Spor Türkiye HD (1080p)', url: 'https://ciner.daioncdn.net/ht-spor/ht-spor.m3u8?app=web', quality: '1080p', language: 'tr' }
+            { label: 'HT Spor Türkiye HD (Server 1 — Primary 1080p)', url: 'https://ciner.daioncdn.net/ht-spor/ht-spor.m3u8?app=web', quality: '1080p', language: 'tr' },
+            { label: 'beIN Sports Haber TR (Server 2 — iptv-org TR)', url: 'https://andro.mangeinde4.lat/checklist/androstreamlivebsh.m3u8', quality: '1080p', language: 'tr' }
         ]
     },
     {
@@ -771,7 +966,12 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN XTRA Español (Amagi 1080p)', url: 'https://bein-esp-xumo.amagi.tv/playlistR1080p.m3u8', quality: '1080p', language: 'es' }
+            { label: 'beIN XTRA Español (Server 1 — Amagi 1080p)', url: 'https://bein-esp-xumo.amagi.tv/playlistR1080p.m3u8', quality: '1080p', language: 'es' },
+            { label: 'beIN XTRA Español (Server 2 — iptv-org CloudFront 1080p)', url: 'https://dc1644a9jazgj.cloudfront.net/beIN_Sports_Xtra_Espanol.m3u8', quality: '1080p', language: 'es' },
+            { label: 'beIN XTRA Español (Server 3 — iptv-org Xumo ABR)', url: 'https://bein-esp-xumo.amagi.tv/playlist.m3u8', quality: '1080p', language: 'es' },
+            { label: 'beIN XTRA Español (Server 4 — iptv-org Tubi CloudFront 720p)', url: 'https://aegis-cloudfront-1.tubi.video/01f6c149-449b-4248-8bda-2278799205ec/playlist.m3u8', quality: '720p', language: 'es' },
+            { label: 'beIN Sports en Español HD (Server 5 — Edge CDN 1080p)', url: `${EDGE_CDN_BASE}/premium372/index.m3u8`, quality: '1080p', language: 'es', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports en Español HD (Server 6 — WideIPTV Bluetier HD)', url: 'https://wideiptv.top/player/BEINSPORTES/index.m3u8', quality: '1080p', language: 'es', headers: WIDEIPTV_HEADERS }
         ]
     },
 
@@ -3899,9 +4099,67 @@ async function getAloulaSignedHlsUrl(aloulaChannelId: number, forceRefresh = fal
     }
 }
 
+const wideIptvSignedHlsCache = new Map<string, { signedUrl: string; expiresAt: number }>();
+const wideIptvSignedHlsInFlight = new Map<string, Promise<string | null>>();
+
 /**
- * If a URL targets edge.cowedd4855ws.sbs/premium<ID>/index.m3u8 or live.kwikmotion.com/ksasports<1-3>live,
- * attaches a fresh signed token automatically.
+ * Resolves a fresh 5-minute `no_check_ip` signed HLS `tracks-v1a1/mono.m3u8?token=` URL from
+ * `https://wideiptv.top/player/{slug}` (`ds169.bluetier.top` Flussonic cluster) for beIN Sports AR, FR, EN, TR, ES.
+ */
+async function getWideIptvSignedHlsUrl(slug: string, forceRefresh = false): Promise<string | null> {
+    const cached = wideIptvSignedHlsCache.get(slug);
+    if (!forceRefresh && cached && Date.now() < cached.expiresAt) {
+        return cached.signedUrl;
+    }
+
+    if (!forceRefresh) {
+        const existing = wideIptvSignedHlsInFlight.get(slug);
+        if (existing) return existing;
+    }
+
+    const flight = (async () => {
+        for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+                const res = await fetch(`https://wideiptv.top/player/${encodeURIComponent(slug)}`, {
+                    headers: {
+                        'User-Agent': DEFAULT_UA,
+                        Referer: `https://wideiptv.top/daddy.php?stream=${encodeURIComponent(slug)}`
+                    },
+                    signal: AbortSignal.timeout(4500)
+                });
+                if (!res.ok) continue;
+                const html = await res.text();
+                const match = html.match(/streamUrl:\s*"([^"]+)"/);
+                if (!match?.[1]) continue;
+                const rawStreamUrl = match[1].replace(/\\\//g, '/').trim();
+                if (!rawStreamUrl.startsWith('http')) continue;
+
+                // Point directly to the Flussonic media playlist (`tracks-v1a1/mono.m3u8?token=...`)
+                // so every .ts segment already carries its signed `no_check_ip` token
+                const mediaPlaylistUrl = rawStreamUrl.replace('/index.m3u8', '/tracks-v1a1/mono.m3u8');
+                wideIptvSignedHlsCache.set(slug, {
+                    signedUrl: mediaPlaylistUrl,
+                    expiresAt: Date.now() + 180 * 1000 // Refresh every 3 minutes (token TTL is 5 minutes)
+                });
+                return mediaPlaylistUrl;
+            } catch {
+                // Retry once on transient network blip
+            }
+        }
+        return cached?.signedUrl || null;
+    })();
+
+    wideIptvSignedHlsInFlight.set(slug, flight);
+    try {
+        return await flight;
+    } finally {
+        wideIptvSignedHlsInFlight.delete(slug);
+    }
+}
+
+/**
+ * If a URL targets edge.cowedd4855ws.sbs/premium<ID>/index.m3u8, wideiptv.top/player/<SLUG>/index.m3u8,
+ * or live.kwikmotion.com/ksasports<1-3>live, attaches a fresh signed token automatically.
  */
 async function resolveDynamicManifestUrl(
     rawUrl: string,
@@ -3925,6 +4183,22 @@ async function resolveDynamicManifestUrl(
             ? `${baseClean}?t=${encodeURIComponent(token)}&_=${Date.now()}`
             : `${baseClean}?_=${Date.now()}`;
         return { url: finalUrl, headers: mergedHeaders, edgeSlug: slug };
+    }
+
+    const wideMatch =
+        rawUrl.match(/wideiptv\.top\/player\/([A-Za-z0-9_-]+)\/index\.m3u8/i) ||
+        rawUrl.match(/bluetier\.top\/([A-Za-z0-9_-]+)\/(?:index\.m3u8|tracks-v1a1\/mono\.m3u8)/i);
+    if (wideMatch) {
+        const slug = wideMatch[1];
+        Object.assign(mergedHeaders, WIDEIPTV_HEADERS);
+        const hasToken = rawUrl.includes('token=') && rawUrl.includes('bluetier.top');
+        if (!hasToken || forceRefreshToken) {
+            const signedUrl = await getWideIptvSignedHlsUrl(slug, forceRefreshToken);
+            if (signedUrl) {
+                return { url: signedUrl, headers: mergedHeaders };
+            }
+        }
+        return { url: rawUrl, headers: mergedHeaders };
     }
 
     const ksaMatch = rawUrl.match(/live\.kwikmotion\.com\/ksasports([123])live\/ksasports[123]\.smil\/playlist(?:_dvr)?\.m3u8(?:\?variant=([a-z0-9_]+))?/i);
@@ -4900,34 +5174,46 @@ export const CHANNEL_TO_IPTV_ORG_IDS: Record<string, string[]> = {
     'ktv-sport-ar': ['KTVSport.kw'],
     'arryadia-ar': ['Arryadia.ma'],
 
-    // 2. beIN Sports MENA, EN, FR, TR, USA (strictly 1-to-1 per channel number)
+    // 2. beIN Sports MENA, EN, FR, TR, USA, AU (strictly 1-to-1 per channel number)
     'bein-sports-open-ar': ['beINSports.qa', 'beINSportsNews.qa'],
-    'bein-sports-1-ar': ['beINSports1.qa'],
+    'bein-sports-1-ar': ['beINSports1.qa', 'beINSports4KHDR.qa'],
     'bein-sports-2-ar': ['beINSports2.qa'],
     'bein-sports-3-ar': ['beINSports3.qa'],
     'bein-sports-4-ar': ['beINSports4.qa'],
     'bein-sports-5-ar': ['beINSports5.qa'],
     'bein-sports-6-ar': ['beINSports6.qa'],
     'bein-sports-7-ar': ['beINSports7.qa'],
-    'bein-sports-8-ar': ['beINSports8.qa'],
+    'bein-sports-8-ar': ['beINSports8.qa', 'beINSportsNBA.qa'],
     'bein-sports-9-ar': ['beINSports9.qa'],
-    'bein-sports-xtra-1-ar': ['beINSportsXtra1.qa'],
-    'bein-sports-xtra-2-ar': ['beINSportsXtra2.qa'],
-    'bein-sports-xtra-3-ar': ['beINSportsXtra3.qa'],
+    'bein-sports-premium-1-ar': ['beINSportsPremium1.qa', 'beINSports1.qa'],
+    'bein-sports-premium-2-ar': ['beINSportsPremium2.qa', 'beINSports2.qa'],
+    'bein-sports-premium-3-ar': ['beINSportsPremium3.qa', 'beINSports3.qa'],
+    'bein-sports-afc-ar': ['beINSportsAFC.qa', 'beINSportsAFC1.qa', 'beINSportsAFC2.qa', 'beINSportsAFC3.qa'],
+    'bein-sports-xtra-1-ar': ['beINSportsXtra1.qa', 'beINSportsXtra2.qa'],
     'bein-sports-en-1': ['beINSportsEnglish1.qa', 'beINSports1English.qa'],
     'bein-sports-en-2': ['beINSportsEnglish2.qa', 'beINSports2English.qa'],
     'bein-sports-en-3': ['beINSportsEnglish3.qa', 'beINSports3English.qa'],
-    'bein-sports-usa': ['beINSports.us'],
-    'bein-sports-xtra-en': ['beINSportsXtra.us'],
-    'bein-sports-xtra-es': ['beINSportsEnEspanol.us', 'beINSportsXtraEnEspanol.us'],
-    'bein-sports-1-fr': ['beINSports1.fr'],
-    'bein-sports-2-fr': ['beINSports2.fr'],
-    'bein-sports-3-fr': ['beINSports3.fr'],
-    'bein-sports-1-tr': ['beINSports1.tr'],
-    'bein-sports-2-tr': ['beINSports2.tr'],
-    'bein-sports-3-tr': ['beINSports3.tr'],
-    'bein-sports-4-tr': ['beINSports4.tr'],
-    'bein-sports-5-tr': ['beINSports5.tr'],
+    'bein-sports-usa': ['beINSportsUSA.us', 'beINSports.us'],
+    'bein-sports-au-1': ['beINSports1.au'],
+    'bein-sports-au-2': ['beINSports2.au'],
+    'bein-sports-au-3': ['beINSports3.au'],
+    'bein-sports-xtra-en': ['beINSPORTSXTRA.us', 'beINSportsXtra1.qa'],
+    'bein-sports-xtra-es': ['beINSPORTSXTRAenEspanol.us', 'beINSportsenEspanol.qa', 'beINSportsEnEspanol.us'],
+    'bein-sports-fr-1': ['beINSportsFrench1.qa', 'beINSports1.fr'],
+    'bein-sports-fr-2': ['beINSportsFrench2.qa', 'beINSports2.fr'],
+    'bein-sports-fr-3': ['beINSportsFrench3.qa', 'beINSports3.fr'],
+    'bein-sports-max-4-fr': ['beINSportsMax4.qa', 'beINSportsMax4.fr'],
+    'bein-sports-max-5-fr': ['beINSportsMax5.qa', 'beINSportsMax5.fr'],
+    'bein-sports-max-6-fr': ['beINSportsMax6.qa', 'beINSportsMax6.fr'],
+    'bein-sports-max-7-fr': ['beINSportsMax7.qa', 'beINSportsMax7.fr'],
+    'bein-sports-max-8-fr': ['beINSportsMax8.qa', 'beINSportsMax8.fr'],
+    'bein-sports-max-9-fr': ['beINSportsMax9.qa', 'beINSportsMax9.fr'],
+    'bein-sports-max-10-fr': ['beINSportsMax10.qa', 'beINSportsMax10.fr'],
+    'bein-sports-1-tr': ['beINSports1Turk.tr', 'beINSports1.tr'],
+    'bein-sports-2-tr': ['beINSports2Turk.tr', 'beINSports2.tr'],
+    'bein-sports-3-tr': ['beINSports3Turk.tr', 'beINSports3.tr'],
+    'bein-sports-4-tr': ['beINSports4Turk.tr', 'beINSports4.tr'],
+    'bein-sports-5-tr': ['beINSports5Turk.tr', 'beINSports5.tr'],
     'bein-sports-haber-tr': ['beINSportsHaber.tr', 'HTSporTV.tr'],
 
     // 3. Arabic Movies, Rotana, Shahid & MBC (strictly 1-to-1 per channel)
@@ -5363,10 +5649,16 @@ function doesUpstreamNameMatchChannelIdentity(ch: LiveChannel, rawUpstreamName: 
     if (ch.id === 'bein-sports-premium-2-ar') return /\bbein\s*sports?\s*(?:premium\s*)?2\b/.test(n) && (n.includes('arab') || n.includes('mena'));
     if (ch.id === 'bein-sports-premium-3-ar') return /\bbein\s*sports?\s*(?:premium\s*)?3\b/.test(n) && (n.includes('arab') || n.includes('mena'));
     if (ch.id === 'bein-sports-afc-ar') return /\bbein\s*sports?\s*(?:afc|7|8)\b/.test(n) && (n.includes('arab') || n.includes('mena'));
+    if (ch.id === 'bein-sports-xtra-1-ar') return /\bbein\s*sports?\s*xtra\s*1\b/.test(n);
 
-    // 2. beIN Sports English 1-3
-    if (ch.id === 'bein-sports-en-1') return /\bbein\s*sports?\b/.test(n) && /\benglish\s*1\b|\ben\s*1\b/.test(n);
-    if (ch.id === 'bein-sports-en-2') return /\bbein\s*sports?\b/.test(n) && /\benglish\s*2\b|\ben\s*2\b/.test(n);
+    // 2. beIN Sports English 1-3, USA & Australia
+    if (ch.id === 'bein-sports-en-1') return /\bbein\s*sports?\b/.test(n) && /\benglish\s*1\b|\ben\s*1\b|\b1\s*malaysia\b|\baustralia\s*1\b/.test(n);
+    if (ch.id === 'bein-sports-en-2') return /\bbein\s*sports?\b/.test(n) && /\benglish\s*2\b|\ben\s*2\b|\b2\s*malaysia\b|\baustralia\s*2\b/.test(n);
+    if (ch.id === 'bein-sports-en-3') return /\bbein\s*sports?\b/.test(n) && /\benglish\s*3\b|\ben\s*3\b|\b3\s*malaysia\b|\baustralia\s*3\b/.test(n);
+    if (ch.id === 'bein-sports-usa') return /\bbein\s*sports?\s*(?:usa|us)\b/.test(n);
+    if (ch.id === 'bein-sports-au-1') return /\bbein\s*sports?\s*australia\s*1\b/.test(n);
+    if (ch.id === 'bein-sports-au-2') return /\bbein\s*sports?\s*australia\s*2\b/.test(n);
+    if (ch.id === 'bein-sports-au-3') return /\bbein\s*sports?\s*australia\s*3\b/.test(n);
 
     // 3. beIN Sports France 1-3 & MAX 4-10
     const beinFrMatch = ch.id.match(/^bein-sports-fr-(\d+)$/);
@@ -5754,9 +6046,14 @@ export const CHANNEL_TO_XMLTV_IDS: Record<string, string[]> = {
     'bein-sports-premium-2-ar': ['beIN SPORTS 2.qa'],
     'bein-sports-premium-3-ar': ['beIN SPORTS 3.qa'],
     'bein-sports-afc-ar': ['beIN SPORTS AFC.qa', 'beIN SPORTS 1 AFC.qa', 'beIN SPORTS 2 AFC.qa'],
+    'bein-sports-xtra-1-ar': ['beIN SPORTS XTRA 1.qa', 'beIN SPORTS XTRA 2.qa'],
     'bein-sports-en-1': ['beIN SPORTS EN 1.qa'],
     'bein-sports-en-2': ['beIN SPORTS EN 2.qa'],
     'bein-sports-en-3': ['beIN SPORTS XTRA 1.qa', 'beIN SPORTS EN 1.qa'],
+    'bein-sports-usa': ['beIN SPORTS EN 1.qa', 'beIN SPORTS XTRA 1.qa'],
+    'bein-sports-au-1': ['beIN SPORTS EN 1.qa'],
+    'bein-sports-au-2': ['beIN SPORTS EN 2.qa'],
+    'bein-sports-au-3': ['beIN SPORTS XTRA 1.qa'],
     'bein-sports-xtra-en': ['beIN SPORTS XTRA 1.qa', 'beIN SPORTS XTRA 2.qa', 'beIN SPORTS XTRA 3.qa'],
     'bein-sports-xtra-es': ['BEINSES.us', 'ESPNDHD.us', 'ESPND.us'],
 
@@ -5882,6 +6179,7 @@ export const CHANNEL_TO_XMLTV_IDS: Record<string, string[]> = {
     'bein-sports-max-5-fr': ['beIN SPORTS MAX 5.fr'],
     'bein-sports-max-6-fr': ['beIN SPORTS MAX 6.fr'],
     'bein-sports-max-7-fr': ['beIN SPORTS MAX 7.fr'],
+    'bein-sports-max-8-fr': ['beIN SPORTS MAX 8.fr', 'beIN SPORTS 1.fr'],
     'bein-sports-max-9-fr': ['beIN SPORTS MAX 9.fr'],
     'bein-sports-max-10-fr': ['beIN SPORTS MAX 10.fr'],
     'canal-plus-fr': ['Canal+.fr', 'Canal+ Foot.fr'],

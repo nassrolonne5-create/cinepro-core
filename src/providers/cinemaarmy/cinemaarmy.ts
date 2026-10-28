@@ -59,8 +59,8 @@ export class CinemaArmyProvider extends BaseProvider {
             const tmdbId = media.tmdbId;
             const token = generateStreamToken(tmdbId);
             const isTv = media.type === 'tv';
-            const season = media.s || 1;
-            const episode = media.e || 1;
+            const season = Number((media as any).season || (media as any).s || 1);
+            const episode = Number((media as any).episode || (media as any).e || 1);
 
             const targets = isTv ? [
                 { name: 'Baker', method: 'POST', endpoint: `/cookiebakers/tv/${tmdbId}/${season}/${episode}` },

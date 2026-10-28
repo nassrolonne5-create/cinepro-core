@@ -30,6 +30,8 @@ export class SuperStreamProvider extends BaseProvider {
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        (media as any).s = Number((media as any).season || (media as any).s || 1);
+        (media as any).e = Number((media as any).episode || (media as any).e || 1);
         const timeout = (ms: number) => new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
         const allSources: Source[] = [];
 
@@ -111,28 +113,22 @@ export class SuperStreamProvider extends BaseProvider {
             return { sources: allSources, subtitles: [], diagnostics: [] };
         }
 
-        // Fallback upstream mirror via vidnest
+        // Fallback upstream mirror via VidNest v2
         try {
-            const data: any = await Promise.race([
-                vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e),
-                timeout(3500)
-            ]);
-            if (data?.sources?.length) {
-                const sources: Source[] = data.sources.map((src: any) => {
-                    const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
-                    return {
-                        url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
-                        quality: src.quality || 'auto',
-                        type: getSourceType(src.url, src.isM3U8),
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        server: src.server ? `${this.name} (${src.server})` : `${this.name} (VIP)`,
-                        provider: {
-                            name: this.name,
-                            id: this.id
-                        }
-                    };
-                });
-                return { sources, subtitles: [], diagnostics: [] };
+            const { resolveVidnestV2 } = await import('../../utils/vidnestV2.js');
+            const v2 = await resolveVidnestV2(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                [
+                    { name: 'VIP 4K', path: 'flixhq' },
+                    { name: 'SuperCloud', path: 'nextgencloudfabric' }
+                ],
+                3200
+            );
+            if (v2.sources.length > 0) {
+                return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
             }
         } catch {}
 

@@ -33,6 +33,8 @@ export class VidzeeProvider extends BaseProvider {
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        (media as any).s = Number((media as any).season || (media as any).s || 1);
+        (media as any).e = Number((media as any).episode || (media as any).e || 1);
         const timeout = (ms: number) => new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
 
         try {
@@ -72,52 +74,41 @@ export class VidzeeProvider extends BaseProvider {
             }
         } catch (e) {}
 
-        // Fallback: RiveStream with proper header unwrapping
+        // Fallback: Cached Clean RiveStream & VidNest v2
         try {
-            const data: any = await Promise.race([
-                rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e),
-                timeout(3000)
-            ]);
-            if (data?.sources?.length) {
-                const defaultHeaders = data.headers || {};
-                const sources: Source[] = [];
-                for (const src of data.sources) {
-                    const uLower = (src.url || '').toLowerCase();
-                    const sLower = (src.server || '').toLowerCase();
-                    const qLower = (src.quality || '').toLowerCase();
-                    if (
-                        uLower.includes('boomchick') || uLower.includes('streamflix') || uLower.includes('aoneroom') ||
-                        sLower.includes('vanguard') || uLower.includes('cheaptruckrepairs') ||
-                        uLower.includes('onlinevisibilitysystem.site') || uLower.includes('highperformanceread.com') ||
-                        qLower.includes('tamil') || qLower.includes('hindi') || qLower.includes('telugu')
-                    ) continue;
-                    const sName = src.server || 'Ultra';
-                    const url = unwrapAndBuildProxyUrl(
-                        src.url,
-                        src.headers || defaultHeaders,
-                        (u, h) => this.createProxyUrl(u, h)
-                    );
-                    sources.push({
-                        url,
-                        quality: src.quality || '1080p',
-                        type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
-                        server: sName,
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        provider: {
-                            name: `${this.name} (${sName})`,
-                            id: `${this.id}-${sName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
-                        }
-                    });
-                }
-                if (sources.length > 0) return { sources, subtitles: [], diagnostics: [] };
+            const { resolveRiveStreamClean, resolveVidnestV2 } = await import('../../utils/vidnestV2.js');
+            const riveSources = await resolveRiveStreamClean(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                2800
+            );
+            if (riveSources.length > 0) {
+                return { sources: riveSources, subtitles: [], diagnostics: [] };
+            }
+
+            const v2 = await resolveVidnestV2(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                [
+                    { name: 'Ultra 4K', path: 'flixhq' },
+                    { name: 'Zee Cloud', path: 'nextgencloudfabric' }
+                ],
+                2800
+            );
+            if (v2.sources.length > 0) {
+                return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
             }
         } catch {}
 
         // Fallback: TrendiMovies
         try {
             const downloads: any = await Promise.race([
-                (trendimovies as any).getDownloads(media.tmdbId, media.type, media.s, media.e),
-                timeout(2500)
+                (trendimovies as any).getDownloads(media.tmdbId, media.type, (media as any).s, (media as any).e),
+                timeout(2200)
             ]);
             if (downloads && Array.isArray(downloads) && downloads.length > 0) {
                 const sources: Source[] = downloads

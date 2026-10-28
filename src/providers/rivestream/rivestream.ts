@@ -80,7 +80,12 @@ export class RivestreamProvider extends BaseProvider {
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         try {
-            const data = await rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e);
+            const season = Number((media as any).season || (media as any).s || 1);
+            const episode = Number((media as any).episode || (media as any).e || 1);
+            const data: any = await Promise.race([
+                rivestream.fetchSources(media.tmdbId, media.type, season, episode),
+                new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 3800))
+            ]);
             const sources: Source[] = [];
 
             if (data && Array.isArray(data.sources)) {
@@ -126,8 +131,26 @@ export class RivestreamProvider extends BaseProvider {
                     });
                 }
             }
-            return { sources, subtitles: [], diagnostics: [] };
-        } catch (e) {
+            if (sources.length > 0) {
+                return { sources, subtitles: [], diagnostics: [] };
+            }
+        } catch (e) {}
+
+        try {
+            const { resolveVidnestV2 } = await import('../../utils/vidnestV2.js');
+            const v2 = await resolveVidnestV2(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                [
+                    { name: 'Mirage 4K', path: 'flixhq' },
+                    { name: 'PrimeVids', path: 'nextgencloudfabric' }
+                ],
+                3200
+            );
+            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
+        } catch {
             return { sources: [], subtitles: [], diagnostics: [] };
         }
     }

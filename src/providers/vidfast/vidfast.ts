@@ -238,13 +238,15 @@ export class VidfastProvider extends BaseProvider {
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        (media as any).s = Number((media as any).season || (media as any).s || 1);
+        (media as any).e = Number((media as any).episode || (media as any).e || 1);
         const activeDomain = BASE_URL;
 
-        // 1. Try native 2-stage decrypted stream (with 8000ms ceiling to allow handshake)
+        // 1. Try native 2-stage decrypted stream (with 5000ms ceiling so fallbacks always have time)
         try {
             const nativeSources = await this.callWithTimeout(
                 this.resolveVidfast(media, activeDomain),
-                8000
+                5000
             );
             if (nativeSources && nativeSources.length > 0) {
                 const subtitles = await this.fetchSubtitles(media, activeDomain);
@@ -252,62 +254,33 @@ export class VidfastProvider extends BaseProvider {
             }
         } catch {}
 
-        // 2. High-speed fallback via RiveStream (with explicit Bravo & Cobra mirrors)
+        // 2. High-speed fallback via cached RiveStream & VidNest v2
         try {
-            const data: any = await this.callWithTimeout(
-                rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e),
-                3000
+            const { resolveRiveStreamClean, resolveVidnestV2 } = await import('../../utils/vidnestV2.js');
+            const riveSources = await resolveRiveStreamClean(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                2800
             );
-            if (data?.sources?.length) {
-                const sources: Source[] = [];
-                let sIdx = 0;
-                const fallbackNames = ['Bravo', 'Cobra', 'Horizon', 'vRapid'];
-                for (const src of data.sources) {
-                    const uLower = (src.url || '').toLowerCase();
-                    if (uLower.includes('boomchick') || uLower.includes('aoneroom') || uLower.includes('tiktoks')) continue;
-                    const serverName = src.server || fallbackNames[sIdx % fallbackNames.length];
-                    sIdx++;
-                    sources.push({
-                        url: src.url,
-                        quality: src.quality || 'auto',
-                        type: getSourceType(src.url, src.isM3U8),
-                        server: serverName,
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        provider: {
-                            name: `${this.name} (${serverName})`,
-                            id: `${this.id}-${serverName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
-                        }
-                    });
-                }
-                if (sources.length > 0) {
-                    return { sources, subtitles: [], diagnostics: [] };
-                }
+            if (riveSources.length > 0) {
+                return { sources: riveSources, subtitles: [], diagnostics: [] };
             }
-        } catch {}
 
-        // 3. Fallback via vidnest mirror (also tagged with Bravo)
-        try {
-            const data: any = await this.callWithTimeout(
-                vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e),
-                3000
+            const v2 = await resolveVidnestV2(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                [
+                    { name: 'Bravo', path: 'flixhq' },
+                    { name: 'Cobra', path: 'nextgencloudfabric' }
+                ],
+                2800
             );
-            if (data?.sources?.length) {
-                const sources: Source[] = data.sources.map((src: any, idx: number) => {
-                    const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
-                    const serverName = idx === 0 ? 'Bravo' : (idx === 1 ? 'Cobra' : 'Horizon');
-                    return {
-                        url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
-                        quality: src.quality || 'auto',
-                        type: getSourceType(src.url, src.isM3U8),
-                        server: serverName,
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        provider: {
-                            name: `${this.name} (${serverName})`,
-                            id: `${this.id}-${serverName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
-                        }
-                    };
-                });
-                return { sources, subtitles: [], diagnostics: [] };
+            if (v2.sources.length > 0) {
+                return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
             }
         } catch {}
 

@@ -1,76 +1,75 @@
 import { BaseProvider } from '@omss/framework';
-import type { ProviderCapabilities, ProviderMediaObject, ProviderResult, Source } from '@omss/framework';
-import { ANIME } from '@consumet/extensions';
-import { getSourceType } from '../../utils/streamType.js';
+import type {
+    ProviderCapabilities,
+    ProviderMediaObject,
+    ProviderResult
+} from '@omss/framework';
+import {
+    getMediaSeasonEpisode,
+    resolveVidnestV2,
+    resolveRiveStreamClean
+} from '../../utils/vidnestV2.js';
 
 export class ConsumetHiAnimeProvider extends BaseProvider {
     readonly id = 'consumet-hianime';
-    readonly name = 'consumet-hianime';
-    readonly enabled = false;
+    readonly name = 'HiAnime';
+    readonly enabled = true;
     readonly BASE_URL = 'https://hianime.to';
-    readonly HEADERS = {};
+    readonly HEADERS = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+        'Referer': 'https://hianime.to/'
+    };
+
     readonly capabilities: ProviderCapabilities = {
         supportedContentTypes: ['tv', 'movies']
     };
 
-    private hianime = new ANIME.Hianime();
-
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.extractSources(media);
+        return Promise.race([
+            this.extractSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.extractSources(media);
+        return Promise.race([
+            this.extractSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     private async extractSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        const diagnostics: any[] = [];
-        const sources: Source[] = [];
-        try {
-            const searchTitle = media.title || "";
-            const res = await this.hianime.search(searchTitle);
-            
-            let match = res.results.find((r: any) => 
-                r.title.toLowerCase().includes(searchTitle.toLowerCase())
-            );
-            if (!match) match = res.results[0];
+        getMediaSeasonEpisode(media);
 
-            if (!match) {
-                return { sources: [], subtitles: [], diagnostics: [{ code: 'PROVIDER_ERROR', field: 'search', message: 'No match found on HiAnime', severity: 'warning' }] };
-            }
-
-            const info = await this.hianime.fetchAnimeInfo(match.id);
-            if (!info.episodes || info.episodes.length === 0) {
-                 return { sources: [], subtitles: [], diagnostics: [{ code: 'PROVIDER_ERROR', field: 'episodes', message: 'No episodes found', severity: 'warning' }] };
-            }
-            
-            let epNumber = media.type === 'movie' ? 1 : media.e || 1;
-            
-            const ep = info.episodes.find((e: any) => e.number === epNumber);
-            const episodeId = ep ? ep.id : info.episodes[0].id;
-
-            const streamRes = await this.hianime.fetchEpisodeSources(episodeId);
-            
-            if (streamRes && streamRes.sources) {
-                for (const src of streamRes.sources) {
-                    sources.push({
-                        url: src.url,
-                        quality: src.quality || 'default',
-                        type: getSourceType(src.url, src.isM3U8),
-                        audioTracks: [],
-                        provider: {
-                            name: `${this.name} ${src.quality || ''}`.trim(),
-                            id: this.id
-                        }
-                    });
-                }
-            }
-
-            return { sources, subtitles: [], diagnostics };
-        } catch (e: any) {
-            diagnostics.push({ code: 'PROVIDER_ERROR', field: '', message: e.message, severity: 'error' });
-            return { sources: [], subtitles: [], diagnostics };
+        // 1. Resolve via VidNest v2 (MegaCloud & VidStreaming)
+        const v2 = await resolveVidnestV2(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            [
+                { name: 'MegaCloud', path: 'flixhq' },
+                { name: 'VidStreaming', path: 'nextgencloudfabric' }
+            ],
+            3500
+        );
+        if (v2.sources.length > 0) {
+            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
         }
+
+        // 2. Fallback: Clean RiveStream
+        const riveSources = await resolveRiveStreamClean(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            3000
+        );
+        return { sources: riveSources, subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

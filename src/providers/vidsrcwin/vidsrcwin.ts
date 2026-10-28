@@ -1,4 +1,3 @@
-import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type {
     ProviderCapabilities,
@@ -6,12 +5,17 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-
-import { getVidVaultToken } from '../../utils/vidvaultToken.js';
+import { purstream } from 'kaizoku-core';
+import { getSourceType } from '../../utils/streamType.js';
+import {
+    getMediaSeasonEpisode,
+    resolveVidnestV2,
+    resolveRiveStreamClean
+} from '../../utils/vidnestV2.js';
 
 export class VidSrcWinProvider extends BaseProvider {
     readonly id = 'vidsrcwin';
-    readonly name = 'VidSrc.win';
+    readonly name = 'VidSrcWin';
     readonly enabled = true;
     readonly BASE_URL = 'https://vidsrc.win';
     readonly HEADERS = {
@@ -24,83 +28,81 @@ export class VidSrcWinProvider extends BaseProvider {
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        const { season, episode } = getMediaSeasonEpisode(media);
         const sources: Source[] = [];
-        try {
-            // 1. Obtain request token from cached token helper
-            const token = await getVidVaultToken();
-            if (!token) return { sources: [], subtitles: [], diagnostics: [] };
 
-            // 2. Query download / stream proxy
-            const bodyPayload = media.type === 'tv'
-                ? { type: 'tv', tmdbId: Number(media.tmdbId), season: Number(media.s || 1), episode: Number(media.e || 1) }
-                : { type: 'movie', tmdbId: Number(media.tmdbId) };
+        // Run VidNest v2 and PurStream in parallel for sub-2s resolution
+        const [v2Settled, purSettled] = await Promise.allSettled([
+            resolveVidnestV2(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                [
+                    { name: 'Main HD', path: 'flixhq' },
+                    { name: 'Cloud HD', path: 'nextgencloudfabric' }
+                ],
+                3200
+            ),
+            Promise.race([
+                purstream.fetchSources(media.tmdbId, media.type, season, episode),
+                new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
+            ])
+        ]);
 
-            const streamRes = await fetch('https://vidvault.to/api/download-proxy', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-request-token': token,
-                    'User-Agent': this.HEADERS['User-Agent'],
-                    'Referer': 'https://vidvault.ru/'
-                },
-                body: JSON.stringify(bodyPayload),
-                signal: AbortSignal.timeout(8000)
-            });
-            if (!streamRes.ok) return { sources: [], subtitles: [], diagnostics: [] };
-            const streamData = (await streamRes.json()) as any;
+        if (v2Settled.status === 'fulfilled' && v2Settled.value.sources.length > 0) {
+            sources.push(...v2Settled.value.sources);
+        }
 
-            const candidates: any[] = [];
-            if (streamData?.mkvV2Data?.url) {
-                candidates.push({ ...streamData.mkvV2Data, label: 'Master HD' });
-            }
-            if (streamData?.mkvData?.url) {
-                candidates.push({ ...streamData.mkvData, label: 'Direct HD' });
-            }
-            if (Array.isArray(streamData?.mp4Data?.links)) {
-                for (const l of streamData.mp4Data.links) {
-                    if (l?.url) candidates.push({ ...l, label: 'Fast MP4' });
-                }
-            }
-
-            for (const item of candidates) {
-                if (!item.url) continue;
-                const headers = {
-                    'User-Agent': this.HEADERS['User-Agent'],
-                    'Referer': 'https://vidvault.ru/'
-                };
-                const proxyData = JSON.stringify({ url: item.url, headers });
-                const proxiedUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.mp4`;
-
-                const quality = item.quality ? String(item.quality).replace(/p$/i, '') + 'p' : '1080p';
-                const srvLabel = item.label || 'Direct';
-                const srvId = `${this.id}-${srvLabel.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
-
-                const srcObj: any = {
-                    url: proxiedUrl,
-                    quality,
-                    type: 'mp4',
-                    server: srvLabel,
+        if (purSettled.status === 'fulfilled' && Array.isArray((purSettled.value as any)?.sources)) {
+            for (const src of (purSettled.value as any).sources) {
+                if (!src?.url) continue;
+                sources.push({
+                    url: src.url,
+                    quality: src.quality || '1080p',
+                    type: getSourceType(src.url, src.isM3U8),
+                    server: 'Direct Master',
                     audioTracks: [{ language: 'en', label: 'English' }],
                     provider: {
-                        name: `${this.name} (${srvLabel})`,
-                        id: srvId
+                        name: `${this.name} (Direct Master)`,
+                        id: `${this.id}-master`
                     }
-                };
-                sources.push(srcObj as Source);
+                });
             }
-
-            return { sources, subtitles: [], diagnostics: [] };
-        } catch {
-            return { sources: [], subtitles: [], diagnostics: [] };
         }
+
+        if (sources.length > 0) {
+            const subtitles = v2Settled.status === 'fulfilled' ? v2Settled.value.subtitles : [];
+            return { sources, subtitles, diagnostics: [] };
+        }
+
+        // Fallback: Clean RiveStream
+        const riveSources = await resolveRiveStreamClean(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            3000
+        );
+        return { sources: riveSources, subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

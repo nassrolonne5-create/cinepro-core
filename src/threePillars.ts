@@ -432,21 +432,27 @@ export function setupThreePillarArchitecture(server: any) {
                     if (tvShowCached?.releaseDate) {
                         media.releaseYear = String(new Date(tvShowCached.releaseDate).getFullYear());
                     }
-                    media.season = season || (media as any).s || 1;
-                    media.episode = episode || (media as any).e || 1;
+                    media.season = Number(season || (media as any).s || 1);
+                    media.episode = Number(episode || (media as any).e || 1);
+                    media.s = media.season;
+                    media.e = media.episode;
                 }
                 if (media.releaseYear) {
                     media.year = Number(media.releaseYear);
                 }
             } catch {
+                const normSeason = Number(season || 1);
+                const normEpisode = Number(episode || 1);
                 media = {
                     tmdbId: id,
                     imdbId: '',
                     title: id,
                     type,
                     year: new Date().getFullYear(),
-                    season: season || 1,
-                    episode: episode || 1
+                    season: normSeason,
+                    episode: normEpisode,
+                    s: normSeason,
+                    e: normEpisode
                 };
             }
 

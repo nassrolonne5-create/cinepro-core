@@ -39,9 +39,11 @@ export class IcefyProvider extends BaseProvider {
         const subtitles: Subtitle[] = [];
 
         // 1. Resolve via Icefy Player Engine (AES-256-GCM Decryption)
+        const season = Number((media as any).season || (media as any).s || 1);
+        const episode = Number((media as any).episode || (media as any).e || 1);
         try {
             const embedPath = media.type === 'tv'
-                ? `/e/tv/${media.tmdbId}/${media.s || 1}/${media.e || 1}?autostart=true`
+                ? `/e/tv/${media.tmdbId}/${season}/${episode}?autostart=true`
                 : `/e/movie/${media.tmdbId}?autostart=true`;
 
             const embedRes = await fetch(`${this.BASE_URL}${embedPath}`, {

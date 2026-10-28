@@ -3,191 +3,255 @@ import type {
     ProviderCapabilities,
     ProviderMediaObject,
     ProviderResult,
-    Source
+    Source,
+    Subtitle
 } from '@omss/framework';
+import {
+    getMediaSeasonEpisode,
+    resolveVidnestV2,
+    resolveRiveStreamClean
+} from '../../utils/vidnestV2.js';
 
-// Registered Talk Shows and Daily Variety Programs
-const TALK_SHOW_IDS = new Set([
-    '59941', // The Tonight Show Starring Jimmy Fallon
-    '63247', // The Late Show with Stephen Colbert
-    '1489',  // Jimmy Kimmel Live!
-    '61818', // Late Night with Seth Meyers
-    '2224',  // The Daily Show
-    '1667',  // Saturday Night Live
-    '60694', // Last Week Tonight with John Oliver
-    '1493',  // Real Time with Bill Maher
-    '1220',  // The Graham Norton Show
-    '3432'   // The View
-]);
+const TALK_SHOW_MAP: Record<string, { slug: string; title: string }> = {
+    '1220': { slug: 'the-graham-norton-show', title: 'The Graham Norton Show' },
+    '63770': { slug: 'the-late-show-with-stephen-colbert', title: 'The Late Show with Stephen Colbert' },
+    '59941': { slug: 'the-tonight-show-starring-jimmy-fallon', title: 'The Tonight Show Starring Jimmy Fallon' },
+    '14981': { slug: 'jimmy-kimmel-live', title: 'Jimmy Kimmel Live!' },
+    '61818': { slug: 'late-night-with-seth-meyers', title: 'Late Night with Seth Meyers' },
+    '2224': { slug: 'the-daily-show', title: 'The Daily Show' },
+    '60694': { slug: 'last-week-tonight-with-john-oliver', title: 'Last Week Tonight with John Oliver' },
+    '1900': { slug: 'live-with-kelly-and-mark', title: 'Live with Kelly and Mark' },
+    '4573': { slug: 'real-time-with-bill-maher', title: 'Real Time with Bill Maher' },
+    '1667': { slug: 'saturday-night-live', title: 'Saturday Night Live' }
+};
 
 export class TalkShowProvider extends BaseProvider {
     readonly id = 'talkshow';
-    readonly name = 'LateNight TV';
+    readonly name = 'TalkShow';
     readonly enabled = true;
-    readonly BASE_URL = 'https://api.themoviedb.org/3';
+    readonly BASE_URL = 'https://watchseries.pe';
     readonly HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Referer': 'https://watchseries.pe/'
     };
 
     readonly capabilities: ProviderCapabilities = {
-        supportedContentTypes: ['tv']
+        supportedContentTypes: ['tv', 'movies']
     };
 
-    async getMovieSources(): Promise<ProviderResult> {
-        return { sources: [], subtitles: [], diagnostics: [] };
+    async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        const tmdbId = String(media.tmdbId || '');
-        const season = Number(media.s || 1);
-        const episode = Number(media.e || 1);
-
-        // Check if this is a registered talk show or query TMDB genre
-        let isTalkShow = TALK_SHOW_IDS.has(tmdbId);
-        let epInfo: any = null;
-
-        const apiKey = process.env.TMDB_API_KEY || '1865f43a0549ca50d341dd9ab8b29f49';
-
-        try {
-            // Fetch TMDB episode details (Air date, guests, title)
-            const epRes = await fetch(`${this.BASE_URL}/tv/${tmdbId}/season/${season}/episode/${episode}?api_key=${apiKey}`, {
-                signal: AbortSignal.timeout(5000)
-            });
-            if (epRes.ok) {
-                epInfo = await epRes.json();
-            }
-
-            if (!isTalkShow && epInfo) {
-                // Check TV show genres
-                const tvRes = await fetch(`${this.BASE_URL}/tv/${tmdbId}?api_key=${apiKey}`, {
-                    signal: AbortSignal.timeout(4000)
-                });
-                if (tvRes.ok) {
-                    const tvData = (await tvRes.json()) as any;
-                    const genres = (tvData.genres || []).map((g: any) => g.name.toLowerCase());
-                    if (genres.some((g: string) => g.includes('talk') || g.includes('news'))) {
-                        isTalkShow = true;
-                    }
-                }
-            }
-        } catch {
-            // Proceed if pre-registered ID
-        }
-
-        if (!isTalkShow) {
-            return { sources: [], subtitles: [], diagnostics: [] };
-        }
+        const { season, episode } = getMediaSeasonEpisode(media);
+        const tmdbId = String(media.tmdbId);
+        const showInfo = TALK_SHOW_MAP[tmdbId];
 
         const sources: Source[] = [];
-        const airDate = epInfo?.air_date || '';
-        const epTitle = epInfo?.name || `Episode ${episode}`;
+        const subtitles: Subtitle[] = [];
 
-        // 1. Resolve through VidSrc.sh / Embed cluster for talk shows
-        try {
-            const embedUrl = `https://vidsrc.sh/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}`;
-            const pageRes = await fetch(embedUrl, {
-                headers: this.HEADERS,
-                signal: AbortSignal.timeout(5000)
-            });
-            if (pageRes.ok) {
-                const html = await pageRes.text();
-                const dataApiMatch = html.match(/data-api="([^"]+)"/);
-                if (dataApiMatch) {
-                    const apiPath = dataApiMatch[1].replace(/&amp;/g, '&');
-                    const apiRes = await fetch(`https://vidsrc.sh${apiPath}`, {
-                        headers: { ...this.HEADERS, Referer: embedUrl },
-                        signal: AbortSignal.timeout(5000)
+        // 1. Native WatchSeries TalkShow scraper when matching talk show ID
+        if (media.type === 'tv' && showInfo) {
+            try {
+                const searchUrl = `${this.BASE_URL}/tv-series/${showInfo.slug}-season-${season}-episode-${episode}`;
+                const searchRes = await fetch(searchUrl, {
+                    headers: this.HEADERS,
+                    redirect: 'follow',
+                    signal: AbortSignal.timeout(4000)
+                });
+
+                let showPageHtml = '';
+                let showPageUrl = '';
+
+                if (searchRes.ok) {
+                    const html = await searchRes.text();
+                    if (html.includes('data-episode-id') || html.includes('data-link-id')) {
+                        showPageHtml = html;
+                        showPageUrl = searchRes.url;
+                    }
+                }
+
+                if (!showPageHtml) {
+                    const q = encodeURIComponent(showInfo.title);
+                    const sRes = await fetch(`${this.BASE_URL}/search/${q}`, {
+                        headers: this.HEADERS,
+                        signal: AbortSignal.timeout(3500)
                     });
-                    if (apiRes.ok) {
-                        const apiData = (await apiRes.json()) as any;
-                        if (apiData?.src) {
-                            const proxyData = JSON.stringify({
-                                url: apiData.src,
-                                headers: { Referer: 'https://vidsrc.sh/' }
-                            });
-                            const proxiedUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.m3u8`;
+                    if (sRes.ok) {
+                        const sHtml = await sRes.text();
+                        const hrefMatches = [...sHtml.matchAll(/href="(\/watch-tv\/[^"]+)"/g)].map(m => m[1]);
+                        const uniqueHrefs = [...new Set(hrefMatches)];
+                        const targetSlug = `/watch-tv/watch-${showInfo.slug}-online-`;
+                        const matchedHref = uniqueHrefs.find(h => h.startsWith(targetSlug)) || uniqueHrefs[0];
 
-                            const srcObj1: any = {
-                                url: proxiedUrl,
-                                quality: '1080p',
-                                type: 'hls',
-                                server: 'LateNight Master HD',
-                                audioTracks: [{ language: 'en', label: 'English' }],
-                                provider: {
-                                    name: `${this.name} (Master HD)`,
-                                    id: `${this.id}-master`
-                                }
-                            };
-                            sources.push(srcObj1 as Source);
+                        if (matchedHref) {
+                            showPageUrl = `${this.BASE_URL}${matchedHref}`;
+                            const pRes = await fetch(showPageUrl, {
+                                headers: this.HEADERS,
+                                signal: AbortSignal.timeout(3500)
+                            });
+                            if (pRes.ok) {
+                                showPageHtml = await pRes.text();
+                            }
                         }
                     }
                 }
-            }
-        } catch {}
 
-        // 2. High-speed Late-Night Catch-up Stream
-        // For talk shows, build the canonical broadcast feed relay
-        try {
-            // Network mapping
-            let networkHls = 'https://townnews.g-mana.live/media/027a05c7-43b6-49eb-ad10-a0c0f10a0754/main.m3u8';
-            let networkName = 'NBC Catch-up';
+                if (showPageHtml) {
+                    let linkId = '';
+                    const seasonMatch = showPageUrl.match(/season-(\d+)/i);
+                    const pageSeason = seasonMatch ? Number(seasonMatch[1]) : season;
 
-            if (tmdbId === '63247') {
-                networkHls = 'https://cbsn-us.cbsn.cbsstream.tv/out/v1/55a864888f13459e981f5401569760a5/master.m3u8';
-                networkName = 'CBS Catch-up';
-            } else if (tmdbId === '1489') {
-                networkHls = 'https://d3svnrf3rmq619.cloudfront.net/krgv-live/smil:krgv-live.smil/playlist.m3u8';
-                networkName = 'ABC Catch-up';
-            }
+                    if (pageSeason === season) {
+                        const epRegex = new RegExp(`data-link-id="(\\d+)"[^>]*>[\\s\\S]{0,400}?Eps\\s*0*${episode}\\s*:`, 'i');
+                        const m = showPageHtml.match(epRegex);
+                        if (m?.[1]) {
+                            linkId = m[1];
+                        }
+                    }
 
-            const proxyData = JSON.stringify({
-                url: networkHls,
-                headers: this.HEADERS
-            });
-            const proxiedUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.m3u8`;
+                    if (!linkId) {
+                        const firstLink = showPageHtml.match(/data-link-id="(\d+)"/);
+                        if (firstLink?.[1]) linkId = firstLink[1];
+                    }
 
-            const srcObj2: any = {
-                url: proxiedUrl,
-                quality: '1080p',
-                type: 'hls',
-                server: networkName,
-                audioTracks: [{ language: 'en', label: 'English' }],
-                provider: {
-                    name: `${this.name} (${networkName})`,
-                    id: `${this.id}-catchup`
+                    if (linkId) {
+                        const ajaxRes = await fetch(`${this.BASE_URL}/ajax/episode/ servers/${linkId}`.replace(' ', ''), {
+                            headers: {
+                                ...this.HEADERS,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Referer': showPageUrl || `${this.BASE_URL}/`
+                            },
+                            signal: AbortSignal.timeout(3500)
+                        });
+                        if (ajaxRes.ok) {
+                            const serversHtml = await ajaxRes.text();
+                            const serverIds = [...serversHtml.matchAll(/data-id="(\d+)"/g)].map(m => m[1]);
+                            for (const sId of serverIds.slice(0, 2)) {
+                                try {
+                                    const srcRes = await fetch(`${this.BASE_URL}/ajax/episode/sources/${sId}`, {
+                                        headers: {
+                                            ...this.HEADERS,
+                                            'X-Requested-With': 'XMLHttpRequest',
+                                            'Referer': showPageUrl || `${this.BASE_URL}/`
+                                        },
+                                        signal: AbortSignal.timeout(3000)
+                                    });
+                                    if (!srcRes.ok) continue;
+                                    const srcJson = (await srcRes.json()) as any;
+                                    const embedLink = srcJson?.link;
+                                    if (!embedLink || typeof embedLink !== 'string') continue;
+
+                                    const embedUrlObj = new URL(embedLink);
+                                    const embedOrigin = embedUrlObj.origin;
+                                    const pathParts = embedUrlObj.pathname.split('/').filter(Boolean);
+                                    const videoId = pathParts[pathParts.length - 1];
+                                    const prefix = pathParts.slice(0, -1).join('/');
+
+                                    const embedPageRes = await fetch(embedLink, {
+                                        headers: {
+                                            'User-Agent': this.HEADERS['User-Agent'],
+                                            'Referer': `${this.BASE_URL}/`
+                                        },
+                                        signal: AbortSignal.timeout(3000)
+                                    });
+                                    if (!embedPageRes.ok) continue;
+                                    const embedHtml = await embedPageRes.text();
+
+                                    const nonce =
+                                        embedHtml.match(/_is_th:([a-zA-Z0-9]{32,64})/)?.[1] ||
+                                        embedHtml.match(/window\._lk_db\s*=\s*\{x:\s*"([a-zA-Z0-9]+)",\s*y:\s*"([a-zA-Z0-9]+)",\s*z:\s*"([a-zA-Z0-9]+)"\}/)?.slice(1, 4).join('') ||
+                                        embedHtml.match(/"([a-zA-Z0-9]{48})"/)?.[1];
+
+                                    if (!nonce) continue;
+
+                                    const getSourcesUrl = `${embedOrigin}/${prefix}/getSources?id=${videoId}&_k=${nonce}`;
+                                    const gsRes = await fetch(getSourcesUrl, {
+                                        headers: {
+                                            'User-Agent': this.HEADERS['User-Agent'],
+                                            'Referer': embedLink,
+                                            'X-Requested-With': 'XMLHttpRequest'
+                                        },
+                                        signal: AbortSignal.timeout(3000)
+                                    });
+                                    if (!gsRes.ok) continue;
+                                    const gsData = (await gsRes.json()) as any;
+
+                                    if (Array.isArray(gsData?.sources)) {
+                                        for (const s of gsData.sources) {
+                                            if (s?.file && typeof s.file === 'string' && s.file.startsWith('http')) {
+                                                const proxiedUrl = this.createProxyUrl(s.file, {
+                                                    'User-Agent': this.HEADERS['User-Agent'],
+                                                    'Referer': `${embedOrigin}/`,
+                                                    'Origin': embedOrigin
+                                                });
+                                                sources.push({
+                                                    url: proxiedUrl,
+                                                    quality: '1080p',
+                                                    type: 'hls',
+                                                    server: 'LateNight HD',
+                                                    audioTracks: [{ language: 'en', label: 'English' }],
+                                                    provider: {
+                                                        name: `${this.name} (LateNight HD)`,
+                                                        id: `${this.id}-latenight`
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }
+                                    if (sources.length > 0) break;
+                                } catch {}
+                            }
+                        }
+                    }
                 }
-            };
-            sources.push(srcObj2 as Source);
-        } catch {}
+            } catch {}
+        }
 
-        // 3. Fallback High-Speed Cloudflare VOD node
-        try {
-            const cloudflareVodUrl = `https://mk2.wt1zl0r2ox.workers.dev/vod/talkshows/${tmdbId}/s${season}e${episode}.mp4`;
-            const proxyData = JSON.stringify({
-                url: cloudflareVodUrl,
-                headers: this.HEADERS
-            });
-            const proxiedUrl = `/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=.mp4`;
+        if (sources.length > 0) {
+            return { sources, subtitles, diagnostics: [] };
+        }
 
-            const srcObj3: any = {
-                url: proxiedUrl,
-                quality: '1080p',
-                type: 'mp4',
-                server: 'Cloud VOD',
-                audioTracks: [{ language: 'en', label: 'English' }],
-                provider: {
-                    name: `${this.name} (Cloud VOD)`,
-                    id: `${this.id}-cloud`
-                }
-            };
-            sources.push(srcObj3 as Source);
-        } catch {}
+        // 2. Universal TV & Movie fallback via VidNest v2 + RiveStream
+        const v2 = await resolveVidnestV2(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            [
+                { name: 'LateNight HD', path: 'flixhq' },
+                { name: 'Broadcast Cloud', path: 'nextgencloudfabric' }
+            ],
+            3200
+        );
+        if (v2.sources.length > 0) {
+            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
+        }
 
-        return { sources, subtitles: [], diagnostics: [] };
+        const riveSources = await resolveRiveStreamClean(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            3000
+        );
+        return { sources: riveSources, subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

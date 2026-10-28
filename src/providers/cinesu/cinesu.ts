@@ -1,4 +1,3 @@
-import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type {
     ProviderCapabilities,
@@ -6,7 +5,12 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
-import { vidnest, vidup, rivestream, trendimovies } from 'kaizoku-core';
+import { trendimovies } from 'kaizoku-core';
+import {
+    getMediaSeasonEpisode,
+    resolveVidnestV2,
+    resolveRiveStreamClean
+} from '../../utils/vidnestV2.js';
 
 export class CinesuProvider extends BaseProvider {
     readonly id = 'cinesu';
@@ -22,7 +26,7 @@ export class CinesuProvider extends BaseProvider {
         return Promise.race([
             this.fetchSources(media),
             new Promise<ProviderResult>((resolve) =>
-                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 8000)
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
             )
         ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
@@ -31,128 +35,62 @@ export class CinesuProvider extends BaseProvider {
         return Promise.race([
             this.fetchSources(media),
             new Promise<ProviderResult>((resolve) =>
-                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 8000)
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
             )
         ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
-    private async callWithTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
-        try {
-            const timeout = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('timeout')), ms)
-            );
-            return await Promise.race([promise, timeout]);
-        } catch {
-            return null;
-        }
-    }
-
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        // 1. High-speed RiveStream source
-        try {
-            const data: any = await this.callWithTimeout(
-                rivestream.fetchSources(media.tmdbId, media.type, media.s, media.e),
-                3500
-            );
-            if (data?.sources?.length) {
-                const sources: Source[] = [];
-                for (const src of data.sources) {
-                    const uLower = (src.url || '').toLowerCase();
-                    if (uLower.includes('boomchick') || uLower.includes('aoneroom') || uLower.includes('tiktoks')) continue;
-                    const serverName = src.server ? `${this.name} (${src.server})` : `${this.name} (Prime)`;
-                    sources.push({
-                        url: src.url,
-                        quality: src.quality || 'auto',
-                        type: getSourceType(src.url, src.isM3U8),
-                        server: serverName,
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        provider: {
-                            name: serverName,
-                            id: `${this.id}-${serverName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
-                        }
-                    });
-                }
-                if (sources.length > 0) {
-                    return { sources, subtitles: [], diagnostics: [] };
-                }
-            }
-        } catch {}
+        const { season, episode } = getMediaSeasonEpisode(media);
 
-        // 2. Vidnest mirror
-        try {
-            const data: any = await this.callWithTimeout(
-                vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e),
-                3500
-            );
-            if (data?.sources?.length) {
-                const sources: Source[] = [];
-                for (const src of data.sources) {
-                    const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
-                    const serverName = `${this.name} (Mirror)`;
-                    sources.push({
-                        url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
-                        quality: src.quality || 'auto',
-                        type: getSourceType(src.url, src.isM3U8),
-                        server: serverName,
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        provider: {
-                            name: serverName,
-                            id: `${this.id}-mirror`
-                        }
-                    });
-                }
-                if (sources.length > 0) {
-                    return { sources, subtitles: [], diagnostics: [] };
-                }
-            }
-        } catch {}
+        // 1. Clean unwrapped RiveStream
+        const riveSources = await resolveRiveStreamClean(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            3500
+        );
+        if (riveSources.length > 0) {
+            return { sources: riveSources, subtitles: [], diagnostics: [] };
+        }
 
-        // 3. Trendimovies direct downloads
+        // 2. VidNest v2 mirror
+        const v2 = await resolveVidnestV2(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            [
+                { name: 'Prime HD', path: 'flixhq' },
+                { name: 'Mirror Cloud', path: 'nextgencloudfabric' }
+            ],
+            3200
+        );
+        if (v2.sources.length > 0) {
+            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
+        }
+
+        // 3. TrendiMovies direct downloads
         try {
-            const downloads: any = await this.callWithTimeout(
-                (trendimovies as any).getDownloads(media.tmdbId, media.type, media.s, media.e),
-                3000
-            );
-            if (downloads && Array.isArray(downloads) && downloads.length > 0) {
+            const downloads: any = await Promise.race([
+                (trendimovies as any).getDownloads(media.tmdbId, media.type, season, episode),
+                new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 2800))
+            ]);
+            if (Array.isArray(downloads) && downloads.length > 0) {
                 const sources: Source[] = downloads
                     .filter((l: any) => l?.url && l.active !== false)
-                    .map((l: any) => {
-                        const serverName = `${this.name} (Direct)`;
-                        return {
-                            url: l.url,
-                            quality: l.quality || 'HD',
-                            type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
-                            server: serverName,
-                            audioTracks: [{ language: 'en', label: 'English' }],
-                            provider: {
-                                name: serverName,
-                                id: `${this.id}-direct`
-                            }
-                        };
-                    });
-                if (sources.length > 0) {
-                    return { sources, subtitles: [], diagnostics: [] };
-                }
-            }
-        } catch {}
-
-        // 4. Fallback upstream mirror via vidup (fast 2500ms timeout)
-        try {
-            const data: any = await this.callWithTimeout(
-                vidup.fetchSources(media.tmdbId, media.type, media.s, media.e),
-                2500
-            );
-            if (data?.sources?.length) {
-                const sources: Source[] = data.sources.map((src: any) => ({
-                    url: src.url,
-                    quality: src.quality || 'auto',
-                    type: getSourceType(src.url, src.isM3U8),
-                    audioTracks: [{ language: 'en', label: 'English' }],
-                    provider: {
-                        name: `${this.name} (VidUp)`,
-                        id: this.id
-                    }
-                }));
+                    .map((l: any) => ({
+                        url: l.url,
+                        quality: l.quality || 'HD',
+                        type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
+                        server: `${this.name} (Direct)`,
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: `${this.name} (Direct)`,
+                            id: `${this.id}-direct`
+                        }
+                    }));
                 if (sources.length > 0) {
                     return { sources, subtitles: [], diagnostics: [] };
                 }

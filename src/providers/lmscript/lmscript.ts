@@ -1,3 +1,4 @@
+import { getSourceType } from '../../utils/streamType.js';
 import { BaseProvider } from '@omss/framework';
 import type {
     ProviderCapabilities,
@@ -5,6 +6,12 @@ import type {
     ProviderResult,
     Source
 } from '@omss/framework';
+import { lmscript } from 'kaizoku-core';
+import {
+    getMediaSeasonEpisode,
+    resolveVidnestV2,
+    resolveRiveStreamClean
+} from '../../utils/vidnestV2.js';
 
 export class LmscriptProvider extends BaseProvider {
     readonly id = 'lmscript';
@@ -12,99 +19,96 @@ export class LmscriptProvider extends BaseProvider {
     readonly enabled = true;
     readonly BASE_URL = 'https://lmscript.xyz';
     readonly HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
-        'Accept': 'application/json'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
     };
-    
-    // LMScript only supports movies
+
     readonly capabilities: ProviderCapabilities = {
-        supportedContentTypes: ['movies']
+        supportedContentTypes: ['movies', 'tv']
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return this.fetchSources(media);
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return { sources: [], subtitles: [], diagnostics: [] };
+        return Promise.race([
+            this.fetchSources(media),
+            new Promise<ProviderResult>((resolve) =>
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 6500)
+            )
+        ]).catch(() => ({ sources: [], subtitles: [], diagnostics: [] }));
     }
-    
+
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        if (media.type === 'tv') return { sources: [], subtitles: [], diagnostics: [] };
-        try {
-            const query = media.title || media.imdbId || media.tmdbId;
-            if (!query) return { sources: [], subtitles: [], diagnostics: [] };
+        const { season, episode } = getMediaSeasonEpisode(media);
+        const sources: Source[] = [];
 
-            const url = `${this.BASE_URL}/v1/movies?filters%5Bq%5D=${encodeURIComponent(query)}&expand=streams`;
-            const res = await fetch(url, {
-                headers: this.HEADERS,
-                signal: AbortSignal.timeout(8000)
-            });
-            if (!res.ok) return { sources: [], subtitles: [], diagnostics: [] };
-
-            const data = await res.json() as any;
-            if (!data?.items || !Array.isArray(data.items)) {
-                return { sources: [], subtitles: [], diagnostics: [] };
-            }
-
-            const movie = data.items.find((item: any) =>
-                String(item.tmdb_prefix) === String(media.tmdbId) ||
-                String(item.tmdb_id) === String(media.tmdbId) ||
-                (media.imdbId && item.imdb_id && String(item.imdb_id).includes(media.imdbId.replace(/\D/g, ''))) ||
-                (media.title && item.title && item.title.toLowerCase() === media.title.toLowerCase())
-            );
-
-            if (!movie || !movie.streams) {
-                return { sources: [], subtitles: [], diagnostics: [] };
-            }
-
-            const streams = movie.streams;
-            const sources: Source[] = [];
-            const qualities = ['1080p', '720p', '480p', '360p'];
-
-            // Probe the primary stream to ensure upstream hash signature is valid and returns an actual playlist
-            const probeUrl = streams['1080p'] || streams['720p'] || streams['480p'] || streams['360p'];
-            if (probeUrl && typeof probeUrl === 'string') {
-                try {
-                    const probeRes = await fetch(probeUrl, {
-                        headers: this.HEADERS,
-                        signal: AbortSignal.timeout(3000)
-                    });
-                    if (!probeRes.ok) {
-                        return { sources: [], subtitles: [], diagnostics: [] };
+        // 1. Native LMScript for movies
+        if (media.type === 'movie') {
+            try {
+                const data: any = await Promise.race([
+                    lmscript.fetchSources(media.tmdbId, 'movie', season, episode),
+                    new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 3500))
+                ]);
+                if (Array.isArray(data?.sources) && data.sources.length > 0) {
+                    const headers = data.headers || {};
+                    let idx = 0;
+                    for (const src of data.sources) {
+                        if (!src?.url) continue;
+                        idx++;
+                        const proxiedUrl = Object.keys(headers).length > 0
+                            ? this.createProxyUrl(src.url, headers)
+                            : src.url;
+                        const sLabel = src.server || `Server ${idx}`;
+                        sources.push({
+                            url: proxiedUrl,
+                            quality: src.quality || '1080p',
+                            type: getSourceType(src.url, src.isM3U8),
+                            server: sLabel,
+                            audioTracks: [{ language: 'en', label: 'English' }],
+                            provider: {
+                                name: `${this.name} (${sLabel})`,
+                                id: `${this.id}-${idx}`
+                            }
+                        });
                     }
-                    const sampleText = await probeRes.text();
-                    if (!sampleText.includes('#EXTM3U') || sampleText.includes('WRONG HASH')) {
-                        console.warn('[LMScript] Upstream stream invalid or rejected hash. Skipping LMScript.');
-                        return { sources: [], subtitles: [], diagnostics: [] };
+                    if (sources.length > 0) {
+                        return { sources, subtitles: [], diagnostics: [] };
                     }
-                } catch {
-                    return { sources: [], subtitles: [], diagnostics: [] };
                 }
-            }
-
-            for (const q of qualities) {
-                const streamUrl = streams[q];
-                if (streamUrl && typeof streamUrl === 'string') {
-                    // Always proxy through CinePro proxy so requests come from the matching scraper IP
-                    const proxiedUrl = this.createProxyUrl(streamUrl, this.HEADERS);
-                    sources.push({
-                        url: proxiedUrl,
-                        quality: q,
-                        type: streamUrl.includes('.m3u8') ? 'hls' : 'mp4',
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        provider: {
-                            name: this.name,
-                            id: this.id
-                        }
-                    });
-                }
-            }
-
-            return { sources, subtitles: [], diagnostics: [] };
-        } catch (e) {
-            return { sources: [], subtitles: [], diagnostics: [] };
+            } catch {}
         }
+
+        // 2. VidNest v2 for TV episodes and movie fallback
+        const v2 = await resolveVidnestV2(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            [
+                { name: 'Script HD', path: 'flixhq' },
+                { name: 'Script Cloud', path: 'nextgencloudfabric' }
+            ],
+            3200
+        );
+        if (v2.sources.length > 0) {
+            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
+        }
+
+        // 3. Clean RiveStream fallback
+        const riveSources = await resolveRiveStreamClean(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            3000
+        );
+        return { sources: riveSources, subtitles: [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {
