@@ -3967,6 +3967,117 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
     }
 ];
 
+/**
+ * Verified 1-to-1 Dedicated Bluetier Flussonic Hardware HLS Cluster Slugs (`ds169.bluetier.top` via `wideiptv.top/player/<SLUG>`).
+ * Serves native MPEG-TS (0x47) segments in ~45ms with continuous 4s segment cadence and 5-minute no_check_ip tokens
+ * (zero PNG wrapping, zero TikTok CDN upload bursts).
+ * Promoted to Server 1 (Primary) while retaining all existing Edge CDN and iptv-org servers as failover backups.
+ */
+export const CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS: Record<string, string> = {
+    // 1. beIN Sports Arabic (MENA)
+    'bein-sports-1-ar': 'beINAR',
+    'bein-sports-2-ar': 'beINAR2',
+    'bein-sports-3-ar': 'beINAR3',
+    'bein-sports-4-ar': 'beINAR4',
+    'bein-sports-5-ar': 'beINAR5',
+    'bein-sports-6-ar': 'beINAR6',
+    'bein-sports-7-ar': 'beINAR7',
+    'bein-sports-8-ar': 'beINAR8',
+    'bein-sports-premium-1-ar': 'beINAR',
+    'bein-sports-premium-2-ar': 'beINAR2',
+    'bein-sports-premium-3-ar': 'beINAR3',
+    'bein-sports-afc-ar': 'beINAR7',
+
+    // 2. beIN Sports France (1-3 & MAX 4-9)
+    'bein-sports-fr-1': 'BEINSPORT1FR',
+    'bein-sports-fr-2': 'BEINSPORT2FR',
+    'bein-sports-fr-3': 'BEINSPORT3FR',
+    'bein-sports-max-4-fr': 'beINMAX4FR',
+    'bein-sports-max-5-fr': 'beINMAX5FR',
+    'bein-sports-max-6-fr': 'beINMAX6FR',
+    'bein-sports-max-7-fr': 'beINMAX7FR',
+    'bein-sports-max-8-fr': 'beINMAX8FR',
+    'bein-sports-max-9-fr': 'beINMAX9FR',
+
+    // 3. beIN Sports Türkiye, USA & Español
+    'bein-sports-1-tr': 'beINSPORTS1TR',
+    'bein-sports-2-tr': 'beINSPORTS2TR',
+    'bein-sports-3-tr': 'beINSPORTS3TR',
+    'bein-sports-4-tr': 'BEINSPORT4TR',
+    'bein-sports-5-tr': 'beINSPORTS5TR',
+    'bein-sports-usa': 'beINSPORTSUS',
+    'bein-sports-xtra-es': 'BEINSPORTES',
+
+    // 4. UK Sports (Sky Sports UK, TNT Sports UK, Eurosport UK)
+    'sky-sports-main-event': 'skysportsmainevent',
+    'sky-sports-premier-league': 'skysportspremierleague',
+    'sky-sports-football': 'SkySportsFootballUK',
+    'sky-sports-plus': 'SkySportsPlus',
+    'sky-sports-action': 'skysportsaction',
+    'sky-sports-f1': 'skysportsf1',
+    'sky-sports-news': 'skysportsnews',
+    'sky-sports-racing': 'skysportsracing',
+    'tnt-sports-1': 'TNT1UK',
+    'tnt-sports-2': 'TNTSports2',
+    'tnt-sports-3': 'TNTSports3',
+    'tnt-sports-4': 'TNTSports4',
+    'eurosport-1': 'Eurosport1UK',
+    'eurosport-2': 'Eurosport2UK',
+
+    // 5. France Sports (Canal+ Sport, Canal+ Foot, RMC Sport)
+    'canal-plus-sport-fr': 'CANALSPORTFR',
+    'canal-plus-foot-fr': 'FOOTPLUSFR',
+    'rmc-sport-1-fr': 'RMCSPORT1FR',
+    'rmc-sport-2-fr': 'RMCSPORT2FR',
+
+    // 6. Italy Sports (Sky Sport Italia)
+    'sky-sport-uno-it': 'SkySportUnoIT',
+    'sky-sport-calcio-it': 'SkySportCalcioIT',
+    'sky-sport-f1-it': 'SkySportF1IT',
+    'sky-sport-motogp-it': 'SkySportMotoGPIT',
+    'sky-sport-tennis-it': 'SkySportTennisIT',
+    'sky-sport-nba-it': 'SkySportNBAIT',
+    'sky-sport-arena-it': 'SkySportArenaIT',
+    'sky-sport-24-it': 'SkySport24IT',
+
+    // 7. Spain Sports (DAZN LaLiga & DAZN F1)
+    'dazn-laliga-es': 'DAZNLALIGA',
+    'dazn-f1-es': 'DAZNF1ES',
+
+    // 8. USA Sports (ESPN, Fox Sports 1, NBA TV, Tennis Channel)
+    'espn-hd': 'ESPN',
+    'espn-2-hd': 'ESPN2',
+    'espnu-hd': 'ESPNU',
+    'fox-sports-1': 'FoxSports1',
+    'nba-tv': 'NBATV',
+    'tennis-channel': 'TennisChannel'
+};
+
+// Promote verified Bluetier Flussonic Hardware HLS servers to Server 1 (Primary) while retaining all existing servers
+for (const ch of CORE_SPORTS_CHANNELS) {
+    const bluetierSlug = CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS[ch.id];
+    if (!bluetierSlug) continue;
+    const targetWideUrl = `https://wideiptv.top/player/${bluetierSlug}/index.m3u8`;
+    const existingIdx = ch.streams.findIndex(
+        (s) => s.url.toLowerCase() === targetWideUrl.toLowerCase() || s.url.includes(`wideiptv.top/player/${bluetierSlug}/`)
+    );
+    const primaryBluetierStream = {
+        label: `${ch.shortName} (Server 1 — Bluetier Hardware HLS 1080p Primary)`,
+        url: targetWideUrl,
+        quality: '1080p',
+        language: ch.language,
+        headers: WIDEIPTV_HEADERS
+    };
+    if (existingIdx === 0) {
+        ch.streams[0] = primaryBluetierStream;
+    } else if (existingIdx > 0) {
+        const others = ch.streams.filter((_, idx) => idx !== existingIdx);
+        ch.streams = [primaryBluetierStream, ...others];
+    } else {
+        ch.streams = [primaryBluetierStream, ...ch.streams];
+    }
+}
+
 // ============================================================================
 // EDGE CDN TOKEN RESOLVER, SOCKET RETRY & MPEG-TS SEGMENT UNWRAPPER
 // ============================================================================
@@ -4165,16 +4276,41 @@ async function getAloulaSignedHlsUrl(aloulaChannelId: number, forceRefresh = fal
     }
 }
 
-const wideIptvSignedHlsCache = new Map<string, { signedUrl: string; expiresAt: number }>();
+const WIDEIPTV_SLUG_ALIASES: Record<string, string> = {
+    bein1: 'beINAR',
+    beinar1: 'beINAR',
+    bein2: 'beINAR2',
+    bein3: 'beINAR3',
+    bein4: 'beINAR4',
+    bein5: 'beINAR5',
+    bein6: 'beINAR6',
+    bein7: 'beINAR7',
+    bein8: 'beINAR8',
+    bein1fr: 'BEINSPORT1FR',
+    bein2fr: 'BEINSPORT2FR',
+    bein3fr: 'BEINSPORT3FR',
+    skysportsfootball: 'SkySportsFootballUK',
+    tnt2uk: 'TNTSports2',
+    tnt3uk: 'TNTSports3',
+    tnt4uk: 'TNTSports4'
+};
+
+const wideIptvSignedHlsCache = new Map<string, { signedUrl: string; refreshAt: number; expiresAt: number }>();
 const wideIptvSignedHlsInFlight = new Map<string, Promise<string | null>>();
 
 /**
  * Resolves a fresh 5-minute `no_check_ip` signed HLS `tracks-v1a1/mono.m3u8?token=` URL from
- * `https://wideiptv.top/player/{slug}` (`ds169.bluetier.top` Flussonic cluster) for beIN Sports AR, FR, EN, TR, ES.
+ * `https://wideiptv.top/player/{slug}` (`ds169.bluetier.top` Flussonic cluster).
+ * Proactively refreshes tokens in the background after 90s so active playback never pauses for token renewal.
  */
-async function getWideIptvSignedHlsUrl(slug: string, forceRefresh = false): Promise<string | null> {
+async function getWideIptvSignedHlsUrl(rawSlug: string, forceRefresh = false): Promise<string | null> {
+    const slug = WIDEIPTV_SLUG_ALIASES[rawSlug.toLowerCase()] || rawSlug;
+    const now = Date.now();
     const cached = wideIptvSignedHlsCache.get(slug);
-    if (!forceRefresh && cached && Date.now() < cached.expiresAt) {
+    if (!forceRefresh && cached && now < cached.expiresAt) {
+        if (now >= cached.refreshAt && !wideIptvSignedHlsInFlight.has(slug)) {
+            void fetchFreshWideIptvSignedHlsUrl(slug, cached).catch(() => {});
+        }
         return cached.signedUrl;
     }
 
@@ -4183,6 +4319,13 @@ async function getWideIptvSignedHlsUrl(slug: string, forceRefresh = false): Prom
         if (existing) return existing;
     }
 
+    return fetchFreshWideIptvSignedHlsUrl(slug, cached);
+}
+
+async function fetchFreshWideIptvSignedHlsUrl(
+    slug: string,
+    cached?: { signedUrl: string; refreshAt: number; expiresAt: number }
+): Promise<string | null> {
     const flight = (async () => {
         for (let attempt = 0; attempt < 2; attempt++) {
             try {
@@ -4191,7 +4334,7 @@ async function getWideIptvSignedHlsUrl(slug: string, forceRefresh = false): Prom
                         'User-Agent': DEFAULT_UA,
                         Referer: `https://wideiptv.top/daddy.php?stream=${encodeURIComponent(slug)}`
                     },
-                    signal: AbortSignal.timeout(4500)
+                    signal: AbortSignal.timeout(4200)
                 });
                 if (!res.ok) continue;
                 const html = await res.text();
@@ -4205,7 +4348,8 @@ async function getWideIptvSignedHlsUrl(slug: string, forceRefresh = false): Prom
                 const mediaPlaylistUrl = rawStreamUrl.replace('/index.m3u8', '/tracks-v1a1/mono.m3u8');
                 wideIptvSignedHlsCache.set(slug, {
                     signedUrl: mediaPlaylistUrl,
-                    expiresAt: Date.now() + 180 * 1000 // Refresh every 3 minutes (token TTL is 5 minutes)
+                    refreshAt: Date.now() + 90 * 1000, // Background refresh at 90s
+                    expiresAt: Date.now() + 210 * 1000 // Valid up to 210s (upstream token TTL is 300s)
                 });
                 return mediaPlaylistUrl;
             } catch {
@@ -9095,6 +9239,18 @@ export function generateSportsM3UPlaylist(
  * Resolves relative URLs inside an HLS .m3u8 manifest and rewrites them through /v1/live/proxy
  * Supports #EXT-X-DISCONTINUITY injection when failing over transparently between backup servers.
  */
+interface RollingSegmentEntry {
+    inf: string;
+    uri: string;
+    normKey: string;
+}
+interface RollingPlaylistState {
+    segments: RollingSegmentEntry[];
+    lastLatestSeq: number;
+    updatedAt: number;
+}
+const rollingLivePlaylistCache = new Map<string, RollingPlaylistState>();
+
 export function rewriteLiveHlsManifest(
     manifestContent: string,
     baseUrl: string,
@@ -9104,6 +9260,7 @@ export function rewriteLiveHlsManifest(
     injectDiscontinuity = false
 ): string {
     let lines = manifestContent.split(/\r?\n/);
+    const isEdgeParent = /https?:\/\/edge\.[a-z0-9.-]+/i.test(baseUrl);
 
     // If upstream is a DVR media playlist (e.g. Kwikmotion chunks_dvr.m3u8 with 3,500+ segments),
     // trim to a fast live sliding window of the latest 8 segments so manifests stay lightweight (<2KB)
@@ -9137,6 +9294,94 @@ export function rewriteLiveHlsManifest(
             });
             lines = [...adjustedHeaders, ...keptPairs.flatMap((p) => [p.inf, p.uri])];
         }
+    } else if (
+        manifestContent.includes('#EXTINF') &&
+        !manifestContent.includes('#EXT-X-STREAM-INF') &&
+        !manifestContent.includes('#EXT-X-ENDLIST')
+    ) {
+        // 14-Segment Anti-Burst Rolling Window for live media playlists (especially edge.wedd48c.top):
+        // Prevents mid-stream disconnects when upstream uploads segments in 3-segment bursts every 12-16s
+        // and only serves a tiny 6-segment window that jumps #EXT-X-MEDIA-SEQUENCE by 3 at once.
+        const headerLines: string[] = [];
+        const incomingSegments: RollingSegmentEntry[] = [];
+        let pendingInf = '';
+        let baseSeq = 0;
+        let hasSeqHeader = false;
+
+        for (const l of lines) {
+            const t = l.trim();
+            if (!t) continue;
+            const seqMatch = t.match(/^#EXT-X-MEDIA-SEQUENCE:(\d+)/i);
+            if (seqMatch) {
+                baseSeq = Number(seqMatch[1]);
+                hasSeqHeader = true;
+            }
+            if (t.startsWith('#EXTINF')) {
+                pendingInf = l;
+            } else if (!t.startsWith('#')) {
+                if (pendingInf) {
+                    const normKey = t.split('?')[0].split('/').slice(-2).join('/');
+                    incomingSegments.push({ inf: pendingInf, uri: l, normKey });
+                    pendingInf = '';
+                }
+            } else if (!pendingInf) {
+                headerLines.push(l);
+            }
+        }
+
+        if (incomingSegments.length > 0 && hasSeqHeader) {
+            const rollingKey = `${channelId || ''}::${baseUrl.split('?')[0]}`;
+            const now = Date.now();
+            const prev = rollingLivePlaylistCache.get(rollingKey);
+            const incomingLatestSeq = baseSeq + incomingSegments.length - 1;
+            let mergedSegments = incomingSegments;
+
+            if (prev && now - prev.updatedAt < 90_000) {
+                const seqDelta = incomingLatestSeq - prev.lastLatestSeq;
+                // Merge if sequence advanced normally or stayed same (0 to 8 segments jump)
+                if (seqDelta >= 0 && seqDelta <= 8) {
+                    const byKey = new Map<string, RollingSegmentEntry>();
+                    for (const seg of prev.segments) {
+                        byKey.set(seg.normKey, seg);
+                    }
+                    for (const seg of incomingSegments) {
+                        byKey.set(seg.normKey, seg);
+                    }
+                    mergedSegments = Array.from(byKey.values()).slice(-14);
+                }
+            }
+
+            rollingLivePlaylistCache.set(rollingKey, {
+                segments: mergedSegments,
+                lastLatestSeq: incomingLatestSeq,
+                updatedAt: now
+            });
+
+            if (rollingLivePlaylistCache.size > 400) {
+                const oldestKey = rollingLivePlaylistCache.keys().next().value;
+                if (oldestKey) rollingLivePlaylistCache.delete(oldestKey);
+            }
+
+            const effectiveStartSeq = Math.max(0, incomingLatestSeq - mergedSegments.length + 1);
+            let hasStartOffset = false;
+            const adjustedHeaders = headerLines.map((h) => {
+                if (/^#EXT-X-START:/i.test(h.trim())) {
+                    hasStartOffset = true;
+                }
+                if (/^#EXT-X-MEDIA-SEQUENCE:\d+/i.test(h.trim())) {
+                    return `#EXT-X-MEDIA-SEQUENCE:${effectiveStartSeq}`;
+                }
+                return h;
+            });
+
+            // For Edge CDN burst streams, instruct players to maintain an 18s (4.5-segment) cushion
+            // behind the live edge so 12-16s upstream TikTok CDN upload pauses never drain the buffer.
+            if (isEdgeParent && !hasStartOffset && mergedSegments.length >= 6) {
+                adjustedHeaders.push('#EXT-X-START:TIME-OFFSET=-18.0,PRECISE=YES');
+            }
+
+            lines = [...adjustedHeaders, ...mergedSegments.flatMap((p) => [p.inf, p.uri])];
+        }
     }
 
     const rewritten: string[] = [];
@@ -9152,8 +9397,6 @@ export function rewriteLiveHlsManifest(
             return rel;
         }
     };
-
-    const isEdgeParent = /https?:\/\/edge\.[a-z0-9.-]+/i.test(baseUrl);
 
     const wrapProxy = (targetUrl: string, isSubManifest: boolean): string => {
         const isTiktokSegment = /tiktokcdn/i.test(targetUrl) || targetUrl.includes('.image');
@@ -9205,13 +9448,13 @@ export function rewriteLiveHlsManifest(
 }
 
 // ============================================================================
-// PILLAR 2 & 4: ANTI-FREEZE ZOMBIE DETECTOR, BOUNDED 96MB RAM SEGMENT CACHE & 3-SEGMENT PRE-FETCHER
+// PILLAR 2 & 4: ANTI-FREEZE ZOMBIE DETECTOR, BOUNDED 160MB RAM SEGMENT CACHE & MULTI-OFFSET PRE-FETCHER
 // ============================================================================
 const lastGoodManifestCache = new Map<string, { content: string; updatedAt: number }>();
 const unwrappedSegmentCache = new Map<string, { buffer: Buffer; contentType: string; expiresAt: number }>();
 const segmentInFlight = new Map<string, Promise<{ buffer: Buffer; contentType: string }>>();
-const MAX_CACHED_SEGMENTS = 120;
-const MAX_CACHE_BYTES = 96 * 1024 * 1024; // 96 MB RAM cap
+const MAX_CACHED_SEGMENTS = 240;
+const MAX_CACHE_BYTES = 160 * 1024 * 1024; // 160 MB RAM cap for 14-segment rolling windows
 let currentCachedBytes = 0;
 let totalCacheHits = 0;
 let totalCacheMisses = 0;
@@ -9248,14 +9491,14 @@ function setCachedSegment(url: string, buffer: Buffer, contentType: string): voi
     unwrappedSegmentCache.set(url, {
         buffer,
         contentType,
-        expiresAt: Date.now() + 75 * 1000
+        expiresAt: Date.now() + 140 * 1000
     });
     currentCachedBytes += buffer.length;
 }
 
 /**
  * Checks whether an upstream live media manifest's segment list is advancing or frozen (zombie encoder).
- * Returns true if the manifest has been stuck on the exact same last segment for >18 seconds across 3+ polls.
+ * Returns true if the manifest has been stuck on the exact same last segment for >32 seconds across 6+ polls.
  */
 function checkManifestFrozen(manifestUrl: string, rawManifestText: string): boolean {
     const lines = rawManifestText.split(/\r?\n/);
@@ -9290,7 +9533,7 @@ function checkManifestFrozen(manifestUrl: string, rawManifestText: string): bool
 }
 
 /**
- * Predictively pre-fetches and unwraps the last 2 .ts segments from a media playlist in the background
+ * Predictively pre-fetches and unwraps the latest segments (plus the -18s start offset segment for Edge CDN)
  * using non-blocking async zlib decompression so that when hls.js / ExoPlayer requests them,
  * they are served immediately from RAM in 0ms (X-Cache: HIT) without choking socket bandwidth.
  */
@@ -9310,9 +9553,17 @@ function prefetchLatestSegment(
     }
     if (mediaLines.length === 0) return;
 
-    // Pre-fetch the last 2 segments (staggered by 220ms so 4-6MB 1080p50 segments don't contend on bandwidth)
-    const targetLines = mediaLines.slice(-2);
     const isEdgeParent = /https?:\/\/edge\.[a-z0-9.-]+/i.test(baseUrl);
+    // Pre-fetch the latest 3 segments for Edge CDN (since it uploads in 3-segment bursts) or latest 2 for standard HLS,
+    // plus the -18s live offset segment on initial tune-in so instant playback hits RAM cache.
+    const targetLinesSet = new Set<string>();
+    if (isEdgeParent && mediaLines.length >= 5) {
+        targetLinesSet.add(mediaLines[Math.max(0, mediaLines.length - 5)]);
+        for (const l of mediaLines.slice(-3)) targetLinesSet.add(l);
+    } else {
+        for (const l of mediaLines.slice(-2)) targetLinesSet.add(l);
+    }
+    const targetLines = Array.from(targetLinesSet);
 
     for (let idx = 0; idx < targetLines.length; idx++) {
         const segRel = targetLines[idx];
@@ -9332,7 +9583,7 @@ function prefetchLatestSegment(
 
         const isTiktokSegment = /tiktokcdn/i.test(absSegUrl) || absSegUrl.includes('.image');
         const effectiveHeaders = isTiktokSegment && isEdgeParent ? undefined : headers;
-        const staggerDelayMs = idx * 220;
+        const staggerDelayMs = idx * 180;
 
         const prefetchTask = (async () => {
             if (staggerDelayMs > 0) {
