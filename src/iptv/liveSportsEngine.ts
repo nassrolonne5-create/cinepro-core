@@ -1,6 +1,10 @@
 import { Readable } from 'node:stream';
 import * as zlib from 'node:zlib';
+import { promisify } from 'node:util';
 import { spawn } from 'node:child_process';
+
+const inflateAsync = promisify(zlib.inflate);
+const gunzipAsync = promisify(zlib.gunzip);
 
 export interface HlsQualityVariant {
     label: string;
@@ -192,7 +196,7 @@ export interface LiveSportEvent {
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36';
 const EDGE_CDN_BASE = 'https://edge.wedd48c.top';
 let activeEdgeCdnBase = EDGE_CDN_BASE;
-let lastEdgeHostDiscoveryAt = 0;
+let lastEdgeHostDiscoveryAt = Date.now();
 let edgeHostDiscoveryFlight: Promise<string> | null = null;
 const DEMBED_HEADERS: Record<string, string> = {
     Origin: 'https://dembed.st',
@@ -3966,7 +3970,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
 // ============================================================================
 // EDGE CDN TOKEN RESOLVER, SOCKET RETRY & MPEG-TS SEGMENT UNWRAPPER
 // ============================================================================
-const edgeTokenCache = new Map<string, { token: string; expiresAt: number; staleToken: string }>();
+const edgeTokenCache = new Map<string, { token: string; refreshAt: number; expiresAt: number; staleToken: string }>();
 const edgeTokenInFlight = new Map<string, Promise<string | null>>();
 
 /**
@@ -3974,7 +3978,7 @@ const edgeTokenInFlight = new Map<string, Promise<string | null>>();
  * so if edge.wedd48c.top rotates in the future, all 300+ Edge streams self-heal automatically.
  */
 async function getActiveEdgeCdnBase(forceRefresh = false): Promise<string> {
-    if (!forceRefresh && Date.now() - lastEdgeHostDiscoveryAt < 15 * 60 * 1000 && activeEdgeCdnBase) {
+    if (!forceRefresh && Date.now() - lastEdgeHostDiscoveryAt < 30 * 60 * 1000 && activeEdgeCdnBase) {
         return activeEdgeCdnBase;
     }
     if (!forceRefresh && edgeHostDiscoveryFlight) {
@@ -3988,7 +3992,7 @@ async function getActiveEdgeCdnBase(forceRefresh = false): Promise<string> {
                     'User-Agent': DEFAULT_UA,
                     Referer: 'https://thedaddy.pk/'
                 },
-                signal: AbortSignal.timeout(4500)
+                signal: AbortSignal.timeout(3500)
             });
             if (res.ok) {
                 const html = await res.text();
@@ -4015,12 +4019,18 @@ async function getActiveEdgeCdnBase(forceRefresh = false): Promise<string> {
 
 /**
  * Fetches or reuses a short-lived playlist token for edge.wedd48c.top/premium<ID>/index.m3u8
- * Uses a proactive 20s refresh window and 3 socket retries so tokens never expire mid-playback (~42s mark).
+ * Token TTL upstream is 120s; we reuse tokens for up to 75s and trigger a non-blocking background refresh
+ * at 35s so manifest polling during playback takes 0ms and never waits on /api/playlist-token.
  */
 async function getEdgePlaylistToken(slugKey: string, forceRefresh = false): Promise<string | null> {
     const cleanSlug = slugKey.split('::')[0];
+    const now = Date.now();
     const cached = edgeTokenCache.get(slugKey);
-    if (!forceRefresh && cached && Date.now() < cached.expiresAt) {
+
+    if (!forceRefresh && cached && now < cached.expiresAt) {
+        if (now >= cached.refreshAt && !edgeTokenInFlight.has(slugKey)) {
+            void fetchFreshEdgeToken(slugKey, cleanSlug, cached).catch(() => {});
+        }
         return cached.token;
     }
 
@@ -4031,38 +4041,46 @@ async function getEdgePlaylistToken(slugKey: string, forceRefresh = false): Prom
         }
     }
 
+    return fetchFreshEdgeToken(slugKey, cleanSlug, cached);
+}
+
+async function fetchFreshEdgeToken(
+    slugKey: string,
+    cleanSlug: string,
+    cached?: { token: string; refreshAt: number; expiresAt: number; staleToken: string }
+): Promise<string | null> {
     const flight = (async () => {
         for (let attempt = 0; attempt < 3; attempt++) {
             try {
-                const edgeBase = attempt > 0 ? await getActiveEdgeCdnBase(true) : await getActiveEdgeCdnBase(false);
+                const edgeBase = attempt > 1 ? await getActiveEdgeCdnBase(true) : await getActiveEdgeCdnBase(false);
                 const res = await fetch(`${edgeBase}/api/playlist-token?slug=${encodeURIComponent(cleanSlug)}`, {
                     headers: {
                         'User-Agent': DEFAULT_UA,
                         ...DEMBED_HEADERS,
                         ...(attempt > 0 || slugKey.includes('::') ? { Connection: 'close' } : {})
                     },
-                    signal: AbortSignal.timeout(3500)
+                    signal: AbortSignal.timeout(2800)
                 });
                 if (!res.ok) {
-                    await new Promise((r) => setTimeout(r, 120 * (attempt + 1)));
+                    await new Promise((r) => setTimeout(r, 80 * (attempt + 1)));
                     continue;
                 }
                 const data = (await res.json()) as { token?: string; ttl?: number };
                 if (!data?.token) continue;
-                // Proactively refresh every 20 seconds so tokens are always fresh well before upstream expiry
+                const ttlSec = Math.max(60, Number(data.ttl) || 120);
                 edgeTokenCache.set(slugKey, {
                     token: data.token,
-                    expiresAt: Date.now() + 20 * 1000,
+                    refreshAt: Date.now() + Math.min(35, Math.floor(ttlSec * 0.35)) * 1000,
+                    expiresAt: Date.now() + Math.min(80, Math.floor(ttlSec * 0.65)) * 1000,
                     staleToken: data.token
                 });
                 return data.token;
             } catch {
                 if (attempt < 2) {
-                    await new Promise((r) => setTimeout(r, 120 * (attempt + 1)));
+                    await new Promise((r) => setTimeout(r, 80 * (attempt + 1)));
                 }
             }
         }
-        // Fallback to last known token if token endpoint had a momentary network blip
         return cached?.staleToken || null;
     })();
 
@@ -4348,8 +4366,8 @@ async function fetchUpstreamBufferWithRetry(
     options?: { maxAttempts?: number; timeoutMs?: number; stallTimeoutMs?: number }
 ): Promise<{ buffer: Buffer; status: number; ok: boolean; contentType: string; finalResolvedUrl: string }> {
     const maxAttempts = options?.maxAttempts ?? 3;
-    const stallTimeoutMs = options?.stallTimeoutMs ?? 2000;
-    const maxTotalAttemptMs = Math.max(options?.timeoutMs ?? 6500, 5500);
+    const stallTimeoutMs = options?.stallTimeoutMs ?? 4500;
+    const maxTotalAttemptMs = Math.max(options?.timeoutMs ?? 8500, 4500);
     let lastError: any = null;
     let lastStatus = 502;
     let lastResolvedUrl = rawUrl;
@@ -4538,7 +4556,12 @@ function paethPredictor(a: number, b: number, c: number): number {
     return c;
 }
 
-function extractPngPixelsTs(bytes: Uint8Array): Buffer | null {
+function parsePngChunksForTpix(bytes: Uint8Array): {
+    w: number;
+    h: number;
+    ctype: number;
+    zbuf: Buffer;
+} | null {
     if (bytes.length < 16 || bytes[0] !== 0x89 || bytes[1] !== 0x50) return null;
     const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     let off = 8;
@@ -4580,19 +4603,21 @@ function extractPngPixelsTs(bytes: Uint8Array): Buffer | null {
         zoff += p.length;
     }
 
-    let raw: Buffer;
-    try {
-        raw = zlib.inflateSync(zbuf);
-    } catch {
-        return null;
-    }
+    return { w, h, ctype, zbuf };
+}
 
+function reconstructTpixGzFromRawScanlines(raw: Buffer, w: number, h: number, ctype: number): Buffer | null {
     const bpp = ctype === 6 ? 4 : 3;
     const stride = w * bpp;
-    const rgb = Buffer.allocUnsafe(w * h * 3);
+    const rowRgbBytes = w * 3;
+    const maxRgbCapacity = rowRgbBytes * h;
+    if (maxRgbCapacity < 16) return null;
+
+    const rgb = Buffer.allocUnsafe(maxRgbCapacity);
     let src = 0;
     let dst = 0;
-    let prev: ArrayLike<number> = new Uint8Array(stride);
+    let prev: Uint8Array = new Uint8Array(stride);
+    let requiredTotalBytes = 0;
 
     for (let y = 0; y < h; y++) {
         if (src + 1 + stride > raw.length) return null;
@@ -4610,50 +4635,88 @@ function extractPngPixelsTs(bytes: Uint8Array): Buffer | null {
                     rgb[o++] = row[i + 2];
                 }
             }
-            dst += w * 3;
+            dst += rowRgbBytes;
             prev = row;
-            continue;
-        }
-
-        const recon = new Uint8Array(stride);
-        for (let i = 0; i < stride; i++) {
-            const a = i >= bpp ? recon[i - bpp] : 0;
-            const b = prev[i];
-            const c = i >= bpp ? prev[i - bpp] : 0;
-            let v = row[i];
-            if (filter === 1) v += a;
-            else if (filter === 2) v += b;
-            else if (filter === 3) v += (a + b) >> 1;
-            else if (filter === 4) v += paethPredictor(a, b, c);
-            else return null;
-            recon[i] = v & 255;
-        }
-        if (ctype === 2) {
-            rgb.set(recon, dst);
-            dst += stride;
         } else {
-            for (let i = 0; i < stride; i += 4) {
-                rgb[dst++] = recon[i];
-                rgb[dst++] = recon[i + 1];
-                rgb[dst++] = recon[i + 2];
+            const recon = new Uint8Array(stride);
+            for (let i = 0; i < stride; i++) {
+                const a = i >= bpp ? recon[i - bpp] : 0;
+                const b = prev[i];
+                const c = i >= bpp ? prev[i - bpp] : 0;
+                let v = row[i];
+                if (filter === 1) v += a;
+                else if (filter === 2) v += b;
+                else if (filter === 3) v += (a + b) >> 1;
+                else if (filter === 4) v += paethPredictor(a, b, c);
+                else return null;
+                recon[i] = v & 255;
             }
+            if (ctype === 2) {
+                rgb.set(recon, dst);
+                dst += stride;
+            } else {
+                for (let i = 0; i < stride; i += 4) {
+                    rgb[dst++] = recon[i];
+                    rgb[dst++] = recon[i + 1];
+                    rgb[dst++] = recon[i + 2];
+                }
+            }
+            prev = recon;
         }
-        prev = recon;
+
+        // Check TPIX header ("TIKTIKPX") as soon as the first 12 bytes are reconstructed so we can stop early
+        if (requiredTotalBytes === 0 && dst >= 12) {
+            if (
+                rgb[0] !== 84 ||
+                rgb[1] !== 73 ||
+                rgb[2] !== 75 ||
+                rgb[3] !== 84 ||
+                rgb[4] !== 73 ||
+                rgb[5] !== 75 ||
+                rgb[6] !== 80 ||
+                rgb[7] !== 88
+            ) {
+                return null;
+            }
+            const n = rgb.readUInt32BE(8);
+            if (n <= 0 || 12 + n > maxRgbCapacity) return null;
+            requiredTotalBytes = 12 + n;
+        }
+
+        if (requiredTotalBytes > 0 && dst >= requiredTotalBytes) {
+            break;
+        }
     }
 
-    // Check TPIX header ("TIKTIKPX")
-    const TPIX = [84, 73, 75, 84, 73, 75, 80, 88];
-    if (rgb.length < 12) return null;
-    for (let k = 0; k < 8; k++) {
-        if (rgb[k] !== TPIX[k]) return null;
-    }
-    const n = rgb.readUInt32BE(8);
-    if (n <= 0 || 12 + n > rgb.length) return null;
-    const gz = rgb.subarray(12, 12 + n);
+    if (requiredTotalBytes === 0 || dst < requiredTotalBytes) return null;
+    const gz = rgb.subarray(12, requiredTotalBytes);
     if (gz.length < 2 || gz[0] !== 0x1f || gz[1] !== 0x8b) return null;
+    return gz;
+}
 
+function extractPngPixelsTs(bytes: Uint8Array): Buffer | null {
+    const parsed = parsePngChunksForTpix(bytes);
+    if (!parsed) return null;
     try {
+        const raw = zlib.inflateSync(parsed.zbuf);
+        const gz = reconstructTpixGzFromRawScanlines(raw, parsed.w, parsed.h, parsed.ctype);
+        if (!gz) return null;
         const ts = zlib.gunzipSync(gz);
+        if (ts.length > 0 && ts[0] === 0x47) return ts;
+    } catch {
+        return null;
+    }
+    return null;
+}
+
+async function extractPngPixelsTsAsync(bytes: Uint8Array): Promise<Buffer | null> {
+    const parsed = parsePngChunksForTpix(bytes);
+    if (!parsed) return null;
+    try {
+        const raw = (await inflateAsync(parsed.zbuf)) as Buffer;
+        const gz = reconstructTpixGzFromRawScanlines(raw, parsed.w, parsed.h, parsed.ctype);
+        if (!gz) return null;
+        const ts = (await gunzipAsync(gz)) as Buffer;
         if (ts.length > 0 && ts[0] === 0x47) return ts;
     } catch {
         return null;
@@ -4667,7 +4730,6 @@ function extractPngPixelsTs(bytes: Uint8Array): Buffer | null {
  */
 export function unwrapLiveTsSegment(buf: Buffer): Buffer {
     if (buf.length < 188) return buf;
-    // Already a clean MPEG-TS segment
     if (buf[0] === 0x47 && buf[188] === 0x47) return buf;
 
     const bytes = new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
@@ -4705,7 +4767,58 @@ export function unwrapLiveTsSegment(buf: Buffer): Buffer {
         }
     }
 
-    // Scan for 3 consecutive MPEG-TS 188-byte packet sync bytes (0x47)
+    for (let i = 0; i + 376 < buf.length; i++) {
+        if (buf[i] === 0x47 && buf[i + 188] === 0x47 && buf[i + 376] === 0x47) {
+            return buf.subarray(i);
+        }
+    }
+
+    return buf;
+}
+
+/**
+ * Non-blocking async MPEG-TS segment unwrapper that offloads zlib inflate/gunzip to Node's C++ libuv threadpool
+ * so multi-megabyte 1080p50 segments never block concurrent manifest or segment requests.
+ */
+export async function unwrapLiveTsSegmentAsync(buf: Buffer): Promise<Buffer> {
+    if (buf.length < 188) return buf;
+    if (buf[0] === 0x47 && buf[188] === 0x47) return buf;
+
+    const bytes = new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+
+    const fromWebp = extractWebpExifTs(bytes);
+    if (fromWebp) {
+        return Buffer.from(fromWebp.buffer, fromWebp.byteOffset, fromWebp.byteLength);
+    }
+
+    const fromPng = extractPngIendTs(bytes);
+    if (fromPng) {
+        return Buffer.from(fromPng.buffer, fromPng.byteOffset, fromPng.byteLength);
+    }
+
+    const fromPngPixels = await extractPngPixelsTsAsync(bytes);
+    if (fromPngPixels) {
+        return fromPngPixels;
+    }
+
+    const TRAW = Buffer.from([84, 73, 75, 84, 73, 75, 82, 65, 87]);
+    const idxRaw = buf.indexOf(TRAW);
+    if (idxRaw !== -1) {
+        const sub = buf.subarray(idxRaw + TRAW.length);
+        if (sub.length > 0 && sub[0] === 0x47) return sub;
+    }
+
+    const TSGZ = Buffer.from([84, 73, 75, 84, 73, 75, 84, 83, 71, 90]);
+    const idxGz = buf.indexOf(TSGZ);
+    if (idxGz !== -1) {
+        try {
+            const unzipped = (await gunzipAsync(buf.subarray(idxGz + TSGZ.length))) as Buffer;
+            if (unzipped.length > 0 && unzipped[0] === 0x47) return unzipped;
+        } catch {
+            // Fall through
+        }
+    }
+
     for (let i = 0; i + 376 < buf.length; i++) {
         if (buf[i] === 0x47 && buf[i + 188] === 0x47 && buf[i + 376] === 0x47) {
             return buf.subarray(i);
@@ -4976,6 +5089,12 @@ function recordStreamHealthResult(
  * estimate bitrate, and extract the real DVB Service Description Table (SDT PID 0x0011) service/provider name.
  */
 export function inspectMpegTsSegment(buf: Buffer, sourceUrl?: string): MpegTsInspectionInfo {
+    if (sourceUrl) {
+        const existing = streamInspectionRegistry.get(sourceUrl);
+        if (existing && Date.now() - new Date(existing.inspectedAt).getTime() < 120 * 1000) {
+            return existing;
+        }
+    }
     const packetCount = Math.floor(buf.length / 188);
     const syncValid = buf.length >= 188 && buf[0] === 0x47 && (buf.length < 376 || buf[188] === 0x47);
     let serviceName: string | undefined;
@@ -6383,7 +6502,11 @@ export async function harvestOfficialXmltvEpg(): Promise<void> {
 
                     const progRegex = /<programme\s+start="([^"]+)"\s+stop="([^"]+)"\s+channel="([^"]+)"[^>]*>([\s\S]*?)<\/programme>/g;
                     let match: RegExpExecArray | null;
+                    let iterCount = 0;
                     while ((match = progRegex.exec(xmlText)) !== null) {
+                        if (++iterCount % 250 === 0) {
+                            await new Promise((r) => setImmediate(r));
+                        }
                         const rawChannelId = unescapeXmlText(match[3]);
                         if (!ALL_TARGET_XMLTV_IDS.has(rawChannelId)) continue;
 
@@ -6433,10 +6556,11 @@ export async function harvestOfficialXmltvEpg(): Promise<void> {
             }
         };
 
-        const batchSize = 5;
+        const batchSize = 2;
         for (let i = 0; i < OFFICIAL_XMLTV_FEEDS.length; i += batchSize) {
             const batch = OFFICIAL_XMLTV_FEEDS.slice(i, i + batchSize);
             await Promise.allSettled(batch.map((feedUrl) => fetchAndParseXmlFeed(feedUrl)));
+            await new Promise((r) => setImmediate(r));
         }
 
         if (nextCache.size > 0) {
@@ -6459,6 +6583,13 @@ export async function harvestOfficialXmltvEpg(): Promise<void> {
 
     return xmltvHarvestPromise;
 }
+
+// Pre-warm 24-hour KSA/SSC Sports signed HLS tokens in background on boot so first tune-in is instant
+setTimeout(() => {
+    for (const id of [9, 10, 16]) {
+        getAloulaSignedHlsUrl(id).catch(() => {});
+    }
+}, 250);
 
 /**
  * Builds a proxied URL through CinePro's Live HLS Proxy (embeds channelId for automatic mid-stream failover)
@@ -6488,9 +6619,10 @@ export function buildLiveProxyUrl(
 async function probeStreamLiveness(
     url: string,
     headers?: Record<string, string>,
-    timeoutMs = 5500,
+    timeoutMs = 2400,
     publicBaseUrl?: string,
-    channelId?: string
+    channelId?: string,
+    shouldPrefetchSegments = false
 ): Promise<{
     ok: boolean;
     latencyMs: number;
@@ -6513,13 +6645,14 @@ async function probeStreamLiveness(
 
     const t0 = Date.now();
     const cacheKey = publicBaseUrl ? `${publicBaseUrl}::${url}` : '';
+    const proxyManifestKey = publicBaseUrl ? `${publicBaseUrl}::${url}::r=1::p=` : '';
     if (cacheKey) {
         const cached = lastGoodManifestCache.get(cacheKey);
-        if (cached && Date.now() - cached.updatedAt < 4500) {
+        if (cached && Date.now() - cached.updatedAt < 35000) {
             const cachedVariants = streamVariantsCache.get(cacheKey);
             return {
                 ok: true,
-                latencyMs: 5,
+                latencyMs: Math.min(25, health.emaLatencyMs || 12),
                 healthScore: health.healthScore,
                 circuitState: health.circuitState,
                 variants: cachedVariants?.variants,
@@ -6587,18 +6720,27 @@ async function probeStreamLiveness(
         if (isM3U && publicBaseUrl && cacheKey) {
             const finalBase = res.url || resolved.url;
             const rewritten = rewriteLiveHlsManifest(chunk, finalBase, publicBaseUrl, resolved.headers, channelId);
+            const nowMs = Date.now();
             lastGoodManifestCache.set(cacheKey, {
                 content: rewritten,
-                updatedAt: Date.now()
+                updatedAt: nowMs
             });
-            prefetchLatestSegment(chunk, finalBase, resolved.headers, channelId);
+            if (proxyManifestKey) {
+                lastGoodManifestCache.set(proxyManifestKey, {
+                    content: rewritten,
+                    updatedAt: nowMs
+                });
+            }
+            if (shouldPrefetchSegments) {
+                prefetchLatestSegment(chunk, finalBase, resolved.headers, channelId);
+            }
             const extracted = parseHlsMasterVariants(chunk, finalBase, publicBaseUrl, resolved.headers, channelId);
             parsedVariants = extracted.variants;
             parsedAudio = extracted.audioTracks;
             streamVariantsCache.set(cacheKey, {
                 variants: extracted.variants,
                 audioTracks: extracted.audioTracks,
-                updatedAt: Date.now()
+                updatedAt: nowMs
             });
         }
         return {
@@ -6763,6 +6905,31 @@ export function getLiveChannels(
  * Enriches every source with Multi-Quality ABR variants, Rolling Health Scores, Circuit Breaker status,
  * MPEG-TS binary inspection metadata, and Virtual Master Playlist URLs.
  */
+interface ResolvedChannelCacheEntry {
+    result: {
+        channel: LiveChannel | null;
+        epg: ChannelEPG | null;
+        masterPlaylistUrl: string;
+        sources: LiveStreamSource[];
+    };
+    expiresAt: number;
+}
+const resolvedChannelCache = new Map<string, ResolvedChannelCacheEntry>();
+const resolvedChannelInFlight = new Map<
+    string,
+    Promise<{
+        channel: LiveChannel | null;
+        epg: ChannelEPG | null;
+        masterPlaylistUrl: string;
+        sources: LiveStreamSource[];
+    }>
+>();
+
+/**
+ * Resolves and verifies all streams strictly for a given channel ID (never mixes other channels).
+ * Enriches every source with Multi-Quality ABR variants, Rolling Health Scores, Circuit Breaker status,
+ * MPEG-TS binary inspection metadata, and Virtual Master Playlist URLs.
+ */
 export async function resolveChannelStreams(
     channelId: string,
     publicBaseUrl: string,
@@ -6773,12 +6940,13 @@ export async function resolveChannelStreams(
     masterPlaylistUrl: string;
     sources: LiveStreamSource[];
 }> {
-    await Promise.allSettled([
-        harvestDynamicSportsM3U(),
-        harvestAndAutoCorrectUpstreamFeeds(),
-        harvestOfficialXmltvEpg(),
-        Date.now() - lastEventsFetchTime >= EVENTS_TTL_MS ? getLiveSportEvents(publicBaseUrl) : Promise.resolve([])
-    ]);
+    // Trigger background harvesters non-blocking so viewer channel tune-in starts in 0ms
+    harvestDynamicSportsM3U().catch(() => {});
+    harvestAndAutoCorrectUpstreamFeeds().catch(() => {});
+    harvestOfficialXmltvEpg().catch(() => {});
+    if (Date.now() - lastEventsFetchTime >= EVENTS_TTL_MS) {
+        getLiveSportEvents(publicBaseUrl).catch(() => {});
+    }
 
     const normalizedId = channelId.toLowerCase().trim();
     const baseChannel =
@@ -6790,127 +6958,187 @@ export async function resolveChannelStreams(
         return { channel: null, epg: null, masterPlaylistUrl: '', sources: [] };
     }
 
-    const masterPlaylistUrl = `${publicBaseUrl}/v1/live/master/${baseChannel.id}.m3u8`;
-    const channelEpg = getChannelEPG(baseChannel.id, publicBaseUrl);
-    const channel: LiveChannel = {
-        ...baseChannel,
-        epg: channelEpg
-            ? {
-                  nowPlaying: channelEpg.nowPlaying,
-                  nextUp: channelEpg.nextUp,
-                  upcoming: channelEpg.upcoming
-              }
-            : undefined
-    };
-
-    // 1. Add curated streams while filtering out any transponder quarantined as hijacked in the 24h upstream directory
-    const candidateStreams: Array<{
-        label: string;
-        url: string;
-        quality: string;
-        language: LiveChannel['language'];
-        headers?: Record<string, string>;
-    }> = [];
-
-    for (const st of channel.streams) {
-        if (st.url.includes('primetv.cc.cd') || st.url.includes('andro.mangeinde4.lat')) {
-            continue;
+    const channelCacheKey = `${publicBaseUrl}::${baseChannel.id}`;
+    const cachedResolved = resolvedChannelCache.get(channelCacheKey);
+    if (cachedResolved && Date.now() < cachedResolved.expiresAt) {
+        if (onStreamVerified) {
+            for (const src of cachedResolved.result.sources) {
+                if (src.verified) onStreamVerified(src);
+            }
         }
-        const slugMatch = st.url.match(/\/(premium\d+)\//i);
-        if (slugMatch && quarantinedChannelSlugs.has(`${channel.id}::${slugMatch[1].toLowerCase()}`)) {
-            continue;
-        }
-        if (!candidateStreams.some((s) => s.url === st.url)) {
-            candidateStreams.push(st);
-        }
+        return cachedResolved.result;
     }
 
-    // 2. Append any newly shifted / auto-discovered upstream transponders for this exact channel
-    const autoDiscovered = autoDiscoveredChannelFeeds.get(channel.id) || [];
-    for (const disc of autoDiscovered) {
-        if (!candidateStreams.some((s) => s.url === disc.url)) {
-            candidateStreams.push({
-                label: disc.label,
-                url: disc.url,
-                quality: disc.quality,
-                language: channel.language,
-                headers: disc.headers
-            });
+    const existingFlight = resolvedChannelInFlight.get(channelCacheKey);
+    if (existingFlight) {
+        const res = await existingFlight;
+        if (onStreamVerified) {
+            for (const src of res.sources) {
+                if (src.verified) onStreamVerified(src);
+            }
         }
+        return res;
     }
 
-    const curatedCount = candidateStreams.length;
+    const flight = (async () => {
+        const masterPlaylistUrl = `${publicBaseUrl}/v1/live/master/${baseChannel.id}.m3u8`;
+        const channelEpg = getChannelEPG(baseChannel.id, publicBaseUrl);
+        const channel: LiveChannel = {
+            ...baseChannel,
+            epg: channelEpg
+                ? {
+                      nowPlaying: channelEpg.nowPlaying,
+                      nextUp: channelEpg.nextUp,
+                      upcoming: channelEpg.upcoming
+                  }
+                : undefined
+        };
 
-    // 3. Merge dynamically harvested M3U backups strictly for this exact channel ID
-    const dynamicBackups = dynamicChannelCache.get(channel.id) || [];
-    for (const dyn of dynamicBackups) {
-        if (!candidateStreams.some((s) => s.url === dyn.url)) {
-            candidateStreams.push({
-                label: dyn.label,
-                url: dyn.url,
-                quality: dyn.quality,
-                language: channel.language,
-                headers: dyn.headers
-            });
+        // 1. Add curated streams while filtering out any transponder quarantined as hijacked in the 24h upstream directory
+        const candidateStreams: Array<{
+            label: string;
+            url: string;
+            quality: string;
+            language: LiveChannel['language'];
+            headers?: Record<string, string>;
+        }> = [];
+
+        for (const st of channel.streams) {
+            if (st.url.includes('primetv.cc.cd') || st.url.includes('andro.mangeinde4.lat')) {
+                continue;
+            }
+            const slugMatch = st.url.match(/\/(premium\d+)\//i);
+            if (slugMatch && quarantinedChannelSlugs.has(`${channel.id}::${slugMatch[1].toLowerCase()}`)) {
+                continue;
+            }
+            if (!candidateStreams.some((s) => s.url === st.url)) {
+                candidateStreams.push(st);
+            }
         }
-    }
 
-    // 4. Dynamic Live-Event Simulcast Backups:
-    // ONLY when this channel is currently airing a verified LIVE match (`isLive && eventId`),
-    // attach simulcast streams from other channels that are verified to be broadcasting that EXACT SAME live match right now.
-    if (channelEpg?.nowPlaying?.isLive && channelEpg?.nowPlaying?.eventId) {
-        const liveEventId = String(channelEpg.nowPlaying.eventId);
-        const activeEvent = cachedEvents.find((ev) => String(ev.id) === liveEventId && ev.status !== 'FINISHED');
-        if (activeEvent && activeEvent.recommendedChannels.length > 1) {
-            const simulcastChannelIds = activeEvent.recommendedChannels
-                .map((rc) => rc.channelId)
-                .filter((cid) => cid !== channel.id);
-
-            // Sort same-language simulcast channels first, then international simulcasts of the exact same match
-            const simulcastChannels = simulcastChannelIds
-                .map((cid) => CORE_SPORTS_CHANNELS.find((c) => c.id === cid))
-                .filter((c): c is LiveChannel => Boolean(c))
-                .sort((a, b) => {
-                    const aSameLang = a.language === channel.language ? 0 : 1;
-                    const bSameLang = b.language === channel.language ? 0 : 1;
-                    return aSameLang - bSameLang;
+        // 2. Append any newly shifted / auto-discovered upstream transponders for this exact channel
+        const autoDiscovered = autoDiscoveredChannelFeeds.get(channel.id) || [];
+        for (const disc of autoDiscovered) {
+            if (!candidateStreams.some((s) => s.url === disc.url)) {
+                candidateStreams.push({
+                    label: disc.label,
+                    url: disc.url,
+                    quality: disc.quality,
+                    language: channel.language,
+                    headers: disc.headers
                 });
+            }
+        }
 
-            for (const simCh of simulcastChannels) {
-                const simPrimary = simCh.streams[0];
-                if (!simPrimary) continue;
-                const slugMatch = simPrimary.url.match(/\/(premium\d+)\//i);
-                if (slugMatch && quarantinedChannelSlugs.has(`${simCh.id}::${slugMatch[1].toLowerCase()}`)) {
-                    continue;
-                }
-                if (!candidateStreams.some((s) => s.url === simPrimary.url)) {
-                    candidateStreams.push({
-                        label: `${simCh.shortName} (Simulcast Backup — Same Live Event: ${activeEvent.shortTitle})`,
-                        url: simPrimary.url,
-                        quality: simPrimary.quality,
-                        language: simPrimary.language,
-                        headers: simPrimary.headers
-                    });
+        const curatedCount = candidateStreams.length;
+
+        // 3. Merge dynamically harvested M3U backups strictly for this exact channel ID
+        const dynamicBackups = dynamicChannelCache.get(channel.id) || [];
+        for (const dyn of dynamicBackups) {
+            if (!candidateStreams.some((s) => s.url === dyn.url)) {
+                candidateStreams.push({
+                    label: dyn.label,
+                    url: dyn.url,
+                    quality: dyn.quality,
+                    language: channel.language,
+                    headers: dyn.headers
+                });
+            }
+        }
+
+        // 4. Dynamic Live-Event Simulcast Backups:
+        // ONLY when this channel is currently airing a verified LIVE match (`isLive && eventId`),
+        // attach simulcast streams from other channels that are verified to be broadcasting that EXACT SAME live match right now.
+        if (channelEpg?.nowPlaying?.isLive && channelEpg?.nowPlaying?.eventId) {
+            const liveEventId = String(channelEpg.nowPlaying.eventId);
+            const activeEvent = cachedEvents.find((ev) => String(ev.id) === liveEventId && ev.status !== 'FINISHED');
+            if (activeEvent && activeEvent.recommendedChannels.length > 1) {
+                const simulcastChannelIds = activeEvent.recommendedChannels
+                    .map((rc) => rc.channelId)
+                    .filter((cid) => cid !== channel.id);
+
+                // Sort same-language simulcast channels first, then international simulcasts of the exact same match
+                const simulcastChannels = simulcastChannelIds
+                    .map((cid) => CORE_SPORTS_CHANNELS.find((c) => c.id === cid))
+                    .filter((c): c is LiveChannel => Boolean(c))
+                    .sort((a, b) => {
+                        const aSameLang = a.language === channel.language ? 0 : 1;
+                        const bSameLang = b.language === channel.language ? 0 : 1;
+                        return aSameLang - bSameLang;
+                    })
+                    .slice(0, 4);
+
+                for (const simCh of simulcastChannels) {
+                    const simPrimary = simCh.streams[0];
+                    if (!simPrimary) continue;
+                    const slugMatch = simPrimary.url.match(/\/(premium\d+)\//i);
+                    if (slugMatch && quarantinedChannelSlugs.has(`${simCh.id}::${slugMatch[1].toLowerCase()}`)) {
+                        continue;
+                    }
+                    if (!candidateStreams.some((s) => s.url === simPrimary.url)) {
+                        candidateStreams.push({
+                            label: `${simCh.shortName} (Simulcast Backup — Same Live Event: ${activeEvent.shortTitle})`,
+                            url: simPrimary.url,
+                            quality: simPrimary.quality,
+                            language: simPrimary.language,
+                            headers: simPrimary.headers
+                        });
+                    }
                 }
             }
         }
-    }
 
-    const langMap: Record<string, string> = {
-        ar: 'العربية (Arabic)',
-        en: 'English',
-        fr: 'Français (French)',
-        es: 'Español (Spanish)',
-        tr: 'Türkçe (Turkish)',
-        it: 'Italiano (Italian)',
-        multi: 'Multi-Audio'
-    };
+        const langMap: Record<string, string> = {
+            ar: 'العربية (Arabic)',
+            en: 'English',
+            fr: 'Français (French)',
+            es: 'Español (Spanish)',
+            tr: 'Türkçe (Turkish)',
+            it: 'Italiano (Italian)',
+            multi: 'Multi-Audio'
+        };
 
-    // Probe all candidate streams for this channel in parallel
-    const probed = await Promise.all(
-        candidateStreams.map(async (item, index) => {
-            const probe = await probeStreamLiveness(item.url, item.headers, 5500, publicBaseUrl, channel.id);
-            const proxiedUrl = buildLiveProxyUrl(item.url, publicBaseUrl, item.headers, channel.id);
+        // Launch all candidate stream probes in parallel; once the primary stream (index 0) verifies,
+        // give backup servers a 180ms grace window so a slow secondary server never delays tune-in
+        const rawProbePromises = candidateStreams.map((item, index) => {
+            const probeTimeoutMs = index < curatedCount ? 2200 : 1400;
+            const shouldPrefetch = index === 0;
+            return probeStreamLiveness(
+                item.url,
+                item.headers,
+                probeTimeoutMs,
+                publicBaseUrl,
+                channel.id,
+                shouldPrefetch
+            );
+        });
+
+        const primaryProbeResult = rawProbePromises.length > 0 ? await rawProbePromises[0] : null;
+        const primarySucceeded = Boolean(primaryProbeResult?.ok);
+
+        const probed = await Promise.all(
+            candidateStreams.map(async (item, index) => {
+                let probe: Awaited<ReturnType<typeof probeStreamLiveness>>;
+                if (index === 0 && primaryProbeResult) {
+                    probe = primaryProbeResult;
+                } else if (primarySucceeded) {
+                    const hState = getOrCreateHealthState(item.url, channel.id);
+                    const optimisticFallback: Awaited<ReturnType<typeof probeStreamLiveness>> = {
+                        ok: hState.circuitState !== 'OPEN',
+                        latencyMs: hState.emaLatencyMs || 260,
+                        healthScore: hState.healthScore,
+                        circuitState: hState.circuitState
+                    };
+                    probe = await Promise.race([
+                        rawProbePromises[index],
+                        new Promise<Awaited<ReturnType<typeof probeStreamLiveness>>>((resolve) =>
+                            setTimeout(() => resolve(optimisticFallback), 180)
+                        )
+                    ]);
+                } else {
+                    probe = await rawProbePromises[index];
+                }
+                const proxiedUrl = buildLiveProxyUrl(item.url, publicBaseUrl, item.headers, channel.id);
 
             const nowPlayingSuffix = channelEpg?.nowPlaying?.isLive
                 ? ` • LIVE: ${channelEpg.nowPlaying.title}`
@@ -7083,12 +7311,25 @@ export async function resolveChannelStreams(
         }
     }
 
-    return {
-        channel,
-        epg: channelEpg,
-        masterPlaylistUrl,
-        sources: finalSources
-    };
+        const resultObj = {
+            channel,
+            epg: channelEpg,
+            masterPlaylistUrl,
+            sources: finalSources
+        };
+        resolvedChannelCache.set(channelCacheKey, {
+            result: resultObj,
+            expiresAt: Date.now() + 45 * 1000
+        });
+        return resultObj;
+    })();
+
+    resolvedChannelInFlight.set(channelCacheKey, flight);
+    try {
+        return await flight;
+    } finally {
+        resolvedChannelInFlight.delete(channelCacheKey);
+    }
 }
 
 /**
@@ -9045,13 +9286,13 @@ function checkManifestFrozen(manifestUrl: string, rawManifestText: string): bool
 
     prev.stagnantPolls += 1;
     const stuckDurationMs = now - prev.lastAdvancedAt;
-    return prev.stagnantPolls >= 3 && stuckDurationMs > 18000;
+    return prev.stagnantPolls >= 6 && stuckDurationMs > 32000;
 }
 
 /**
- * Predictively pre-fetches and unwraps the last 3 .ts segments from a media playlist in parallel
- * using a strict 3.4s full-body socket retry so that when hls.js / ExoPlayer requests them,
- * they are served immediately from RAM in 0ms (X-Cache: HIT).
+ * Predictively pre-fetches and unwraps the last 2 .ts segments from a media playlist in the background
+ * using non-blocking async zlib decompression so that when hls.js / ExoPlayer requests them,
+ * they are served immediately from RAM in 0ms (X-Cache: HIT) without choking socket bandwidth.
  */
 function prefetchLatestSegment(
     rawManifestText: string,
@@ -9069,8 +9310,8 @@ function prefetchLatestSegment(
     }
     if (mediaLines.length === 0) return;
 
-    // Pre-fetch the last 3 segments (staggered by 70ms so 4MB 1080p50 segments don't saturate a single CDN edge socket)
-    const targetLines = mediaLines.slice(-3);
+    // Pre-fetch the last 2 segments (staggered by 220ms so 4-6MB 1080p50 segments don't contend on bandwidth)
+    const targetLines = mediaLines.slice(-2);
     const isEdgeParent = /https?:\/\/edge\.[a-z0-9.-]+/i.test(baseUrl);
 
     for (let idx = 0; idx < targetLines.length; idx++) {
@@ -9091,7 +9332,7 @@ function prefetchLatestSegment(
 
         const isTiktokSegment = /tiktokcdn/i.test(absSegUrl) || absSegUrl.includes('.image');
         const effectiveHeaders = isTiktokSegment && isEdgeParent ? undefined : headers;
-        const staggerDelayMs = idx * 70;
+        const staggerDelayMs = idx * 220;
 
         const prefetchTask = (async () => {
             if (staggerDelayMs > 0) {
@@ -9102,8 +9343,8 @@ function prefetchLatestSegment(
                 effectiveHeaders,
                 {
                     maxAttempts: 3,
-                    stallTimeoutMs: 2000,
-                    timeoutMs: 6500
+                    stallTimeoutMs: 4500,
+                    timeoutMs: 9000
                 }
             );
             if (!ok || rawBuf.length === 0) throw new Error(`prefetch_http_${status}`);
@@ -9113,7 +9354,7 @@ function prefetchLatestSegment(
                 contentType.includes('image/') ||
                 contentType.includes('octet-stream') ||
                 (rawBuf.length >= 188 && rawBuf[0] !== 0x47);
-            const finalBuf = needsUnwrap ? unwrapLiveTsSegment(rawBuf) : rawBuf;
+            const finalBuf = needsUnwrap ? await unwrapLiveTsSegmentAsync(rawBuf) : rawBuf;
             const outType =
                 finalBuf.length >= 188 && finalBuf[0] === 0x47 ? 'video/mp2t' : contentType || 'video/mp2t';
             if (finalBuf.length >= 188 && finalBuf[0] === 0x47) {
@@ -9258,10 +9499,10 @@ export async function handleLiveHlsProxyRequest(
 
     let hadInflightFailure = false;
 
-    // 1. Fast micro-cache (2400ms) for rapid concurrent manifest polls to prevent Edge CDN rate limiting
+    // 1. Fast micro-cache (1200ms) for rapid concurrent manifest polls (including immediate tune-in after probe)
     if (isM3U8Url && relaySlot === '1') {
         const recentManifest = lastGoodManifestCache.get(manifestCacheKey);
-        if (recentManifest && Date.now() - recentManifest.updatedAt < 2400) {
+        if (recentManifest && Date.now() - recentManifest.updatedAt < 1200) {
             return reply
                 .code(200)
                 .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
@@ -9314,7 +9555,8 @@ export async function handleLiveHlsProxyRequest(
                 parsed.headers,
                 {
                     maxAttempts: 3,
-                    timeoutMs: 3000
+                    stallTimeoutMs: 3200,
+                    timeoutMs: 4500
                 }
             );
 
@@ -9368,7 +9610,7 @@ export async function handleLiveHlsProxyRequest(
                 }
 
                 recordStreamHealthResult(parsed.url, true, Date.now() - t0, parsed.channelId);
-                // Predictively pre-fetch & unwrap the last 3 .ts segments into RAM
+                // Predictively pre-fetch & unwrap the last 2 .ts segments into RAM
                 prefetchLatestSegment(rawM3UText, finalResolvedUrl, parsed.headers, parsed.channelId);
 
                 const rewritten = rewriteLiveHlsManifest(
@@ -9378,9 +9620,14 @@ export async function handleLiveHlsProxyRequest(
                     parsed.headers,
                     parsed.channelId
                 );
+                const nowMs = Date.now();
                 lastGoodManifestCache.set(manifestCacheKey, {
                     content: rewritten,
-                    updatedAt: Date.now()
+                    updatedAt: nowMs
+                });
+                lastGoodManifestCache.set(`${publicBaseUrl}::${parsed.url}`, {
+                    content: rewritten,
+                    updatedAt: nowMs
                 });
                 return reply
                     .code(200)
@@ -9401,15 +9648,15 @@ export async function handleLiveHlsProxyRequest(
             }
         }
 
-        // Binary Segment Download with Chunk-Activity Stall Watchdog (2.0s stall timeout, 6.5s max ceiling)
+        // Binary Segment Download with Chunk-Activity Stall Watchdog (4.5s stall timeout, 9.5s max ceiling)
         const segPromise = (async () => {
             const { buffer: rawBuf, ok, status, contentType } = await fetchUpstreamBufferWithRetry(
                 parsed.url,
                 parsed.headers,
                 {
                     maxAttempts: hadInflightFailure ? 2 : 3,
-                    stallTimeoutMs: 2000,
-                    timeoutMs: 6500
+                    stallTimeoutMs: 4500,
+                    timeoutMs: 9500
                 }
             );
             if (!ok || rawBuf.length === 0) {
@@ -9423,7 +9670,7 @@ export async function handleLiveHlsProxyRequest(
                 contentType.includes('octet-stream') ||
                 (rawBuf.length >= 188 && rawBuf[0] !== 0x47);
 
-            const finalBuf = needsUnwrap ? unwrapLiveTsSegment(rawBuf) : rawBuf;
+            const finalBuf = needsUnwrap ? await unwrapLiveTsSegmentAsync(rawBuf) : rawBuf;
             const outType =
                 finalBuf.length >= 188 && finalBuf[0] === 0x47
                     ? 'video/mp2t'
