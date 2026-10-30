@@ -3983,6 +3983,7 @@ export const CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS: Record<string, string> = {
     'bein-sports-6-ar': 'beINAR6',
     'bein-sports-7-ar': 'beINAR7',
     'bein-sports-8-ar': 'beINAR8',
+    'bein-sports-9-ar': 'beINAR9',
     'bein-sports-premium-1-ar': 'beINAR',
     'bein-sports-premium-2-ar': 'beINAR2',
     'bein-sports-premium-3-ar': 'beINAR3',
@@ -4008,19 +4009,26 @@ export const CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS: Record<string, string> = {
     'bein-sports-usa': 'beINSPORTSUS',
     'bein-sports-xtra-es': 'BEINSPORTES',
 
-    // 4. UK Sports (Sky Sports UK, TNT Sports UK, Eurosport UK)
+    // 4. UK Sports (Sky Sports UK, TNT Sports UK, Premier Sports, MUTV, Eurosport UK)
     'sky-sports-main-event': 'skysportsmainevent',
     'sky-sports-premier-league': 'skysportspremierleague',
     'sky-sports-football': 'SkySportsFootballUK',
     'sky-sports-plus': 'SkySportsPlus',
     'sky-sports-action': 'skysportsaction',
     'sky-sports-f1': 'skysportsf1',
+    'sky-sports-cricket': 'SkySportsCricketUK',
+    'sky-sports-golf': 'SkySportsGolfUK',
+    'sky-sports-tennis': 'SkySportsTennisUK',
+    'sky-sports-mix': 'SkySportsMixUK',
     'sky-sports-news': 'skysportsnews',
     'sky-sports-racing': 'skysportsracing',
     'tnt-sports-1': 'TNT1UK',
     'tnt-sports-2': 'TNTSports2',
     'tnt-sports-3': 'TNTSports3',
     'tnt-sports-4': 'TNTSports4',
+    'premier-sports-1': 'PremierSports1',
+    'premier-sports-2': 'PremierSports2',
+    'mutv-uk': 'MUTV',
     'eurosport-1': 'Eurosport1UK',
     'eurosport-2': 'Eurosport2UK',
 
@@ -4044,12 +4052,16 @@ export const CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS: Record<string, string> = {
     'dazn-laliga-es': 'DAZNLALIGA',
     'dazn-f1-es': 'DAZNF1ES',
 
-    // 8. USA Sports (ESPN, Fox Sports 1, NBA TV, Tennis Channel)
+    // 8. USA Sports (ESPN, Fox Sports 1 & 2, NFL Network, NBA TV, Golf Channel, Tennis Channel)
     'espn-hd': 'ESPN',
     'espn-2-hd': 'ESPN2',
     'espnu-hd': 'ESPNU',
+    'espn-deportes-es': 'ESPNDeportes',
     'fox-sports-1': 'FoxSports1',
+    'fox-sports-2': 'FoxSports2',
+    'nfl-network': 'NFLNetwork',
     'nba-tv': 'NBATV',
+    'golf-channel-us': 'GolfChannel',
     'tennis-channel': 'TennisChannel'
 };
 
@@ -4145,11 +4157,9 @@ async function getEdgePlaylistToken(slugKey: string, forceRefresh = false): Prom
         return cached.token;
     }
 
-    if (!forceRefresh) {
-        const existingFlight = edgeTokenInFlight.get(slugKey);
-        if (existingFlight) {
-            return existingFlight;
-        }
+    const existingFlight = edgeTokenInFlight.get(slugKey);
+    if (existingFlight) {
+        return existingFlight;
     }
 
     return fetchFreshEdgeToken(slugKey, cleanSlug, cached);
@@ -4217,10 +4227,8 @@ async function getAloulaSignedHlsUrl(aloulaChannelId: number, forceRefresh = fal
         return cached.signedUrl;
     }
 
-    if (!forceRefresh) {
-        const existing = aloulaSignedHlsInFlight.get(aloulaChannelId);
-        if (existing) return existing;
-    }
+    const existing = aloulaSignedHlsInFlight.get(aloulaChannelId);
+    if (existing) return existing;
 
     const flight = (async () => {
         for (let attempt = 0; attempt < 2; attempt++) {
@@ -4286,6 +4294,7 @@ const WIDEIPTV_SLUG_ALIASES: Record<string, string> = {
     bein6: 'beINAR6',
     bein7: 'beINAR7',
     bein8: 'beINAR8',
+    bein9: 'beINAR9',
     bein1fr: 'BEINSPORT1FR',
     bein2fr: 'BEINSPORT2FR',
     bein3fr: 'BEINSPORT3FR',
@@ -4298,10 +4307,29 @@ const WIDEIPTV_SLUG_ALIASES: Record<string, string> = {
 const wideIptvSignedHlsCache = new Map<string, { signedUrl: string; refreshAt: number; expiresAt: number }>();
 const wideIptvSignedHlsInFlight = new Map<string, Promise<string | null>>();
 
+// 3-slot concurrency semaphore for wideiptv.top token scrapes so burst channel checks never trigger Nginx per-IP throttling
+const MAX_WIDEIPTV_TOKEN_CONCURRENCY = 3;
+let activeWideIptvTokenFetches = 0;
+const wideIptvTokenWaitQueue: Array<() => void> = [];
+
+async function withWideIptvTokenSlot<T>(fn: () => Promise<T>): Promise<T> {
+    if (activeWideIptvTokenFetches >= MAX_WIDEIPTV_TOKEN_CONCURRENCY) {
+        await new Promise<void>((resolve) => wideIptvTokenWaitQueue.push(resolve));
+    }
+    activeWideIptvTokenFetches += 1;
+    try {
+        return await fn();
+    } finally {
+        activeWideIptvTokenFetches = Math.max(0, activeWideIptvTokenFetches - 1);
+        const next = wideIptvTokenWaitQueue.shift();
+        if (next) next();
+    }
+}
+
 /**
  * Resolves a fresh 5-minute `no_check_ip` signed HLS `tracks-v1a1/mono.m3u8?token=` URL from
- * `https://wideiptv.top/player/{slug}` (`ds169.bluetier.top` Flussonic cluster).
- * Proactively refreshes tokens in the background after 90s so active playback never pauses for token renewal.
+ * `https://wideiptv.top/player/{slug}` (`cdn.wideiptv.top` Flussonic cluster).
+ * Proactively refreshes tokens in the background after 140s so active playback never pauses for token renewal.
  */
 async function getWideIptvSignedHlsUrl(rawSlug: string, forceRefresh = false): Promise<string | null> {
     const slug = WIDEIPTV_SLUG_ALIASES[rawSlug.toLowerCase()] || rawSlug;
@@ -4314,10 +4342,8 @@ async function getWideIptvSignedHlsUrl(rawSlug: string, forceRefresh = false): P
         return cached.signedUrl;
     }
 
-    if (!forceRefresh) {
-        const existing = wideIptvSignedHlsInFlight.get(slug);
-        if (existing) return existing;
-    }
+    const existing = wideIptvSignedHlsInFlight.get(slug);
+    if (existing) return existing;
 
     return fetchFreshWideIptvSignedHlsUrl(slug, cached);
 }
@@ -4326,7 +4352,7 @@ async function fetchFreshWideIptvSignedHlsUrl(
     slug: string,
     cached?: { signedUrl: string; refreshAt: number; expiresAt: number }
 ): Promise<string | null> {
-    const flight = (async () => {
+    const flight = withWideIptvTokenSlot(async () => {
         for (let attempt = 0; attempt < 2; attempt++) {
             try {
                 const res = await fetch(`https://wideiptv.top/player/${encodeURIComponent(slug)}`, {
@@ -4334,7 +4360,7 @@ async function fetchFreshWideIptvSignedHlsUrl(
                         'User-Agent': DEFAULT_UA,
                         Referer: `https://wideiptv.top/daddy.php?stream=${encodeURIComponent(slug)}`
                     },
-                    signal: AbortSignal.timeout(4200)
+                    signal: AbortSignal.timeout(3800)
                 });
                 if (!res.ok) continue;
                 const html = await res.text();
@@ -4348,8 +4374,8 @@ async function fetchFreshWideIptvSignedHlsUrl(
                 const mediaPlaylistUrl = rawStreamUrl.replace('/index.m3u8', '/tracks-v1a1/mono.m3u8');
                 wideIptvSignedHlsCache.set(slug, {
                     signedUrl: mediaPlaylistUrl,
-                    refreshAt: Date.now() + 90 * 1000, // Background refresh at 90s
-                    expiresAt: Date.now() + 210 * 1000 // Valid up to 210s (upstream token TTL is 300s)
+                    refreshAt: Date.now() + 140 * 1000, // Background refresh at 140s
+                    expiresAt: Date.now() + 240 * 1000 // Valid up to 240s (upstream token TTL is 300s)
                 });
                 return mediaPlaylistUrl;
             } catch {
@@ -4357,7 +4383,7 @@ async function fetchFreshWideIptvSignedHlsUrl(
             }
         }
         return cached?.signedUrl || null;
-    })();
+    });
 
     wideIptvSignedHlsInFlight.set(slug, flight);
     try {
@@ -4402,7 +4428,6 @@ async function resolveDynamicManifestUrl(
     if (wideMatch) {
         const slug = wideMatch[1];
         Object.assign(mergedHeaders, WIDEIPTV_HEADERS);
-        // Always resolve through getWideIptvSignedHlsUrl (which caches valid tokens for 90s and auto-renews before the 220s upstream TTL expires)
         const signedUrl = await getWideIptvSignedHlsUrl(slug, forceRefreshToken);
         if (signedUrl) {
             return { url: signedUrl, headers: mergedHeaders };
@@ -4416,7 +4441,7 @@ async function resolveDynamicManifestUrl(
         const slug = wideSegMatch[1];
         Object.assign(mergedHeaders, WIDEIPTV_HEADERS);
         if (forceRefreshToken || !rawUrl.includes('token=')) {
-            const signedUrl = await getWideIptvSignedHlsUrl(slug, true);
+            const signedUrl = await getWideIptvSignedHlsUrl(slug, forceRefreshToken);
             const tokMatch = signedUrl?.match(/[?&]token=([^&]+)/);
             if (tokMatch) {
                 const baseClean = rawUrl.split('?')[0];
@@ -4469,15 +4494,15 @@ async function fetchUpstreamWithRetry(
     let lastError: any = null;
     let lastResponse: Response | null = null;
     let lastResolvedUrl = rawUrl;
+    let lastStatus = 0;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const forceRefreshToken = attempt > 0;
+        const forceRefreshToken = attempt > 0 && (lastStatus === 401 || lastStatus === 403);
         const resolved = await resolveDynamicManifestUrl(rawUrl, headers, forceRefreshToken);
         lastResolvedUrl = resolved.url;
 
         const attemptHeaders: Record<string, string> = {
             ...resolved.headers,
-            // Force a fresh TCP/TLS connection on retry if a pooled keep-alive socket was closed by CDN
             ...(attempt > 0 ? { Connection: 'close' } : {})
         };
 
@@ -4494,16 +4519,16 @@ async function fetchUpstreamWithRetry(
             }
 
             lastResponse = res;
-            // Retry on 401/403 (token rotation), 408/429 (rate limit), or 5xx (CDN edge blip)
+            lastStatus = res.status;
             if ([401, 403, 408, 429, 500, 502, 503, 504].includes(res.status) && attempt < maxAttempts - 1) {
-                await new Promise((r) => setTimeout(r, 120 * (attempt + 1)));
+                await new Promise((r) => setTimeout(r, 90 * (attempt + 1)));
                 continue;
             }
             return { res, finalResolvedUrl: res.url || resolved.url };
         } catch (err) {
             lastError = err;
             if (attempt < maxAttempts - 1) {
-                await new Promise((r) => setTimeout(r, 120 * (attempt + 1)));
+                await new Promise((r) => setTimeout(r, 90 * (attempt + 1)));
             }
         }
     }
@@ -4517,8 +4542,8 @@ async function fetchUpstreamWithRetry(
 /**
  * Full-Body Fast-Retry Downloader for MPEG-TS / .image segments and HLS manifests.
  * Enforces a strict total timeout (headers + complete body arrayBuffer) per attempt so that if a
- * congested TikTok CDN edge node stalls mid-body during a peak match (El Clásico / UCL),
- * the stalled socket is immediately aborted at 3.4s and retried on a fresh TCP connection (<200ms).
+ * congested CDN edge node stalls mid-body during a peak match (El Clásico / UCL),
+ * the stalled socket is immediately aborted and retried on a fresh TCP connection without re-scraping valid tokens.
  */
 async function fetchUpstreamBufferWithRetry(
     rawUrl: string,
@@ -4526,14 +4551,16 @@ async function fetchUpstreamBufferWithRetry(
     options?: { maxAttempts?: number; timeoutMs?: number; stallTimeoutMs?: number }
 ): Promise<{ buffer: Buffer; status: number; ok: boolean; contentType: string; finalResolvedUrl: string }> {
     const maxAttempts = options?.maxAttempts ?? 3;
-    const stallTimeoutMs = options?.stallTimeoutMs ?? 4500;
-    const maxTotalAttemptMs = Math.max(options?.timeoutMs ?? 8500, 4500);
+    const stallTimeoutMs = options?.stallTimeoutMs ?? 3800;
+    const maxTotalAttemptMs = Math.max(options?.timeoutMs ?? 7500, 4000);
     let lastError: any = null;
     let lastStatus = 502;
     let lastResolvedUrl = rawUrl;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const forceRefreshToken = attempt > 0;
+        // Only force-refresh token if the previous attempt actually returned 401/403 (expired token),
+        // never on a transient socket timeout
+        const forceRefreshToken = attempt > 0 && (lastStatus === 401 || lastStatus === 403);
         const resolved = await resolveDynamicManifestUrl(rawUrl, headers, forceRefreshToken);
         lastResolvedUrl = resolved.url;
 
@@ -5687,6 +5714,8 @@ export const CHANNEL_TO_IPTV_ORG_IDS: Record<string, string[]> = {
     'rmc-sport-2-fr': ['RMCSport2.fr']
 };
 
+let dynamicHarvestPromise: Promise<void> | null = null;
+
 /**
  * Harvests fresh streams from the official `iptv-org` JSON API (`https://iptv-org.github.io/api/streams.json`)
  * and 19 `iptv-org.github.io` M3U playlists in the background.
@@ -5696,205 +5725,227 @@ export async function harvestDynamicSportsM3U(): Promise<void> {
     if (Date.now() - lastHarvestTime < HARVEST_TTL_MS && dynamicChannelCache.size > 0) {
         return;
     }
-
-    const harvested = new Map<
-        string,
-        Array<{ label: string; url: string; quality: string; headers?: Record<string, string> }>
-    >();
-
-    // Reverse lookup index: lowercase iptv-org channel ID -> array of our internal channel objects
-    const iptvOrgIdToInternalChannels = new Map<string, Array<(typeof CORE_SPORTS_CHANNELS)[number]>>();
-    for (const ch of CORE_SPORTS_CHANNELS) {
-        const orgIds = CHANNEL_TO_IPTV_ORG_IDS[ch.id] || [];
-        for (const rawOrgId of orgIds) {
-            const normOrgId = rawOrgId.toLowerCase();
-            const list = iptvOrgIdToInternalChannels.get(normOrgId) || [];
-            list.push(ch);
-            iptvOrgIdToInternalChannels.set(normOrgId, list);
-        }
+    if (dynamicHarvestPromise) {
+        return dynamicHarvestPromise;
     }
 
-    const addHarvestedStream = (
-        ch: (typeof CORE_SPORTS_CHANNELS)[number],
-        streamUrl: string,
-        quality: string,
-        optHeaders?: Record<string, string>,
-        sourceTag = 'iptv-org'
-    ) => {
-        if (
-            !streamUrl.startsWith('http') ||
-            streamUrl.endsWith('.mpd') ||
-            streamUrl.includes('primetv.cc.cd') ||
-            streamUrl.includes('andro.')
-        ) {
-            return;
-        }
-        const existing = harvested.get(ch.id) || [];
-        if (!existing.some((e) => e.url === streamUrl)) {
-            existing.push({
-                label: `${ch.shortName} (${sourceTag} ${quality})`,
-                url: streamUrl,
-                quality,
-                headers: optHeaders && Object.keys(optHeaders).length > 0 ? optHeaders : undefined
-            });
-            harvested.set(ch.id, existing);
-        }
-    };
-
-    // 1. Query Official iptv-org JSON API (https://iptv-org.github.io/api/streams.json)
-    const fetchIptvOrgApiPromise = (async () => {
+    dynamicHarvestPromise = (async () => {
         try {
-            const res = await fetch('https://iptv-org.github.io/api/streams.json', {
-                headers: { 'User-Agent': DEFAULT_UA },
-                signal: AbortSignal.timeout(6500)
-            });
-            if (!res.ok) return;
-            const entries = (await res.json()) as IptvOrgApiStreamEntry[];
-            if (!Array.isArray(entries)) return;
+            const harvested = new Map<
+                string,
+                Array<{ label: string; url: string; quality: string; headers?: Record<string, string> }>
+            >();
 
-            for (const item of entries) {
-                const streamUrl = (item.url || '').trim();
-                if (!streamUrl.startsWith('http')) continue;
-                const rawChannelId = (item.channel || '').trim();
-                const baseChannelId = rawChannelId.split('@')[0].toLowerCase();
-                if (!baseChannelId) continue;
-
-                const matchedChannels = iptvOrgIdToInternalChannels.get(baseChannelId);
-                if (!matchedChannels || matchedChannels.length === 0) continue;
-
-                const optHeaders: Record<string, string> = {};
-                if (item.referrer) optHeaders['Referer'] = item.referrer.trim();
-                if (item.user_agent) optHeaders['User-Agent'] = item.user_agent.trim();
-                const quality = item.quality || '1080p';
-
-                for (const ch of matchedChannels) {
-                    addHarvestedStream(ch, streamUrl, quality, optHeaders, 'iptv-org API');
+            // Reverse lookup index: lowercase iptv-org channel ID -> array of our internal channel objects
+            const iptvOrgIdToInternalChannels = new Map<string, Array<(typeof CORE_SPORTS_CHANNELS)[number]>>();
+            for (const ch of CORE_SPORTS_CHANNELS) {
+                const orgIds = CHANNEL_TO_IPTV_ORG_IDS[ch.id] || [];
+                for (const rawOrgId of orgIds) {
+                    const normOrgId = rawOrgId.toLowerCase();
+                    const list = iptvOrgIdToInternalChannels.get(normOrgId) || [];
+                    list.push(ch);
+                    iptvOrgIdToInternalChannels.set(normOrgId, list);
                 }
             }
-        } catch {
-            // Ignore transient iptv-org API timeout
+
+            const addHarvestedStream = (
+                ch: (typeof CORE_SPORTS_CHANNELS)[number],
+                streamUrl: string,
+                quality: string,
+                optHeaders?: Record<string, string>,
+                sourceTag = 'iptv-org'
+            ) => {
+                if (
+                    !streamUrl.startsWith('http') ||
+                    streamUrl.endsWith('.mpd') ||
+                    streamUrl.includes('primetv.cc.cd') ||
+                    streamUrl.includes('andro.')
+                ) {
+                    return;
+                }
+                const existing = harvested.get(ch.id) || [];
+                if (!existing.some((e) => e.url === streamUrl)) {
+                    existing.push({
+                        label: `${ch.shortName} (${sourceTag} ${quality})`,
+                        url: streamUrl,
+                        quality,
+                        headers: optHeaders && Object.keys(optHeaders).length > 0 ? optHeaders : undefined
+                    });
+                    harvested.set(ch.id, existing);
+                }
+            };
+
+            // 1. Query Official iptv-org JSON API (https://iptv-org.github.io/api/streams.json)
+            const fetchIptvOrgApiPromise = (async () => {
+                try {
+                    const res = await fetch('https://iptv-org.github.io/api/streams.json', {
+                        headers: { 'User-Agent': DEFAULT_UA },
+                        signal: AbortSignal.timeout(6500)
+                    });
+                    if (!res.ok) return;
+                    const entries = (await res.json()) as IptvOrgApiStreamEntry[];
+                    if (!Array.isArray(entries)) return;
+
+                    let idx = 0;
+                    for (const item of entries) {
+                        if (++idx % 400 === 0) {
+                            await new Promise((r) => setImmediate(r));
+                        }
+                        const streamUrl = (item.url || '').trim();
+                        if (!streamUrl.startsWith('http')) continue;
+                        const rawChannelId = (item.channel || '').trim();
+                        const baseChannelId = rawChannelId.split('@')[0].toLowerCase();
+                        if (!baseChannelId) continue;
+
+                        const matchedChannels = iptvOrgIdToInternalChannels.get(baseChannelId);
+                        if (!matchedChannels || matchedChannels.length === 0) continue;
+
+                        const optHeaders: Record<string, string> = {};
+                        if (item.referrer) optHeaders['Referer'] = item.referrer.trim();
+                        if (item.user_agent) optHeaders['User-Agent'] = item.user_agent.trim();
+                        const quality = item.quality || '1080p';
+
+                        for (const ch of matchedChannels) {
+                            addHarvestedStream(ch, streamUrl, quality, optHeaders, 'iptv-org API');
+                        }
+                    }
+                } catch {
+                    // Ignore transient iptv-org API timeout
+                }
+            })();
+
+            // 2. Query Official iptv-org.github.io Category & Country M3U Playlists in small non-blocking batches
+            const m3uFeeds = [
+                'https://iptv-org.github.io/iptv/categories/sports.m3u',
+                'https://iptv-org.github.io/iptv/countries/dz.m3u',
+                'https://iptv-org.github.io/iptv/countries/sa.m3u',
+                'https://iptv-org.github.io/iptv/countries/qa.m3u',
+                'https://iptv-org.github.io/iptv/countries/ae.m3u',
+                'https://iptv-org.github.io/iptv/countries/kw.m3u',
+                'https://iptv-org.github.io/iptv/countries/bh.m3u',
+                'https://iptv-org.github.io/iptv/countries/om.m3u',
+                'https://iptv-org.github.io/iptv/countries/eg.m3u',
+                'https://iptv-org.github.io/iptv/countries/ma.m3u',
+                'https://iptv-org.github.io/iptv/countries/iq.m3u',
+                'https://iptv-org.github.io/iptv/countries/jo.m3u',
+                'https://iptv-org.github.io/iptv/countries/uk.m3u',
+                'https://iptv-org.github.io/iptv/countries/es.m3u',
+                'https://iptv-org.github.io/iptv/countries/it.m3u',
+                'https://iptv-org.github.io/iptv/countries/fr.m3u',
+                'https://iptv-org.github.io/iptv/countries/pl.m3u',
+                'https://iptv-org.github.io/iptv/countries/tr.m3u',
+                'https://iptv-org.github.io/iptv/countries/us.m3u',
+                'https://raw.githubusercontent.com/doms9/iptv/default/M3U8/base.m3u8'
+            ];
+
+            await fetchIptvOrgApiPromise;
+            for (let b = 0; b < m3uFeeds.length; b += 4) {
+                const batch = m3uFeeds.slice(b, b + 4);
+                await Promise.allSettled(
+                    batch.map(async (feedUrl) => {
+                        try {
+                            const res = await fetch(feedUrl, {
+                                headers: { 'User-Agent': DEFAULT_UA },
+                                signal: AbortSignal.timeout(5000)
+                            });
+                            if (!res.ok) return;
+                            const text = await res.text();
+                            const lines = text.split(/\r?\n/);
+
+                            for (let i = 0; i < lines.length; i++) {
+                                if (i > 0 && i % 300 === 0) {
+                                    await new Promise((r) => setImmediate(r));
+                                }
+                                const line = lines[i];
+                                if (!line.startsWith('#EXTINF')) continue;
+
+                                const optHeaders: Record<string, string> = {};
+                                let j = i + 1;
+                                while (j < lines.length && lines[j].startsWith('#EXTVLCOPT:')) {
+                                    const optLine = lines[j];
+                                    if (optLine.startsWith('#EXTVLCOPT:http-referrer=')) {
+                                        optHeaders['Referer'] = optLine.slice('#EXTVLCOPT:http-referrer='.length).trim();
+                                    } else if (optLine.startsWith('#EXTVLCOPT:http-user-agent=')) {
+                                        optHeaders['User-Agent'] = optLine.slice('#EXTVLCOPT:http-user-agent='.length).trim();
+                                    }
+                                    j++;
+                                }
+                                const streamUrl = (lines[j] || '').trim();
+                                if (!streamUrl.startsWith('http')) continue;
+
+                                const tvgId = (line.match(/tvg-id="([^"]+)"/i) || [])[1] || '';
+                                const baseTvgId = tvgId.split('@')[0].toLowerCase();
+                                const title = (line.match(/,(.+)$/) || [])[1]?.trim() || tvgId;
+                                const qualityMatch = title.match(/\b(4K|2160p|1080p|720p|576p|480p)\b/i);
+                                const quality = qualityMatch ? qualityMatch[1] : '1080p';
+
+                                if (baseTvgId) {
+                                    const directMatches = iptvOrgIdToInternalChannels.get(baseTvgId);
+                                    if (directMatches && directMatches.length > 0) {
+                                        for (const ch of directMatches) {
+                                            addHarvestedStream(ch, streamUrl, quality, optHeaders, 'iptv-org M3U');
+                                        }
+                                        continue;
+                                    }
+                                }
+
+                                const key = `${tvgId} ${title}`.toLowerCase();
+                                for (const ch of CORE_SPORTS_CHANNELS) {
+                                    const matchBeinNum = ch.id.match(/^bein-sports-(\d+)-(ar|tr)$/);
+                                    let matched = false;
+                                    if (matchBeinNum) {
+                                        const num = matchBeinNum[1];
+                                        const lang = matchBeinNum[2];
+                                        if (lang === 'ar' && key.includes(`beinsports${num}.qa`)) matched = true;
+                                        if (lang === 'tr' && key.includes(`beinsports${num}turk`)) matched = true;
+                                    } else if (ch.id === 'ssc-sport-1-ar' && (key.includes('ssc1.sa') || key.includes('ssc sport 1') || key.includes('saudisports1.sa'))) {
+                                        matched = true;
+                                    } else if (ch.id === 'ssc-sport-2-ar' && (key.includes('ssc2.sa') || key.includes('ssc sport 2') || key.includes('saudisports2.sa'))) {
+                                        matched = true;
+                                    } else if (ch.id === 'ssc-sport-3-ar' && (key.includes('ssc3.sa') || key.includes('ssc sport 3') || key.includes('saudisports3.sa'))) {
+                                        matched = true;
+                                    } else if (ch.id === 'alkass-1-ar' && (key.includes('alkass1.qa') || key.includes('alkass one'))) {
+                                        matched = true;
+                                    } else if (ch.id === 'ad-sports-1-ar' && (key.includes('abudhabisports1.ae') || key.includes('abu dhabi sports 1'))) {
+                                        matched = true;
+                                    } else if (ch.id === 'dubai-sports-1-ar' && (key.includes('dubaisports1.ae') || key.includes('dubai sports 1'))) {
+                                        matched = true;
+                                    } else if (ch.id === 'fox-sports-1' && (key.includes('foxsports1.us') || key.includes('fs1.hd.us'))) {
+                                        matched = true;
+                                    } else if (ch.id === 'fox-sports-2' && (key.includes('foxsports2.us') || key.includes('fs2.hd.us'))) {
+                                        matched = true;
+                                    } else if (ch.id === 'espn-hd' && (key.includes('espn.us@hd') || key.includes('espn.hd.us'))) {
+                                        matched = true;
+                                    } else if (ch.id === 'espn-2-hd' && (key.includes('espn2.us@hd') || key.includes('espn2.hd.us'))) {
+                                        matched = true;
+                                    }
+
+                                    if (matched) {
+                                        addHarvestedStream(ch, streamUrl, quality, optHeaders, 'iptv-org M3U');
+                                    }
+                                }
+                            }
+                        } catch {
+                            // Ignore individual feed errors
+                        }
+                    })
+                );
+                await new Promise((r) => setImmediate(r));
+            }
+
+            if (harvested.size > 0) {
+                dynamicChannelCache = harvested;
+                lastHarvestTime = Date.now();
+            }
+
+            // Run the Self-Healing Upstream Feed Directory Auto-Corrector in parallel
+            await harvestAndAutoCorrectUpstreamFeeds().catch(() => {});
+        } finally {
+            dynamicHarvestPromise = null;
         }
     })();
 
-    // 2. Query Official iptv-org.github.io Category & Country M3U Playlists
-    const m3uFeeds = [
-        'https://iptv-org.github.io/iptv/categories/sports.m3u',
-        'https://iptv-org.github.io/iptv/countries/dz.m3u',
-        'https://iptv-org.github.io/iptv/countries/sa.m3u',
-        'https://iptv-org.github.io/iptv/countries/qa.m3u',
-        'https://iptv-org.github.io/iptv/countries/ae.m3u',
-        'https://iptv-org.github.io/iptv/countries/kw.m3u',
-        'https://iptv-org.github.io/iptv/countries/bh.m3u',
-        'https://iptv-org.github.io/iptv/countries/om.m3u',
-        'https://iptv-org.github.io/iptv/countries/eg.m3u',
-        'https://iptv-org.github.io/iptv/countries/ma.m3u',
-        'https://iptv-org.github.io/iptv/countries/iq.m3u',
-        'https://iptv-org.github.io/iptv/countries/jo.m3u',
-        'https://iptv-org.github.io/iptv/countries/uk.m3u',
-        'https://iptv-org.github.io/iptv/countries/es.m3u',
-        'https://iptv-org.github.io/iptv/countries/it.m3u',
-        'https://iptv-org.github.io/iptv/countries/fr.m3u',
-        'https://iptv-org.github.io/iptv/countries/pl.m3u',
-        'https://iptv-org.github.io/iptv/countries/tr.m3u',
-        'https://iptv-org.github.io/iptv/countries/us.m3u',
-        'https://raw.githubusercontent.com/doms9/iptv/default/M3U8/base.m3u8'
-    ];
-
-    await Promise.allSettled([
-        fetchIptvOrgApiPromise,
-        ...m3uFeeds.map(async (feedUrl) => {
-            try {
-                const res = await fetch(feedUrl, {
-                    headers: { 'User-Agent': DEFAULT_UA },
-                    signal: AbortSignal.timeout(5000)
-                });
-                if (!res.ok) return;
-                const text = await res.text();
-                const lines = text.split(/\r?\n/);
-
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i];
-                    if (!line.startsWith('#EXTINF')) continue;
-
-                    const optHeaders: Record<string, string> = {};
-                    let j = i + 1;
-                    while (j < lines.length && lines[j].startsWith('#EXTVLCOPT:')) {
-                        const optLine = lines[j];
-                        if (optLine.startsWith('#EXTVLCOPT:http-referrer=')) {
-                            optHeaders['Referer'] = optLine.slice('#EXTVLCOPT:http-referrer='.length).trim();
-                        } else if (optLine.startsWith('#EXTVLCOPT:http-user-agent=')) {
-                            optHeaders['User-Agent'] = optLine.slice('#EXTVLCOPT:http-user-agent='.length).trim();
-                        }
-                        j++;
-                    }
-                    const streamUrl = (lines[j] || '').trim();
-                    if (!streamUrl.startsWith('http')) continue;
-
-                    const tvgId = (line.match(/tvg-id="([^"]+)"/i) || [])[1] || '';
-                    const baseTvgId = tvgId.split('@')[0].toLowerCase();
-                    const title = (line.match(/,(.+)$/) || [])[1]?.trim() || tvgId;
-                    const qualityMatch = title.match(/\b(4K|2160p|1080p|720p|576p|480p)\b/i);
-                    const quality = qualityMatch ? qualityMatch[1] : '1080p';
-
-                    if (baseTvgId) {
-                        const directMatches = iptvOrgIdToInternalChannels.get(baseTvgId);
-                        if (directMatches && directMatches.length > 0) {
-                            for (const ch of directMatches) {
-                                addHarvestedStream(ch, streamUrl, quality, optHeaders, 'iptv-org M3U');
-                            }
-                            continue;
-                        }
-                    }
-
-                    const key = `${tvgId} ${title}`.toLowerCase();
-                    for (const ch of CORE_SPORTS_CHANNELS) {
-                        const matchBeinNum = ch.id.match(/^bein-sports-(\d+)-(ar|tr)$/);
-                        let matched = false;
-                        if (matchBeinNum) {
-                            const num = matchBeinNum[1];
-                            const lang = matchBeinNum[2];
-                            if (lang === 'ar' && key.includes(`beinsports${num}.qa`)) matched = true;
-                            if (lang === 'tr' && key.includes(`beinsports${num}turk`)) matched = true;
-                        } else if (ch.id === 'ssc-sport-1-ar' && (key.includes('ssc1.sa') || key.includes('ssc sport 1') || key.includes('saudisports1.sa'))) {
-                            matched = true;
-                        } else if (ch.id === 'ssc-sport-2-ar' && (key.includes('ssc2.sa') || key.includes('ssc sport 2') || key.includes('saudisports2.sa'))) {
-                            matched = true;
-                        } else if (ch.id === 'ssc-sport-3-ar' && (key.includes('ssc3.sa') || key.includes('ssc sport 3') || key.includes('saudisports3.sa'))) {
-                            matched = true;
-                        } else if (ch.id === 'alkass-1-ar' && (key.includes('alkass1.qa') || key.includes('alkass one'))) {
-                            matched = true;
-                        } else if (ch.id === 'ad-sports-1-ar' && (key.includes('abudhabisports1.ae') || key.includes('abu dhabi sports 1'))) {
-                            matched = true;
-                        } else if (ch.id === 'dubai-sports-1-ar' && (key.includes('dubaisports1.ae') || key.includes('dubai sports 1'))) {
-                            matched = true;
-                        } else if (ch.id === 'fox-sports-1' && (key.includes('foxsports1.us') || key.includes('fs1.hd.us'))) {
-                            matched = true;
-                        } else if (ch.id === 'fox-sports-2' && (key.includes('foxsports2.us') || key.includes('fs2.hd.us'))) {
-                            matched = true;
-                        } else if (ch.id === 'espn-hd' && (key.includes('espn.us@hd') || key.includes('espn.hd.us'))) {
-                            matched = true;
-                        } else if (ch.id === 'espn-2-hd' && (key.includes('espn2.us@hd') || key.includes('espn2.hd.us'))) {
-                            matched = true;
-                        }
-
-                        if (matched) {
-                            addHarvestedStream(ch, streamUrl, quality, optHeaders, 'iptv-org M3U');
-                        }
-                    }
-                }
-            } catch {
-                // Ignore individual feed errors
-            }
-        })
-    ]);
-
-    if (harvested.size > 0) {
-        dynamicChannelCache = harvested;
-        lastHarvestTime = Date.now();
-    }
-
-    // Run the Self-Healing Upstream Feed Directory Auto-Corrector in parallel
-    await harvestAndAutoCorrectUpstreamFeeds().catch(() => {});
+    return dynamicHarvestPromise;
 }
 
 // ============================================================================
@@ -9278,6 +9329,8 @@ interface RollingSegmentEntry {
     inf: string;
     uri: string;
     normKey: string;
+    cacheKey: string;
+    seq: number;
 }
 interface RollingPlaylistState {
     segments: RollingSegmentEntry[];
@@ -9296,6 +9349,17 @@ export function rewriteLiveHlsManifest(
 ): string {
     let lines = manifestContent.split(/\r?\n/);
     const isEdgeParent = /https?:\/\/edge\.[a-z0-9.-]+/i.test(baseUrl);
+
+    const resolveRelative = (rel: string): string => {
+        if (/^https?:\/\//i.test(rel)) {
+            return rel;
+        }
+        try {
+            return new URL(rel, baseUrl).toString();
+        } catch {
+            return rel;
+        }
+    };
 
     // If upstream is a DVR media playlist (e.g. Kwikmotion chunks_dvr.m3u8 with 3,500+ segments),
     // trim to a fast live sliding window of the latest 8 segments so manifests stay lightweight (<2KB)
@@ -9344,15 +9408,15 @@ export function rewriteLiveHlsManifest(
             lines = [...adjustedHeaders, ...keptPairs.flatMap((p) => [...p.prefixTags, p.inf, p.uri])];
         }
     } else if (
-        isEdgeParent &&
         manifestContent.includes('#EXTINF') &&
         !manifestContent.includes('#EXT-X-STREAM-INF') &&
         !manifestContent.includes('#EXT-X-ENDLIST')
     ) {
-        // 10-Segment Anti-Burst Rolling Window strictly for Edge CDN (edge.wedd48c.top):
-        // Prevents mid-stream disconnects when Edge CDN uploads segments in 3-segment bursts every 12-16s,
-        // while keeping standard RFC-8216 hardware HLS servers (Bluetier Flussonic, Kwikmotion, Amagi)
-        // untouched and preserving #EXT-X-DISCONTINUITY in its exact segment position.
+        // RAM-Backed Contiguous Rolling Window (8 segments for standard HLS / Bluetier / Kwikmotion, 10 for Edge CDN):
+        // Expands shallow 3-4 segment upstream playlists into a deep 8-segment cushion.
+        // For standard HLS servers, rolled-off segments are strictly retained ONLY if they are verified present
+        // in unwrappedSegmentCache (RAM) or segmentInFlight and form an unbroken contiguous sequence,
+        // guaranteeing 0% 404 risk and 100% invariant EXT-X-MEDIA-SEQUENCE numbers across polls.
         const headerLines: string[] = [];
         const incomingSegments: RollingSegmentEntry[] = [];
         let pendingInf = '';
@@ -9373,13 +9437,18 @@ export function rewriteLiveHlsManifest(
                 seenFirstSegment = true;
                 pendingInf = l;
             } else if (!t.startsWith('#')) {
-                if (pendingInf) {
-                    const normKey = t.split('?')[0].split('/').slice(-2).join('/');
+                if (pendingInf && !/\.m3u8(\?|$)/i.test(t)) {
+                    const absSegUrl = resolveRelative(t);
+                    const cacheKey = getSegmentCacheKey(absSegUrl);
+                    const normKey = isEdgeParent ? cacheKey : t.split('?')[0].split('/').slice(-2).join('/');
+                    const segSeq = baseSeq + incomingSegments.length;
                     incomingSegments.push({
                         prefixTags: pendingPrefixTags,
                         inf: pendingInf,
                         uri: l,
-                        normKey
+                        normKey,
+                        cacheKey,
+                        seq: segSeq
                     });
                     pendingInf = '';
                     pendingPrefixTags = [];
@@ -9401,20 +9470,50 @@ export function rewriteLiveHlsManifest(
             const rollingKey = `${channelId || ''}::${baseUrl.split('?')[0]}`;
             const now = Date.now();
             const prev = rollingLivePlaylistCache.get(rollingKey);
-            const incomingLatestSeq = baseSeq + incomingSegments.length - 1;
+            const incomingLatestSeq = incomingSegments[incomingSegments.length - 1].seq;
+            const maxWindowSegments = isEdgeParent ? 10 : 8;
             let mergedSegments = incomingSegments;
 
             if (prev && now - prev.updatedAt < 60_000) {
                 const seqDelta = incomingLatestSeq - prev.lastLatestSeq;
                 if (seqDelta >= 0 && seqDelta <= 6) {
-                    const byKey = new Map<string, RollingSegmentEntry>();
-                    for (const seg of prev.segments) {
-                        byKey.set(seg.normKey, seg);
+                    if (isEdgeParent) {
+                        const byKey = new Map<string, RollingSegmentEntry>();
+                        for (const seg of prev.segments) {
+                            byKey.set(seg.normKey, seg);
+                        }
+                        for (const seg of incomingSegments) {
+                            const existing = byKey.get(seg.normKey);
+                            byKey.set(seg.normKey, existing ? { ...seg, seq: existing.seq } : seg);
+                        }
+                        mergedSegments = Array.from(byKey.values()).slice(-maxWindowSegments);
+                    } else {
+                        // Standard HLS (Bluetier, Kwikmotion, Amagi): prepend older contiguous segments ONLY if in RAM
+                        const incomingFirstSeq = incomingSegments[0].seq;
+                        const olderBySeq = new Map<number, RollingSegmentEntry>();
+                        for (const seg of prev.segments) {
+                            if (seg.seq < incomingFirstSeq) {
+                                olderBySeq.set(seg.seq, seg);
+                            }
+                        }
+                        const retainedOlder: RollingSegmentEntry[] = [];
+                        let cursorSeq = incomingFirstSeq - 1;
+                        while (
+                            retainedOlder.length + incomingSegments.length < maxWindowSegments &&
+                            olderBySeq.has(cursorSeq)
+                        ) {
+                            const candidate = olderBySeq.get(cursorSeq)!;
+                            const inRam = unwrappedSegmentCache.get(candidate.cacheKey);
+                            const isAvailableInRam =
+                                (inRam && now < inRam.expiresAt) || segmentInFlight.has(candidate.cacheKey);
+                            if (!isAvailableInRam) {
+                                break; // Stop immediately to guarantee an unbroken contiguous sequence
+                            }
+                            retainedOlder.unshift(candidate);
+                            cursorSeq -= 1;
+                        }
+                        mergedSegments = [...retainedOlder, ...incomingSegments];
                     }
-                    for (const seg of incomingSegments) {
-                        byKey.set(seg.normKey, seg);
-                    }
-                    mergedSegments = Array.from(byKey.values()).slice(-10);
                 }
             }
 
@@ -9429,7 +9528,9 @@ export function rewriteLiveHlsManifest(
                 if (oldestKey) rollingLivePlaylistCache.delete(oldestKey);
             }
 
-            const effectiveStartSeq = Math.max(0, incomingLatestSeq - mergedSegments.length + 1);
+            const effectiveStartSeq = isEdgeParent
+                ? Math.max(0, incomingLatestSeq - mergedSegments.length + 1)
+                : mergedSegments[0].seq;
             let hasStartOffset = false;
             const adjustedHeaders = headerLines.map((h) => {
                 if (/^#EXT-X-START:/i.test(h.trim())) {
@@ -9442,7 +9543,7 @@ export function rewriteLiveHlsManifest(
             });
 
             if (isEdgeParent && !hasStartOffset && mergedSegments.length >= 6) {
-                adjustedHeaders.push('#EXT-X-START:TIME-OFFSET=-15.0,PRECISE=YES');
+                adjustedHeaders.push('#EXT-X-START:TIME-OFFSET=-25.0,PRECISE=YES');
             }
 
             lines = [
@@ -9460,17 +9561,6 @@ export function rewriteLiveHlsManifest(
 
     const rewritten: string[] = [];
     let discontinuityInserted = !injectDiscontinuity;
-
-    const resolveRelative = (rel: string): string => {
-        if (/^https?:\/\//i.test(rel)) {
-            return rel;
-        }
-        try {
-            return new URL(rel, baseUrl).toString();
-        } catch {
-            return rel;
-        }
-    };
 
     const wrapProxy = (targetUrl: string, isSubManifest: boolean): string => {
         const isTiktokSegment = /tiktokcdn/i.test(targetUrl) || targetUrl.includes('.image');
@@ -9522,13 +9612,13 @@ export function rewriteLiveHlsManifest(
 }
 
 // ============================================================================
-// PILLAR 2 & 4: ANTI-FREEZE ZOMBIE DETECTOR, BOUNDED 160MB RAM SEGMENT CACHE & SINGLE-EDGE PRE-FETCHER
+// PILLAR 2 & 4: ANTI-FREEZE ZOMBIE DETECTOR, BOUNDED 220MB RAM SEGMENT CACHE & MULTI-SEGMENT STREAM PUMP
 // ============================================================================
 const lastGoodManifestCache = new Map<string, { content: string; updatedAt: number }>();
 const unwrappedSegmentCache = new Map<string, { buffer: Buffer; contentType: string; expiresAt: number }>();
 const segmentInFlight = new Map<string, Promise<{ buffer: Buffer; contentType: string }>>();
-const MAX_CACHED_SEGMENTS = 240;
-const MAX_CACHE_BYTES = 160 * 1024 * 1024; // 160 MB RAM cap
+const MAX_CACHED_SEGMENTS = 320;
+const MAX_CACHE_BYTES = 220 * 1024 * 1024; // 220 MB RAM cap
 let currentCachedBytes = 0;
 let totalCacheHits = 0;
 let totalCacheMisses = 0;
@@ -9536,7 +9626,16 @@ let totalPrefetchedSegments = 0;
 let totalFailoverEvents = 0;
 
 function getSegmentCacheKey(url: string): string {
-    return url.includes('.ts?') || url.includes('.m4s?') ? url.split('?')[0] : url;
+    if (url.includes('tiktokcdn') || url.includes('.image')) {
+        const hashMatch = url.match(/\/([a-f0-9]{24,64})\.image/i);
+        if (hashMatch) {
+            return `tiktok::${hashMatch[1].toLowerCase()}`;
+        }
+    }
+    if (/\.(ts|m4s|tbin|aac|mp4|image)\?/i.test(url)) {
+        return url.split('?')[0];
+    }
+    return url;
 }
 
 interface ManifestFreezeState {
@@ -9570,7 +9669,7 @@ function setCachedSegment(url: string, buffer: Buffer, contentType: string): voi
     unwrappedSegmentCache.set(key, {
         buffer,
         contentType,
-        expiresAt: Date.now() + 140 * 1000
+        expiresAt: Date.now() + 180 * 1000
     });
     currentCachedBytes += buffer.length;
 }
@@ -9594,7 +9693,7 @@ function checkManifestFrozen(manifestUrl: string, rawManifestText: string): bool
         return false;
     }
 
-    const segKey = lastMediaLine.split('?')[0];
+    const segKey = getSegmentCacheKey(lastMediaLine);
     const now = Date.now();
     const prev = manifestFreezeTracker.get(manifestUrl);
     if (!prev || prev.lastSegmentKey !== segKey) {
@@ -9612,88 +9711,230 @@ function checkManifestFrozen(manifestUrl: string, rawManifestText: string): bool
 }
 
 /**
- * Predictively pre-fetches only the single newest live segment when outbound socket concurrency is idle,
- * preventing background pre-fetches from competing with the player's active segment download.
+ * Immediately pre-warms the latest N segments (N-2, N-1, N) into RAM with 0ms artificial delay
+ * so both initial playback and continuous live edge polling hit local RAM (<5ms) instead of waiting on upstream CDNs.
  */
+function warmStreamSegments(
+    rawManifestText: string,
+    baseUrl: string,
+    headers?: Record<string, string>,
+    channelId?: string,
+    maxCount = 3,
+    depth = 0
+): void {
+    if (segmentInFlight.size >= 8) return;
+
+    const lines = rawManifestText.split(/\r?\n/);
+    const mediaLines: string[] = [];
+    const subManifestLines: string[] = [];
+    for (let i = 0; i < lines.length; i++) {
+        const t = lines[i].trim();
+        if (!t || t.startsWith('#')) continue;
+        if (/\.m3u8(\?|$)/i.test(t)) {
+            subManifestLines.push(t);
+        } else {
+            mediaLines.push(t);
+        }
+    }
+    if (mediaLines.length === 0) {
+        if (depth === 0 && subManifestLines.length > 0) {
+            const firstSub = subManifestLines[0];
+            let absSubUrl = firstSub;
+            if (!/^https?:\/\//i.test(firstSub)) {
+                try {
+                    absSubUrl = new URL(firstSub, baseUrl).toString();
+                } catch {
+                    return;
+                }
+            }
+            fetchUpstreamBufferWithRetry(absSubUrl, headers, {
+                maxAttempts: 1,
+                stallTimeoutMs: 2500,
+                timeoutMs: 3500
+            })
+                .then(({ buffer, ok, finalResolvedUrl }) => {
+                    if (ok && buffer.length > 0) {
+                        const subText = buffer.toString('utf8');
+                        if (subText.includes('#EXTINF')) {
+                            warmStreamSegments(subText, finalResolvedUrl, headers, channelId, maxCount, 1);
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
+        return;
+    }
+
+    const isEdgeParent = /https?:\/\/edge\.[a-z0-9.-]+/i.test(baseUrl);
+    const targetLines = mediaLines.slice(-maxCount);
+
+    for (const segRel of targetLines) {
+        if (segmentInFlight.size >= 8) break;
+        let absSegUrl = segRel;
+        if (!/^https?:\/\//i.test(segRel)) {
+            try {
+                absSegUrl = new URL(segRel, baseUrl).toString();
+            } catch {
+                continue;
+            }
+        }
+
+        const segCacheKey = getSegmentCacheKey(absSegUrl);
+        const cached = unwrappedSegmentCache.get(segCacheKey);
+        if ((cached && Date.now() < cached.expiresAt) || segmentInFlight.has(segCacheKey)) {
+            continue;
+        }
+
+        const isTiktokSegment = /tiktokcdn/i.test(absSegUrl) || absSegUrl.includes('.image');
+        const effectiveHeaders = isTiktokSegment && isEdgeParent ? undefined : headers;
+
+        const prefetchTask = (async () => {
+            const recheck = unwrappedSegmentCache.get(segCacheKey);
+            if (recheck && Date.now() < recheck.expiresAt) {
+                return { buffer: recheck.buffer, contentType: recheck.contentType };
+            }
+            const { buffer: rawBuf, ok, status, contentType } = await fetchUpstreamBufferWithRetry(
+                absSegUrl,
+                effectiveHeaders,
+                {
+                    maxAttempts: 2,
+                    stallTimeoutMs: 2600,
+                    timeoutMs: 5500
+                }
+            );
+            if (!ok || rawBuf.length === 0) throw new Error(`prefetch_http_${status}`);
+            const needsUnwrap =
+                absSegUrl.includes('tiktokcdn') ||
+                absSegUrl.endsWith('.image') ||
+                contentType.includes('image/') ||
+                contentType.includes('octet-stream') ||
+                (rawBuf.length >= 188 && rawBuf[0] !== 0x47);
+            const finalBuf = needsUnwrap ? await unwrapLiveTsSegmentAsync(rawBuf) : rawBuf;
+            const outType =
+                finalBuf.length >= 188 && finalBuf[0] === 0x47 ? 'video/mp2t' : contentType || 'video/mp2t';
+            if (finalBuf.length >= 188 && finalBuf[0] === 0x47) {
+                inspectMpegTsSegment(finalBuf, baseUrl);
+            }
+            setCachedSegment(absSegUrl, finalBuf, outType);
+            totalPrefetchedSegments += 1;
+            return { buffer: finalBuf, contentType: outType };
+        })();
+
+        segmentInFlight.set(segCacheKey, prefetchTask);
+        prefetchTask
+            .catch(() => {})
+            .finally(() => {
+                segmentInFlight.delete(segCacheKey);
+            });
+    }
+}
+
 function prefetchLatestSegment(
     rawManifestText: string,
     baseUrl: string,
     headers?: Record<string, string>,
-    _channelId?: string
+    channelId?: string
 ): void {
-    // Never launch background pre-fetches while the player is actively downloading segments
-    if (segmentInFlight.size >= 2) return;
+    warmStreamSegments(rawManifestText, baseUrl, headers, channelId, 3);
+}
 
-    const lines = rawManifestText.split(/\r?\n/);
-    const mediaLines: string[] = [];
-    for (let i = 0; i < lines.length; i++) {
-        const t = lines[i].trim();
-        if (t && !t.startsWith('#') && !/\.m3u8(\?|$)/i.test(t)) {
-            mediaLines.push(t);
+interface ActiveStreamPumpEntry {
+    manifestCacheKey: string;
+    effectiveUrl: string;
+    effectiveHeaders?: Record<string, string>;
+    publicBaseUrl: string;
+    channelId?: string;
+    lastViewerActivityAt: number;
+    isPolling: boolean;
+}
+const activeStreamPumps = new Map<string, ActiveStreamPumpEntry>();
+let activeStreamPumpInterval: NodeJS.Timeout | null = null;
+
+function ensureActiveStreamPumpLoop(): void {
+    if (activeStreamPumpInterval) return;
+    activeStreamPumpInterval = setInterval(() => {
+        const now = Date.now();
+        for (const [key, entry] of activeStreamPumps.entries()) {
+            if (now - entry.lastViewerActivityAt > 40_000) {
+                activeStreamPumps.delete(key);
+                continue;
+            }
+            if (entry.isPolling) continue;
+            entry.isPolling = true;
+            (async () => {
+                try {
+                    const { buffer: buf, ok, finalResolvedUrl } = await fetchUpstreamBufferWithRetry(
+                        entry.effectiveUrl,
+                        entry.effectiveHeaders,
+                        {
+                            maxAttempts: 2,
+                            stallTimeoutMs: 2800,
+                            timeoutMs: 3800
+                        }
+                    );
+                    if (!ok || buf.length === 0) return;
+                    const textPeek = buf.subarray(0, 16).toString('utf8').trim();
+                    if (!textPeek.startsWith('#EXTM3U') && !textPeek.startsWith('#EXT')) return;
+                    const rawM3UText = buf.toString('utf8');
+                    // Pre-warm the latest 4 segments into RAM before rewriting the rolling playlist
+                    warmStreamSegments(rawM3UText, finalResolvedUrl, entry.effectiveHeaders, entry.channelId, 4);
+                    const rewritten = rewriteLiveHlsManifest(
+                        rawM3UText,
+                        finalResolvedUrl,
+                        entry.publicBaseUrl,
+                        entry.effectiveHeaders,
+                        entry.channelId
+                    );
+                    const updatedAt = Date.now();
+                    lastGoodManifestCache.set(entry.manifestCacheKey, {
+                        content: rewritten,
+                        updatedAt
+                    });
+                    lastGoodManifestCache.set(`${entry.publicBaseUrl}::${entry.effectiveUrl}`, {
+                        content: rewritten,
+                        updatedAt
+                    });
+                } catch {
+                    // Ignore transient background pump errors
+                } finally {
+                    entry.isPolling = false;
+                }
+            })();
         }
+    }, 2000);
+    if (typeof activeStreamPumpInterval.unref === 'function') {
+        activeStreamPumpInterval.unref();
     }
-    if (mediaLines.length === 0) return;
+}
 
-    const isEdgeParent = /https?:\/\/edge\.[a-z0-9.-]+/i.test(baseUrl);
-    const segRel = mediaLines[mediaLines.length - 1];
-    let absSegUrl = segRel;
-    if (!/^https?:\/\//i.test(segRel)) {
-        try {
-            absSegUrl = new URL(segRel, baseUrl).toString();
-        } catch {
-            return;
-        }
-    }
-
-    const segCacheKey = getSegmentCacheKey(absSegUrl);
-    const cached = unwrappedSegmentCache.get(segCacheKey);
-    if ((cached && Date.now() < cached.expiresAt) || segmentInFlight.has(segCacheKey)) {
+function touchActiveStreamPump(
+    manifestCacheKey: string,
+    effectiveUrl: string,
+    effectiveHeaders: Record<string, string> | undefined,
+    publicBaseUrl: string,
+    channelId?: string
+): void {
+    ensureActiveStreamPumpLoop();
+    const existing = activeStreamPumps.get(manifestCacheKey);
+    if (existing) {
+        existing.lastViewerActivityAt = Date.now();
+        existing.effectiveUrl = effectiveUrl;
+        existing.effectiveHeaders = effectiveHeaders;
         return;
     }
-
-    const isTiktokSegment = /tiktokcdn/i.test(absSegUrl) || absSegUrl.includes('.image');
-    const effectiveHeaders = isTiktokSegment && isEdgeParent ? undefined : headers;
-
-    const prefetchTask = (async () => {
-        // Yield 250ms so the player's own primary segment request always gets first priority on the socket
-        await new Promise((r) => setTimeout(r, 250));
-        const recheck = unwrappedSegmentCache.get(segCacheKey);
-        if (recheck && Date.now() < recheck.expiresAt) {
-            return { buffer: recheck.buffer, contentType: recheck.contentType };
-        }
-        const { buffer: rawBuf, ok, status, contentType } = await fetchUpstreamBufferWithRetry(
-            absSegUrl,
-            effectiveHeaders,
-            {
-                maxAttempts: 2,
-                stallTimeoutMs: 4000,
-                timeoutMs: 7500
-            }
-        );
-        if (!ok || rawBuf.length === 0) throw new Error(`prefetch_http_${status}`);
-        const needsUnwrap =
-            absSegUrl.includes('tiktokcdn') ||
-            absSegUrl.endsWith('.image') ||
-            contentType.includes('image/') ||
-            contentType.includes('octet-stream') ||
-            (rawBuf.length >= 188 && rawBuf[0] !== 0x47);
-        const finalBuf = needsUnwrap ? await unwrapLiveTsSegmentAsync(rawBuf) : rawBuf;
-        const outType =
-            finalBuf.length >= 188 && finalBuf[0] === 0x47 ? 'video/mp2t' : contentType || 'video/mp2t';
-        if (finalBuf.length >= 188 && finalBuf[0] === 0x47) {
-            inspectMpegTsSegment(finalBuf, baseUrl);
-        }
-        setCachedSegment(absSegUrl, finalBuf, outType);
-        totalPrefetchedSegments += 1;
-        return { buffer: finalBuf, contentType: outType };
-    })();
-
-    segmentInFlight.set(segCacheKey, prefetchTask);
-    prefetchTask
-        .catch(() => {})
-        .finally(() => {
-            segmentInFlight.delete(segCacheKey);
-        });
+    if (activeStreamPumps.size >= 16) {
+        const oldestKey = activeStreamPumps.keys().next().value;
+        if (oldestKey) activeStreamPumps.delete(oldestKey);
+    }
+    activeStreamPumps.set(manifestCacheKey, {
+        manifestCacheKey,
+        effectiveUrl,
+        effectiveHeaders,
+        publicBaseUrl,
+        channelId,
+        lastViewerActivityAt: Date.now(),
+        isPolling: false
+    });
 }
 
 // Tracks channels that have failed over to a backup server so subsequent manifest polls stay pinned
@@ -9780,7 +10021,7 @@ async function attemptChannelFailoverManifest(
             const failedState = getOrCreateHealthState(failedUrl, channelId);
             failedState.failoverCount += 1;
             recordStreamHealthResult(backup.url, true, 150, channelId);
-            prefetchLatestSegment(text, finalResolvedUrl, backup.headers, channelId);
+            warmStreamSegments(text, finalResolvedUrl, backup.headers, channelId, 3);
 
             // Pin this channel + failedUrl to the healthy backup for 3 minutes so future polls don't jump back and forth
             const pinKey = `${channelId}::${failedUrl}`;
@@ -9812,7 +10053,7 @@ async function attemptChannelFailoverManifest(
  * 1. Full-Body Fast-Retry (3.4s per-attempt timeout covering headers + full body download across 4 attempts).
  * 2. Anti-Freeze Zombie Stream Detector + Pinned Mid-Stream Failover (#EXT-X-DISCONTINUITY).
  * 3. Last-Good Manifest Shield (serves cached manifest on transient blips before switching servers).
- * 4. Bounded 160MB RAM LRU Segment Cache, Token-Normalized Cache Keys & In-Flight Deduplication (0ms hits).
+ * 4. Bounded 220MB RAM LRU Segment Cache, Content-Addressed Cache Keys & Active Stream Pump (0ms hits).
  */
 export async function handleLiveHlsProxyRequest(
     encodedData: string,
@@ -9856,10 +10097,12 @@ export async function handleLiveHlsProxyRequest(
 
     let hadInflightFailure = false;
 
-    // 1. Fast micro-cache (900ms) for rapid concurrent manifest polls
+    // 1. Fast micro-cache (1800ms) for rapid concurrent manifest polls + Active Stream Background Pump
     if (isM3U8Url && relaySlot === '1') {
+        const wasAlreadyActive = activeStreamPumps.has(manifestCacheKey);
+        touchActiveStreamPump(manifestCacheKey, effectiveUrl, effectiveHeaders, publicBaseUrl, parsed.channelId);
         const recentManifest = lastGoodManifestCache.get(manifestCacheKey);
-        if (recentManifest && Date.now() - recentManifest.updatedAt < 900) {
+        if (wasAlreadyActive && recentManifest && Date.now() - recentManifest.updatedAt < 1800) {
             return reply
                 .code(200)
                 .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
@@ -9995,8 +10238,8 @@ export async function handleLiveHlsProxyRequest(
                 }
 
                 recordStreamHealthResult(effectiveUrl, true, Date.now() - t0, parsed.channelId);
-                // Predictively pre-fetch only the newest .ts segment when idle
-                prefetchLatestSegment(rawM3UText, finalResolvedUrl, effectiveHeaders, parsed.channelId);
+                // Immediately pre-warm the latest 4 segments (0ms delay) BEFORE rewriting the rolling manifest
+                warmStreamSegments(rawM3UText, finalResolvedUrl, effectiveHeaders, parsed.channelId, 4);
 
                 const rewritten = rewriteLiveHlsManifest(
                     rawM3UText,
@@ -10033,15 +10276,15 @@ export async function handleLiveHlsProxyRequest(
             }
         }
 
-        // Binary Segment Download with Chunk-Activity Stall Watchdog (4.5s stall timeout, 9.5s max ceiling)
+        // Binary Segment Download with Chunk-Activity Stall Watchdog (2.6s stall timeout, 6.0s max ceiling)
         const segPromise = (async () => {
             const { buffer: rawBuf, ok, status, contentType } = await fetchUpstreamBufferWithRetry(
                 parsed.url,
                 parsed.headers,
                 {
                     maxAttempts: hadInflightFailure ? 2 : 3,
-                    stallTimeoutMs: 4500,
-                    timeoutMs: 9500
+                    stallTimeoutMs: 2600,
+                    timeoutMs: 6000
                 }
             );
             if (!ok || rawBuf.length === 0) {
