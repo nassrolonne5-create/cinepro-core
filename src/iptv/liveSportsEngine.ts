@@ -4398,21 +4398,37 @@ async function resolveDynamicManifestUrl(
 
     const wideMatch =
         rawUrl.match(/wideiptv\.top\/player\/([A-Za-z0-9_-]+)\/index\.m3u8/i) ||
-        rawUrl.match(/bluetier\.top\/([A-Za-z0-9_-]+)\/(?:index\.m3u8|tracks-v1a1\/mono\.m3u8)/i);
+        rawUrl.match(/(?:cdn\.wideiptv\.top|[a-z0-9.-]*bluetier\.top)\/([A-Za-z0-9_-]+)\/(?:index\.m3u8|tracks-v1a1\/mono\.m3u8)/i);
     if (wideMatch) {
         const slug = wideMatch[1];
         Object.assign(mergedHeaders, WIDEIPTV_HEADERS);
-        const hasToken = rawUrl.includes('token=') && rawUrl.includes('bluetier.top');
-        if (!hasToken || forceRefreshToken) {
-            const signedUrl = await getWideIptvSignedHlsUrl(slug, forceRefreshToken);
-            if (signedUrl) {
-                return { url: signedUrl, headers: mergedHeaders };
+        // Always resolve through getWideIptvSignedHlsUrl (which caches valid tokens for 90s and auto-renews before the 220s upstream TTL expires)
+        const signedUrl = await getWideIptvSignedHlsUrl(slug, forceRefreshToken);
+        if (signedUrl) {
+            return { url: signedUrl, headers: mergedHeaders };
+        }
+        return { url: rawUrl, headers: mergedHeaders };
+    }
+
+    // Handle token expiration on Bluetier / cdn.wideiptv.top .ts segments when retrying a 403 segment
+    const wideSegMatch = rawUrl.match(/(?:cdn\.wideiptv\.top|[a-z0-9.-]*bluetier\.top)\/([A-Za-z0-9_-]+)\/tracks-v1a1\/.+\.ts/i);
+    if (wideSegMatch) {
+        const slug = wideSegMatch[1];
+        Object.assign(mergedHeaders, WIDEIPTV_HEADERS);
+        if (forceRefreshToken || !rawUrl.includes('token=')) {
+            const signedUrl = await getWideIptvSignedHlsUrl(slug, true);
+            const tokMatch = signedUrl?.match(/[?&]token=([^&]+)/);
+            if (tokMatch) {
+                const baseClean = rawUrl.split('?')[0];
+                return { url: `${baseClean}?token=${tokMatch[1]}`, headers: mergedHeaders };
             }
         }
         return { url: rawUrl, headers: mergedHeaders };
     }
 
-    const ksaMatch = rawUrl.match(/live\.kwikmotion\.com\/ksasports([123])live\/ksasports[123]\.smil\/playlist(?:_dvr)?\.m3u8(?:\?variant=([a-z0-9_]+))?/i);
+    const ksaMatch =
+        rawUrl.match(/live\.kwikmotion\.com\/ksasports([123])live\/ksasports[123]\.smil\/playlist(?:_dvr)?\.m3u8(?:\?variant=([a-z0-9_]+))?/i) ||
+        rawUrl.match(/live\.kwikmotion\.com\/ksasports([123])live\/ksasports[123]_(source|480p|360p)\/chunks(?:_dvr)?\.m3u8/i);
     if (ksaMatch) {
         Object.assign(mergedHeaders, ALOULA_HEADERS);
         const variant = (ksaMatch[2] || 'source').toLowerCase();
@@ -4423,7 +4439,7 @@ async function resolveDynamicManifestUrl(
             const signedBaseUrl = await getAloulaSignedHlsUrl(aloulaChannelId, forceRefreshToken);
             if (signedBaseUrl) {
                 let targetSignedUrl = signedBaseUrl;
-                if (variant === 'dvr_source') {
+                if (variant === 'dvr_source' || rawUrl.includes('chunks_dvr.m3u8')) {
                     targetSignedUrl = signedBaseUrl.replace('/chunks.m3u8', '/chunks_dvr.m3u8');
                 } else if (variant === '480p') {
                     targetSignedUrl = signedBaseUrl.replace(`ksasports${num}_source/`, `ksasports${num}_480p/`);
@@ -5328,7 +5344,8 @@ export function parseHlsMasterVariants(
     headers?: Record<string, string>,
     channelId?: string,
     defaultQuality = '1080p',
-    defaultLang = 'en'
+    defaultLang = 'en',
+    canonicalManifestUrl?: string
 ): {
     variants: HlsQualityVariant[];
     audioTracks: Array<{ language: string; label: string }>;
@@ -5405,10 +5422,12 @@ export function parseHlsMasterVariants(
     // Sort variants highest bandwidth/resolution first and deduplicate labels
     variants.sort((a, b) => b.bandwidth - a.bandwidth);
 
-    // If this upstream is a direct single-bitrate media playlist (e.g., Edge CDN 1080p 50fps),
-    // expose explicit quality profiles so the player UI always offers Auto / 1080p / 720p / 480p controls
+    // If this upstream is a direct single-bitrate media playlist (e.g., Bluetier Flussonic or Edge CDN 1080p 50fps),
+    // always use canonicalManifestUrl (e.g., https://wideiptv.top/player/beINAR/index.m3u8) instead of a temporary
+    // tokenized URL so tokens auto-renew indefinitely on every poll without expiring after 3 minutes.
     if (variants.length === 0) {
-        const baseProxied = buildLiveProxyUrl(manifestBaseUrl, publicBaseUrl, headers, channelId);
+        const targetSingleUrl = canonicalManifestUrl || manifestBaseUrl;
+        const baseProxied = buildLiveProxyUrl(targetSingleUrl, publicBaseUrl, headers, channelId);
         const is720 = defaultQuality.includes('720');
         variants.push(
             {
@@ -5417,7 +5436,7 @@ export function parseHlsMasterVariants(
                 bandwidth: is720 ? 3200000 : 5800000,
                 fps: 50,
                 url: baseProxied,
-                rawUrl: manifestBaseUrl
+                rawUrl: targetSingleUrl
             },
             {
                 label: '720p HD (Balanced)',
@@ -5425,7 +5444,7 @@ export function parseHlsMasterVariants(
                 bandwidth: 2800000,
                 fps: 50,
                 url: `${baseProxied}&profile=720p`,
-                rawUrl: manifestBaseUrl
+                rawUrl: targetSingleUrl
             },
             {
                 label: '480p SD (Data Saver)',
@@ -5433,7 +5452,7 @@ export function parseHlsMasterVariants(
                 bandwidth: 1400000,
                 fps: 30,
                 url: `${baseProxied}&profile=480p`,
-                rawUrl: manifestBaseUrl
+                rawUrl: targetSingleUrl
             }
         );
     }
@@ -6728,10 +6747,13 @@ export async function harvestOfficialXmltvEpg(): Promise<void> {
     return xmltvHarvestPromise;
 }
 
-// Pre-warm 24-hour KSA/SSC Sports signed HLS tokens in background on boot so first tune-in is instant
+// Pre-warm 24-hour KSA/SSC Sports & top Bluetier signed HLS tokens in background on boot so first tune-in is instant
 setTimeout(() => {
     for (const id of [9, 10, 16]) {
         getAloulaSignedHlsUrl(id).catch(() => {});
+    }
+    for (const slug of ['beINAR', 'beINAR2', 'beINAR3', 'BEINSPORT1FR', 'skysportsmainevent', 'skysportspremierleague', 'TNT1UK', 'ESPN']) {
+        getWideIptvSignedHlsUrl(slug).catch(() => {});
     }
 }, 250);
 
@@ -6792,7 +6814,7 @@ async function probeStreamLiveness(
     const proxyManifestKey = publicBaseUrl ? `${publicBaseUrl}::${url}::r=1::p=` : '';
     if (cacheKey) {
         const cached = lastGoodManifestCache.get(cacheKey);
-        if (cached && Date.now() - cached.updatedAt < 35000) {
+        if (cached && Date.now() - cached.updatedAt < 12000) {
             const cachedVariants = streamVariantsCache.get(cacheKey);
             return {
                 ok: true,
@@ -6870,15 +6892,27 @@ async function probeStreamLiveness(
                 updatedAt: nowMs
             });
             if (proxyManifestKey) {
-                lastGoodManifestCache.set(proxyManifestKey, {
-                    content: rewritten,
-                    updatedAt: nowMs
-                });
+                const existingProxy = lastGoodManifestCache.get(proxyManifestKey);
+                if (!existingProxy || nowMs - existingProxy.updatedAt > 1500) {
+                    lastGoodManifestCache.set(proxyManifestKey, {
+                        content: rewritten,
+                        updatedAt: nowMs
+                    });
+                }
             }
             if (shouldPrefetchSegments) {
                 prefetchLatestSegment(chunk, finalBase, resolved.headers, channelId);
             }
-            const extracted = parseHlsMasterVariants(chunk, finalBase, publicBaseUrl, resolved.headers, channelId);
+            const extracted = parseHlsMasterVariants(
+                chunk,
+                finalBase,
+                publicBaseUrl,
+                resolved.headers,
+                channelId,
+                '1080p',
+                'en',
+                url
+            );
             parsedVariants = extracted.variants;
             parsedAudio = extracted.audioTracks;
             streamVariantsCache.set(cacheKey, {
@@ -7245,7 +7279,7 @@ export async function resolveChannelStreams(
         // Launch all candidate stream probes in parallel; once the primary stream (index 0) verifies,
         // give backup servers a 180ms grace window so a slow secondary server never delays tune-in
         const rawProbePromises = candidateStreams.map((item, index) => {
-            const probeTimeoutMs = index < curatedCount ? 2200 : 1400;
+            const probeTimeoutMs = index < curatedCount ? 3400 : 1600;
             const shouldPrefetch = index === 0;
             return probeStreamLiveness(
                 item.url,
@@ -7397,7 +7431,7 @@ export async function resolveChannelStreams(
             const bCurated = b.index < curatedCount;
             if (aCurated && bCurated) {
                 const scoreDiff = (b.sourceObj.healthScore || 90) - (a.sourceObj.healthScore || 90);
-                if (Math.abs(scoreDiff) > 15) return scoreDiff;
+                if (Math.abs(scoreDiff) > 35) return scoreDiff;
                 return a.index - b.index;
             }
             if (aCurated) return -1;
@@ -9240,6 +9274,7 @@ export function generateSportsM3UPlaylist(
  * Supports #EXT-X-DISCONTINUITY injection when failing over transparently between backup servers.
  */
 interface RollingSegmentEntry {
+    prefixTags: string[];
     inf: string;
     uri: string;
     normKey: string;
@@ -9264,21 +9299,35 @@ export function rewriteLiveHlsManifest(
 
     // If upstream is a DVR media playlist (e.g. Kwikmotion chunks_dvr.m3u8 with 3,500+ segments),
     // trim to a fast live sliding window of the latest 8 segments so manifests stay lightweight (<2KB)
+    // while preserving any inter-segment #EXT-X-PROGRAM-DATE-TIME / #EXT-X-DISCONTINUITY tags in place.
     if (baseUrl.includes('chunks_dvr.m3u8')) {
         const headerLines: string[] = [];
-        const segmentPairs: Array<{ inf: string; uri: string }> = [];
+        const segmentPairs: Array<{ prefixTags: string[]; inf: string; uri: string }> = [];
         let pendingInf = '';
+        let pendingPrefixTags: string[] = [];
+        let seenFirstSegment = false;
+
         for (const l of lines) {
             const t = l.trim();
             if (!t) continue;
             if (t.startsWith('#EXTINF')) {
+                seenFirstSegment = true;
                 pendingInf = l;
             } else if (!t.startsWith('#')) {
                 if (pendingInf) {
-                    segmentPairs.push({ inf: pendingInf, uri: l });
+                    segmentPairs.push({ prefixTags: pendingPrefixTags, inf: pendingInf, uri: l });
                     pendingInf = '';
+                    pendingPrefixTags = [];
                 }
-            } else if (!pendingInf) {
+            } else if (
+                seenFirstSegment ||
+                t.startsWith('#EXT-X-DISCONTINUITY') ||
+                t.startsWith('#EXT-X-PROGRAM-DATE-TIME')
+            ) {
+                if (t !== '#EXT-X-ENDLIST') {
+                    pendingPrefixTags.push(l);
+                }
+            } else {
                 headerLines.push(l);
             }
         }
@@ -9292,19 +9341,23 @@ export function rewriteLiveHlsManifest(
                 }
                 return h;
             });
-            lines = [...adjustedHeaders, ...keptPairs.flatMap((p) => [p.inf, p.uri])];
+            lines = [...adjustedHeaders, ...keptPairs.flatMap((p) => [...p.prefixTags, p.inf, p.uri])];
         }
     } else if (
+        isEdgeParent &&
         manifestContent.includes('#EXTINF') &&
         !manifestContent.includes('#EXT-X-STREAM-INF') &&
         !manifestContent.includes('#EXT-X-ENDLIST')
     ) {
-        // 14-Segment Anti-Burst Rolling Window for live media playlists (especially edge.wedd48c.top):
-        // Prevents mid-stream disconnects when upstream uploads segments in 3-segment bursts every 12-16s
-        // and only serves a tiny 6-segment window that jumps #EXT-X-MEDIA-SEQUENCE by 3 at once.
+        // 10-Segment Anti-Burst Rolling Window strictly for Edge CDN (edge.wedd48c.top):
+        // Prevents mid-stream disconnects when Edge CDN uploads segments in 3-segment bursts every 12-16s,
+        // while keeping standard RFC-8216 hardware HLS servers (Bluetier Flussonic, Kwikmotion, Amagi)
+        // untouched and preserving #EXT-X-DISCONTINUITY in its exact segment position.
         const headerLines: string[] = [];
         const incomingSegments: RollingSegmentEntry[] = [];
         let pendingInf = '';
+        let pendingPrefixTags: string[] = [];
+        let seenFirstSegment = false;
         let baseSeq = 0;
         let hasSeqHeader = false;
 
@@ -9317,14 +9370,29 @@ export function rewriteLiveHlsManifest(
                 hasSeqHeader = true;
             }
             if (t.startsWith('#EXTINF')) {
+                seenFirstSegment = true;
                 pendingInf = l;
             } else if (!t.startsWith('#')) {
                 if (pendingInf) {
                     const normKey = t.split('?')[0].split('/').slice(-2).join('/');
-                    incomingSegments.push({ inf: pendingInf, uri: l, normKey });
+                    incomingSegments.push({
+                        prefixTags: pendingPrefixTags,
+                        inf: pendingInf,
+                        uri: l,
+                        normKey
+                    });
                     pendingInf = '';
+                    pendingPrefixTags = [];
                 }
-            } else if (!pendingInf) {
+            } else if (
+                seenFirstSegment ||
+                t.startsWith('#EXT-X-DISCONTINUITY') ||
+                t.startsWith('#EXT-X-PROGRAM-DATE-TIME')
+            ) {
+                if (t !== '#EXT-X-ENDLIST') {
+                    pendingPrefixTags.push(l);
+                }
+            } else {
                 headerLines.push(l);
             }
         }
@@ -9336,10 +9404,9 @@ export function rewriteLiveHlsManifest(
             const incomingLatestSeq = baseSeq + incomingSegments.length - 1;
             let mergedSegments = incomingSegments;
 
-            if (prev && now - prev.updatedAt < 90_000) {
+            if (prev && now - prev.updatedAt < 60_000) {
                 const seqDelta = incomingLatestSeq - prev.lastLatestSeq;
-                // Merge if sequence advanced normally or stayed same (0 to 8 segments jump)
-                if (seqDelta >= 0 && seqDelta <= 8) {
+                if (seqDelta >= 0 && seqDelta <= 6) {
                     const byKey = new Map<string, RollingSegmentEntry>();
                     for (const seg of prev.segments) {
                         byKey.set(seg.normKey, seg);
@@ -9347,7 +9414,7 @@ export function rewriteLiveHlsManifest(
                     for (const seg of incomingSegments) {
                         byKey.set(seg.normKey, seg);
                     }
-                    mergedSegments = Array.from(byKey.values()).slice(-14);
+                    mergedSegments = Array.from(byKey.values()).slice(-10);
                 }
             }
 
@@ -9374,13 +9441,20 @@ export function rewriteLiveHlsManifest(
                 return h;
             });
 
-            // For Edge CDN burst streams, instruct players to maintain an 18s (4.5-segment) cushion
-            // behind the live edge so 12-16s upstream TikTok CDN upload pauses never drain the buffer.
             if (isEdgeParent && !hasStartOffset && mergedSegments.length >= 6) {
-                adjustedHeaders.push('#EXT-X-START:TIME-OFFSET=-18.0,PRECISE=YES');
+                adjustedHeaders.push('#EXT-X-START:TIME-OFFSET=-15.0,PRECISE=YES');
             }
 
-            lines = [...adjustedHeaders, ...mergedSegments.flatMap((p) => [p.inf, p.uri])];
+            lines = [
+                ...adjustedHeaders,
+                ...mergedSegments.flatMap((p, idx) => {
+                    const cleanPrefix =
+                        idx === 0
+                            ? p.prefixTags.filter((tag) => !tag.trim().startsWith('#EXT-X-DISCONTINUITY'))
+                            : p.prefixTags;
+                    return [...cleanPrefix, p.inf, p.uri];
+                })
+            ];
         }
     }
 
@@ -9448,18 +9522,22 @@ export function rewriteLiveHlsManifest(
 }
 
 // ============================================================================
-// PILLAR 2 & 4: ANTI-FREEZE ZOMBIE DETECTOR, BOUNDED 160MB RAM SEGMENT CACHE & MULTI-OFFSET PRE-FETCHER
+// PILLAR 2 & 4: ANTI-FREEZE ZOMBIE DETECTOR, BOUNDED 160MB RAM SEGMENT CACHE & SINGLE-EDGE PRE-FETCHER
 // ============================================================================
 const lastGoodManifestCache = new Map<string, { content: string; updatedAt: number }>();
 const unwrappedSegmentCache = new Map<string, { buffer: Buffer; contentType: string; expiresAt: number }>();
 const segmentInFlight = new Map<string, Promise<{ buffer: Buffer; contentType: string }>>();
 const MAX_CACHED_SEGMENTS = 240;
-const MAX_CACHE_BYTES = 160 * 1024 * 1024; // 160 MB RAM cap for 14-segment rolling windows
+const MAX_CACHE_BYTES = 160 * 1024 * 1024; // 160 MB RAM cap
 let currentCachedBytes = 0;
 let totalCacheHits = 0;
 let totalCacheMisses = 0;
 let totalPrefetchedSegments = 0;
 let totalFailoverEvents = 0;
+
+function getSegmentCacheKey(url: string): string {
+    return url.includes('.ts?') || url.includes('.m4s?') ? url.split('?')[0] : url;
+}
 
 interface ManifestFreezeState {
     lastSegmentKey: string;
@@ -9469,10 +9547,11 @@ interface ManifestFreezeState {
 const manifestFreezeTracker = new Map<string, ManifestFreezeState>();
 
 function setCachedSegment(url: string, buffer: Buffer, contentType: string): void {
-    const existing = unwrappedSegmentCache.get(url);
+    const key = getSegmentCacheKey(url);
+    const existing = unwrappedSegmentCache.get(key);
     if (existing) {
         currentCachedBytes = Math.max(0, currentCachedBytes - existing.buffer.length);
-        unwrappedSegmentCache.delete(url);
+        unwrappedSegmentCache.delete(key);
     }
 
     while (
@@ -9488,7 +9567,7 @@ function setCachedSegment(url: string, buffer: Buffer, contentType: string): voi
         unwrappedSegmentCache.delete(oldestKey);
     }
 
-    unwrappedSegmentCache.set(url, {
+    unwrappedSegmentCache.set(key, {
         buffer,
         contentType,
         expiresAt: Date.now() + 140 * 1000
@@ -9533,9 +9612,8 @@ function checkManifestFrozen(manifestUrl: string, rawManifestText: string): bool
 }
 
 /**
- * Predictively pre-fetches and unwraps the latest segments (plus the -18s start offset segment for Edge CDN)
- * using non-blocking async zlib decompression so that when hls.js / ExoPlayer requests them,
- * they are served immediately from RAM in 0ms (X-Cache: HIT) without choking socket bandwidth.
+ * Predictively pre-fetches only the single newest live segment when outbound socket concurrency is idle,
+ * preventing background pre-fetches from competing with the player's active segment download.
  */
 function prefetchLatestSegment(
     rawManifestText: string,
@@ -9543,6 +9621,9 @@ function prefetchLatestSegment(
     headers?: Record<string, string>,
     _channelId?: string
 ): void {
+    // Never launch background pre-fetches while the player is actively downloading segments
+    if (segmentInFlight.size >= 2) return;
+
     const lines = rawManifestText.split(/\r?\n/);
     const mediaLines: string[] = [];
     for (let i = 0; i < lines.length; i++) {
@@ -9554,81 +9635,83 @@ function prefetchLatestSegment(
     if (mediaLines.length === 0) return;
 
     const isEdgeParent = /https?:\/\/edge\.[a-z0-9.-]+/i.test(baseUrl);
-    // Pre-fetch the latest 3 segments for Edge CDN (since it uploads in 3-segment bursts) or latest 2 for standard HLS,
-    // plus the -18s live offset segment on initial tune-in so instant playback hits RAM cache.
-    const targetLinesSet = new Set<string>();
-    if (isEdgeParent && mediaLines.length >= 5) {
-        targetLinesSet.add(mediaLines[Math.max(0, mediaLines.length - 5)]);
-        for (const l of mediaLines.slice(-3)) targetLinesSet.add(l);
-    } else {
-        for (const l of mediaLines.slice(-2)) targetLinesSet.add(l);
-    }
-    const targetLines = Array.from(targetLinesSet);
-
-    for (let idx = 0; idx < targetLines.length; idx++) {
-        const segRel = targetLines[idx];
-        let absSegUrl = segRel;
-        if (!/^https?:\/\//i.test(segRel)) {
-            try {
-                absSegUrl = new URL(segRel, baseUrl).toString();
-            } catch {
-                continue;
-            }
+    const segRel = mediaLines[mediaLines.length - 1];
+    let absSegUrl = segRel;
+    if (!/^https?:\/\//i.test(segRel)) {
+        try {
+            absSegUrl = new URL(segRel, baseUrl).toString();
+        } catch {
+            return;
         }
-
-        const cached = unwrappedSegmentCache.get(absSegUrl);
-        if ((cached && Date.now() < cached.expiresAt) || segmentInFlight.has(absSegUrl)) {
-            continue;
-        }
-
-        const isTiktokSegment = /tiktokcdn/i.test(absSegUrl) || absSegUrl.includes('.image');
-        const effectiveHeaders = isTiktokSegment && isEdgeParent ? undefined : headers;
-        const staggerDelayMs = idx * 180;
-
-        const prefetchTask = (async () => {
-            if (staggerDelayMs > 0) {
-                await new Promise((r) => setTimeout(r, staggerDelayMs));
-            }
-            const { buffer: rawBuf, ok, status, contentType } = await fetchUpstreamBufferWithRetry(
-                absSegUrl,
-                effectiveHeaders,
-                {
-                    maxAttempts: 3,
-                    stallTimeoutMs: 4500,
-                    timeoutMs: 9000
-                }
-            );
-            if (!ok || rawBuf.length === 0) throw new Error(`prefetch_http_${status}`);
-            const needsUnwrap =
-                absSegUrl.includes('tiktokcdn') ||
-                absSegUrl.endsWith('.image') ||
-                contentType.includes('image/') ||
-                contentType.includes('octet-stream') ||
-                (rawBuf.length >= 188 && rawBuf[0] !== 0x47);
-            const finalBuf = needsUnwrap ? await unwrapLiveTsSegmentAsync(rawBuf) : rawBuf;
-            const outType =
-                finalBuf.length >= 188 && finalBuf[0] === 0x47 ? 'video/mp2t' : contentType || 'video/mp2t';
-            if (finalBuf.length >= 188 && finalBuf[0] === 0x47) {
-                inspectMpegTsSegment(finalBuf, baseUrl);
-            }
-            setCachedSegment(absSegUrl, finalBuf, outType);
-            totalPrefetchedSegments += 1;
-            return { buffer: finalBuf, contentType: outType };
-        })();
-
-        segmentInFlight.set(absSegUrl, prefetchTask);
-        prefetchTask
-            .catch(() => {})
-            .finally(() => {
-                segmentInFlight.delete(absSegUrl);
-            });
     }
+
+    const segCacheKey = getSegmentCacheKey(absSegUrl);
+    const cached = unwrappedSegmentCache.get(segCacheKey);
+    if ((cached && Date.now() < cached.expiresAt) || segmentInFlight.has(segCacheKey)) {
+        return;
+    }
+
+    const isTiktokSegment = /tiktokcdn/i.test(absSegUrl) || absSegUrl.includes('.image');
+    const effectiveHeaders = isTiktokSegment && isEdgeParent ? undefined : headers;
+
+    const prefetchTask = (async () => {
+        // Yield 250ms so the player's own primary segment request always gets first priority on the socket
+        await new Promise((r) => setTimeout(r, 250));
+        const recheck = unwrappedSegmentCache.get(segCacheKey);
+        if (recheck && Date.now() < recheck.expiresAt) {
+            return { buffer: recheck.buffer, contentType: recheck.contentType };
+        }
+        const { buffer: rawBuf, ok, status, contentType } = await fetchUpstreamBufferWithRetry(
+            absSegUrl,
+            effectiveHeaders,
+            {
+                maxAttempts: 2,
+                stallTimeoutMs: 4000,
+                timeoutMs: 7500
+            }
+        );
+        if (!ok || rawBuf.length === 0) throw new Error(`prefetch_http_${status}`);
+        const needsUnwrap =
+            absSegUrl.includes('tiktokcdn') ||
+            absSegUrl.endsWith('.image') ||
+            contentType.includes('image/') ||
+            contentType.includes('octet-stream') ||
+            (rawBuf.length >= 188 && rawBuf[0] !== 0x47);
+        const finalBuf = needsUnwrap ? await unwrapLiveTsSegmentAsync(rawBuf) : rawBuf;
+        const outType =
+            finalBuf.length >= 188 && finalBuf[0] === 0x47 ? 'video/mp2t' : contentType || 'video/mp2t';
+        if (finalBuf.length >= 188 && finalBuf[0] === 0x47) {
+            inspectMpegTsSegment(finalBuf, baseUrl);
+        }
+        setCachedSegment(absSegUrl, finalBuf, outType);
+        totalPrefetchedSegments += 1;
+        return { buffer: finalBuf, contentType: outType };
+    })();
+
+    segmentInFlight.set(segCacheKey, prefetchTask);
+    prefetchTask
+        .catch(() => {})
+        .finally(() => {
+            segmentInFlight.delete(segCacheKey);
+        });
 }
+
+// Tracks channels that have failed over to a backup server so subsequent manifest polls stay pinned
+// to the same backup server instead of ping-ponging between incompatible EXT-X-MEDIA-SEQUENCE counters.
+const channelFailoverPinMap = new Map<
+    string,
+    {
+        backupUrl: string;
+        backupHeaders?: Record<string, string>;
+        pinnedAt: number;
+        needsDiscontinuity: boolean;
+    }
+>();
 
 /**
  * Seamless Mid-Stream Failover: if a channel's active server fails or freezes mid-match,
- * finds the next healthy backup stream for that exact channel, fetches its manifest,
- * and injects #EXT-X-DISCONTINUITY so the player switches smoothly without crashing.
+ * finds the next healthy backup stream for that exact channel, pins the channel to that backup server
+ * for 3 minutes, and injects #EXT-X-DISCONTINUITY on the transition poll so the player switches smoothly.
  */
 async function attemptChannelFailoverManifest(
     channelId: string,
@@ -9699,13 +9782,22 @@ async function attemptChannelFailoverManifest(
             recordStreamHealthResult(backup.url, true, 150, channelId);
             prefetchLatestSegment(text, finalResolvedUrl, backup.headers, channelId);
 
+            // Pin this channel + failedUrl to the healthy backup for 3 minutes so future polls don't jump back and forth
+            const pinKey = `${channelId}::${failedUrl}`;
+            channelFailoverPinMap.set(pinKey, {
+                backupUrl: backup.url,
+                backupHeaders: backup.headers,
+                pinnedAt: Date.now(),
+                needsDiscontinuity: false
+            });
+
             return rewriteLiveHlsManifest(
                 text,
                 finalResolvedUrl,
                 publicBaseUrl,
                 backup.headers,
                 channelId,
-                true // inject #EXT-X-DISCONTINUITY
+                true // inject #EXT-X-DISCONTINUITY on the initial transition poll
             );
         } catch {
             // Try next backup server
@@ -9718,9 +9810,9 @@ async function attemptChannelFailoverManifest(
  * Handles proxying of Live HLS manifests (.m3u8) and MPEG-TS/fMP4 segments (.ts, .tbin, .m4s, .image)
  * Features:
  * 1. Full-Body Fast-Retry (3.4s per-attempt timeout covering headers + full body download across 4 attempts).
- * 2. Anti-Freeze Zombie Stream Detector + Seamless Mid-Stream Failover (#EXT-X-DISCONTINUITY).
- * 3. Last-Good Manifest Shield (if upstream CDN blips for 1-2s, serves last valid manifest instead of 500/502 error).
- * 4. Bounded 96MB RAM LRU Segment Cache, 3-Segment Predictive Pre-Fetching & In-Flight Deduplication (0ms hits).
+ * 2. Anti-Freeze Zombie Stream Detector + Pinned Mid-Stream Failover (#EXT-X-DISCONTINUITY).
+ * 3. Last-Good Manifest Shield (serves cached manifest on transient blips before switching servers).
+ * 4. Bounded 160MB RAM LRU Segment Cache, Token-Normalized Cache Keys & In-Flight Deduplication (0ms hits).
  */
 export async function handleLiveHlsProxyRequest(
     encodedData: string,
@@ -9746,14 +9838,28 @@ export async function handleLiveHlsProxyRequest(
     const relaySlot = extraQuery?.relay || '1';
     const requestedProfile = extraQuery?.profile || parsed.q || '';
     const isM3U8Url = /\.m3u8(\?|$)/i.test(parsed.url);
-    const manifestCacheKey = `${publicBaseUrl}::${parsed.url}::r=${relaySlot}::p=${requestedProfile}`;
+    const pinKey = parsed.channelId ? `${parsed.channelId}::${parsed.url}` : '';
+    const activePin = pinKey ? channelFailoverPinMap.get(pinKey) : undefined;
+    let effectiveUrl = parsed.url;
+    let effectiveHeaders = parsed.headers;
+    if (isM3U8Url && activePin) {
+        if (Date.now() - activePin.pinnedAt < 180_000) {
+            effectiveUrl = activePin.backupUrl;
+            effectiveHeaders = activePin.backupHeaders || parsed.headers;
+        } else {
+            channelFailoverPinMap.delete(pinKey);
+        }
+    }
+
+    const manifestCacheKey = `${publicBaseUrl}::${effectiveUrl}::r=${relaySlot}::p=${requestedProfile}`;
+    const segCacheKey = !isM3U8Url ? getSegmentCacheKey(parsed.url) : '';
 
     let hadInflightFailure = false;
 
-    // 1. Fast micro-cache (1200ms) for rapid concurrent manifest polls (including immediate tune-in after probe)
+    // 1. Fast micro-cache (900ms) for rapid concurrent manifest polls
     if (isM3U8Url && relaySlot === '1') {
         const recentManifest = lastGoodManifestCache.get(manifestCacheKey);
-        if (recentManifest && Date.now() - recentManifest.updatedAt < 1200) {
+        if (recentManifest && Date.now() - recentManifest.updatedAt < 900) {
             return reply
                 .code(200)
                 .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
@@ -9764,7 +9870,7 @@ export async function handleLiveHlsProxyRequest(
         }
     } else if (!isM3U8Url) {
         // 2. Check unwrapped segment RAM cache for instant 0ms response
-        const cachedSeg = unwrappedSegmentCache.get(parsed.url);
+        const cachedSeg = unwrappedSegmentCache.get(segCacheKey);
         if (cachedSeg && Date.now() < cachedSeg.expiresAt) {
             totalCacheHits += 1;
             return reply
@@ -9778,7 +9884,7 @@ export async function handleLiveHlsProxyRequest(
         }
 
         // Coalesce duplicate in-flight segment downloads (including predictive pre-fetches)
-        const inflightSeg = segmentInFlight.get(parsed.url);
+        const inflightSeg = segmentInFlight.get(segCacheKey);
         if (inflightSeg) {
             try {
                 const segResult = await inflightSeg;
@@ -9802,8 +9908,8 @@ export async function handleLiveHlsProxyRequest(
     try {
         if (isM3U8Url) {
             const { buffer: buf, ok, status, finalResolvedUrl } = await fetchUpstreamBufferWithRetry(
-                parsed.url,
-                parsed.headers,
+                effectiveUrl,
+                effectiveHeaders,
                 {
                     maxAttempts: 3,
                     stallTimeoutMs: 3200,
@@ -9812,9 +9918,34 @@ export async function handleLiveHlsProxyRequest(
             );
 
             if (!ok || buf.length === 0) {
-                recordStreamHealthResult(parsed.url, false, Date.now() - t0, parsed.channelId, `http_${status}`);
+                const updatedHealth = recordStreamHealthResult(
+                    effectiveUrl,
+                    false,
+                    Date.now() - t0,
+                    parsed.channelId,
+                    `http_${status}`
+                );
+                // Shield transient 1-2 poll upstream hiccups with lastGoodManifestCache BEFORE jumping servers
+                const fallbackManifest = lastGoodManifestCache.get(manifestCacheKey);
+                if (
+                    fallbackManifest &&
+                    Date.now() - fallbackManifest.updatedAt < 18000 &&
+                    updatedHealth.consecutiveFailures < 3
+                ) {
+                    return reply
+                        .code(200)
+                        .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
+                        .header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                        .header('X-Manifest-Shield', 'ACTIVE')
+                        .header('Access-Control-Allow-Origin', '*')
+                        .send(fallbackManifest.content);
+                }
                 if (parsed.channelId) {
-                    const failoverM3U = await attemptChannelFailoverManifest(parsed.channelId, parsed.url, publicBaseUrl);
+                    const failoverM3U = await attemptChannelFailoverManifest(
+                        parsed.channelId,
+                        effectiveUrl,
+                        publicBaseUrl
+                    );
                     if (failoverM3U) {
                         return reply
                             .code(200)
@@ -9825,7 +9956,6 @@ export async function handleLiveHlsProxyRequest(
                             .send(failoverM3U);
                     }
                 }
-                const fallbackManifest = lastGoodManifestCache.get(manifestCacheKey);
                 if (fallbackManifest && Date.now() - fallbackManifest.updatedAt < 45000) {
                     return reply
                         .code(200)
@@ -9844,11 +9974,15 @@ export async function handleLiveHlsProxyRequest(
             const textPeek = buf.subarray(0, 16).toString('utf8').trim();
             if (textPeek.startsWith('#EXTM3U') || textPeek.startsWith('#EXT')) {
                 const rawM3UText = buf.toString('utf8');
-                const isFrozen = checkManifestFrozen(parsed.url, rawM3UText);
+                const isFrozen = checkManifestFrozen(effectiveUrl, rawM3UText);
 
                 if (isFrozen && parsed.channelId) {
-                    recordStreamHealthResult(parsed.url, false, Date.now() - t0, parsed.channelId, 'frozen_manifest');
-                    const failoverM3U = await attemptChannelFailoverManifest(parsed.channelId, parsed.url, publicBaseUrl);
+                    recordStreamHealthResult(effectiveUrl, false, Date.now() - t0, parsed.channelId, 'frozen_manifest');
+                    const failoverM3U = await attemptChannelFailoverManifest(
+                        parsed.channelId,
+                        effectiveUrl,
+                        publicBaseUrl
+                    );
                     if (failoverM3U) {
                         return reply
                             .code(200)
@@ -9860,15 +9994,15 @@ export async function handleLiveHlsProxyRequest(
                     }
                 }
 
-                recordStreamHealthResult(parsed.url, true, Date.now() - t0, parsed.channelId);
-                // Predictively pre-fetch & unwrap the last 2 .ts segments into RAM
-                prefetchLatestSegment(rawM3UText, finalResolvedUrl, parsed.headers, parsed.channelId);
+                recordStreamHealthResult(effectiveUrl, true, Date.now() - t0, parsed.channelId);
+                // Predictively pre-fetch only the newest .ts segment when idle
+                prefetchLatestSegment(rawM3UText, finalResolvedUrl, effectiveHeaders, parsed.channelId);
 
                 const rewritten = rewriteLiveHlsManifest(
                     rawM3UText,
                     finalResolvedUrl,
                     publicBaseUrl,
-                    parsed.headers,
+                    effectiveHeaders,
                     parsed.channelId
                 );
                 const nowMs = Date.now();
@@ -9876,7 +10010,7 @@ export async function handleLiveHlsProxyRequest(
                     content: rewritten,
                     updatedAt: nowMs
                 });
-                lastGoodManifestCache.set(`${publicBaseUrl}::${parsed.url}`, {
+                lastGoodManifestCache.set(`${publicBaseUrl}::${effectiveUrl}`, {
                     content: rewritten,
                     updatedAt: nowMs
                 });
@@ -9933,7 +10067,7 @@ export async function handleLiveHlsProxyRequest(
             return { buffer: finalBuf, contentType: outType };
         })();
 
-        segmentInFlight.set(parsed.url, segPromise);
+        segmentInFlight.set(segCacheKey, segPromise);
         try {
             const segResult = await segPromise;
             return reply
@@ -9946,13 +10080,37 @@ export async function handleLiveHlsProxyRequest(
                 .header('Access-Control-Allow-Origin', '*')
                 .send(segResult.buffer);
         } finally {
-            segmentInFlight.delete(parsed.url);
+            segmentInFlight.delete(segCacheKey);
         }
     } catch (err: any) {
         if (isM3U8Url) {
-            recordStreamHealthResult(parsed.url, false, Date.now() - t0, parsed.channelId, err?.message || 'socket_error');
+            const updatedHealth = recordStreamHealthResult(
+                effectiveUrl,
+                false,
+                Date.now() - t0,
+                parsed.channelId,
+                err?.message || 'socket_error'
+            );
+            const fallbackManifest = lastGoodManifestCache.get(manifestCacheKey);
+            if (
+                fallbackManifest &&
+                Date.now() - fallbackManifest.updatedAt < 18000 &&
+                updatedHealth.consecutiveFailures < 3
+            ) {
+                return reply
+                    .code(200)
+                    .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
+                    .header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    .header('X-Manifest-Shield', 'SOCKET-SHIELD')
+                    .header('Access-Control-Allow-Origin', '*')
+                    .send(fallbackManifest.content);
+            }
             if (parsed.channelId) {
-                const failoverM3U = await attemptChannelFailoverManifest(parsed.channelId, parsed.url, publicBaseUrl);
+                const failoverM3U = await attemptChannelFailoverManifest(
+                    parsed.channelId,
+                    effectiveUrl,
+                    publicBaseUrl
+                );
                 if (failoverM3U) {
                     return reply
                         .code(200)
@@ -9963,7 +10121,6 @@ export async function handleLiveHlsProxyRequest(
                         .send(failoverM3U);
                 }
             }
-            const fallbackManifest = lastGoodManifestCache.get(manifestCacheKey);
             if (fallbackManifest && Date.now() - fallbackManifest.updatedAt < 45000) {
                 return reply
                     .code(200)

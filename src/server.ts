@@ -281,10 +281,28 @@ async function main() {
                             }
                             // Rewrite proxy URL to have a .mp4 extension so Android DownloadManager doesn't fail
                             src.url = src.url.replace('/v1/proxy?', '/v1/proxy/video.mp4?');
-                        } else if (src.url && src.url.includes('/v1/live/proxy')) {
-                            src.url = src.url.replace(/^https?:\/\/[^/]+(?=\/v1\/live\/proxy)/, publicBaseUrl);
-                            if (src.url.startsWith('/v1/live/proxy')) {
+                        } else if (src.url && src.url.includes('/v1/live/')) {
+                            src.url = src.url.replace(/^https?:\/\/[^/]+(?=\/v1\/live\/)/, publicBaseUrl);
+                            if (src.url.startsWith('/v1/live/')) {
                                 src.url = publicBaseUrl + src.url;
+                            }
+                        }
+
+                        if (src.masterUrl && src.masterUrl.includes('/v1/live/')) {
+                            src.masterUrl = src.masterUrl.replace(/^https?:\/\/[^/]+(?=\/v1\/live\/)/, publicBaseUrl);
+                            if (src.masterUrl.startsWith('/v1/live/')) {
+                                src.masterUrl = publicBaseUrl + src.masterUrl;
+                            }
+                        }
+
+                        if (Array.isArray(src.qualities)) {
+                            for (const q of src.qualities) {
+                                if (q?.url && q.url.includes('/v1/live/')) {
+                                    q.url = q.url.replace(/^https?:\/\/[^/]+(?=\/v1\/live\/)/, publicBaseUrl);
+                                    if (q.url.startsWith('/v1/live/')) {
+                                        q.url = publicBaseUrl + q.url;
+                                    }
+                                }
                             }
                         }
                     }

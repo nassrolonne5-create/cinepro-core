@@ -267,6 +267,29 @@ export function formatAndNamespaceSources(sources: any[], publicBaseUrl: string 
             if (src.url.startsWith('/v1/proxy')) {
                 src.url = publicBaseUrl + src.url;
             }
+        } else if (src.url && src.url.includes('/v1/live/')) {
+            src.url = src.url.replace(/^https?:\/\/[^/]+(?=\/v1\/live\/)/, publicBaseUrl);
+            if (src.url.startsWith('/v1/live/')) {
+                src.url = publicBaseUrl + src.url;
+            }
+        }
+
+        if (src.masterUrl && src.masterUrl.includes('/v1/live/')) {
+            src.masterUrl = src.masterUrl.replace(/^https?:\/\/[^/]+(?=\/v1\/live\/)/, publicBaseUrl);
+            if (src.masterUrl.startsWith('/v1/live/')) {
+                src.masterUrl = publicBaseUrl + src.masterUrl;
+            }
+        }
+
+        if (Array.isArray(src.qualities)) {
+            for (const q of src.qualities) {
+                if (q?.url && q.url.includes('/v1/live/')) {
+                    q.url = q.url.replace(/^https?:\/\/[^/]+(?=\/v1\/live\/)/, publicBaseUrl);
+                    if (q.url.startsWith('/v1/live/')) {
+                        q.url = publicBaseUrl + q.url;
+                    }
+                }
+            }
         }
     }
 
@@ -409,8 +432,35 @@ export function setupThreePillarArchitecture(server: any) {
 
     // Core Progressive Engine
     async function executeThreePillars(type: 'movie' | 'tv', id: string, season?: number, episode?: number) {
-        const cacheKey = type === 'movie' ? `movie:${id}` : `tv:${id}:s${season}:e${episode}`;
+        const cleanId = String(id || '').trim();
         const publicBaseUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
+
+        // Direct fast-path for Live IPTV channel slugs (e.g., 'bein-sports-1-ar', 'ssc-sport-1', 'live:sky-sports-main-event')
+        // Avoids firing 45 VOD movie scrapers or caching short-lived live tokens in the multi-hour VOD SQLite cache.
+        if (cleanId && !/^\d+$/.test(cleanId) && !/^tt\d+$/i.test(cleanId)) {
+            const iptvProvider = sourceService.registry
+                .getProviders()
+                .find((p: any) => p.id === 'iptvsports' && p.enabled);
+            if (iptvProvider) {
+                const liveMedia = {
+                    tmdbId: cleanId,
+                    imdbId: '',
+                    title: cleanId,
+                    type,
+                    year: new Date().getFullYear(),
+                    season: Number(season || 1),
+                    episode: Number(episode || 1)
+                };
+                const liveRes = await scrapeProviderSafely(iptvProvider, type, liveMedia, 6500);
+                if (liveRes && Array.isArray(liveRes.sources) && liveRes.sources.length > 0) {
+                    const built = sourceService.buildResponse([liveRes]);
+                    built.sources = formatAndNamespaceSources(built.sources, publicBaseUrl);
+                    return built;
+                }
+            }
+        }
+
+        const cacheKey = type === 'movie' ? `movie:${id}` : `tv:${id}:s${season}:e${episode}`;
 
         // 1. CACHE CHECK: Instant response if already cached with rich server set (< 5ms)
         const cached = await sourceService.cache.get(cacheKey);
