@@ -36,59 +36,52 @@ export class VidzeeProvider extends BaseProvider {
         (media as any).s = Number((media as any).season || (media as any).s || 1);
         (media as any).e = Number((media as any).episode || (media as any).e || 1);
         const timeout = (ms: number) => new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
+        const { resolveRiveStreamClean, resolveVidnestV2, mergeProviderSources } = await import('../../utils/vidnestV2.js');
 
-        try {
-            const data: any = await Promise.race([
-                vidzee.fetchSources(media.tmdbId, media.type, media.s, media.e),
-                timeout(3000)
-            ]);
-            const headers = data?.headers || {};
-            const sources: Source[] = [];
-
-            for (const src of (data?.sources || [])) {
-                const uLower = (src.url || '').toLowerCase();
-                const sLower = (src.server || '').toLowerCase();
-                if (uLower.includes('boomchick') || sLower.includes('tcloud') || uLower.includes('streamflix')) {
-                    continue;
-                }
-                const url = unwrapAndBuildProxyUrl(
-                    src.url,
-                    src.headers || headers,
-                    (u, h) => this.createProxyUrl(u, h)
-                );
-                const sName = src.server || 'Server 1';
-                sources.push({
-                    url,
-                    quality: src.quality || 'auto',
-                    type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
-                    server: sName,
-                    audioTracks: [{ language: 'en', label: 'English' }],
-                    provider: {
-                        name: `${this.name} (${sName})`,
-                        id: `${this.id}-${sName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+        const [nativeSettled, riveSettled, v2Settled, trendiSettled] = await Promise.allSettled([
+            (async () => {
+                const sources: Source[] = [];
+                try {
+                    const data: any = await Promise.race([
+                        vidzee.fetchSources(media.tmdbId, media.type, media.s, media.e),
+                        timeout(2400)
+                    ]);
+                    const headers = data?.headers || {};
+                    for (const src of (data?.sources || [])) {
+                        const uLower = (src.url || '').toLowerCase();
+                        const sLower = (src.server || '').toLowerCase();
+                        if (uLower.includes('boomchick') || sLower.includes('tcloud') || uLower.includes('streamflix')) {
+                            continue;
+                        }
+                        const url = unwrapAndBuildProxyUrl(
+                            src.url,
+                            src.headers || headers,
+                            (u, h) => this.createProxyUrl(u, h)
+                        );
+                        const sName = src.server || 'Server 1';
+                        sources.push({
+                            url,
+                            quality: src.quality || 'auto',
+                            type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
+                            server: sName,
+                            audioTracks: [{ language: 'en', label: 'English' }],
+                            provider: {
+                                name: `${this.name} (${sName})`,
+                                id: `${this.id}-${sName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+                            }
+                        });
                     }
-                });
-            }
-            if (sources.length > 0) {
-                return { sources, subtitles: [], diagnostics: [] };
-            }
-        } catch (e) {}
-
-        // Fallback: Cached Clean RiveStream & VidNest v2
-        try {
-            const { resolveRiveStreamClean, resolveVidnestV2 } = await import('../../utils/vidnestV2.js');
-            const riveSources = await resolveRiveStreamClean(
+                } catch {}
+                return sources;
+            })(),
+            resolveRiveStreamClean(
                 media,
                 this.id,
                 this.name,
                 (u, h) => this.createProxyUrl(u, h),
                 2800
-            );
-            if (riveSources.length > 0) {
-                return { sources: riveSources, subtitles: [], diagnostics: [] };
-            }
-
-            const v2 = await resolveVidnestV2(
+            ),
+            resolveVidnestV2(
                 media,
                 this.id,
                 this.name,
@@ -98,36 +91,43 @@ export class VidzeeProvider extends BaseProvider {
                     { name: 'Zee Cloud', path: 'nextgencloudfabric' }
                 ],
                 2800
-            );
-            if (v2.sources.length > 0) {
-                return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
-            }
-        } catch {}
+            ),
+            (async () => {
+                try {
+                    const downloads: any = await Promise.race([
+                        (trendimovies as any).getDownloads(media.tmdbId, media.type, (media as any).s, (media as any).e),
+                        timeout(2400)
+                    ]);
+                    if (Array.isArray(downloads) && downloads.length > 0) {
+                        return downloads
+                            .filter((l: any) => l?.url && l.active !== false)
+                            .map((l: any) => ({
+                                url: l.url,
+                                quality: l.quality || 'HD',
+                                type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
+                                server: `Direct ${l.quality || 'HD'}`,
+                                audioTracks: [{ language: 'en', label: 'English' }],
+                                provider: {
+                                    name: `${this.name} (${l.quality || 'Direct'})`,
+                                    id: `${this.id}-${(l.quality || 'direct').toLowerCase().replace(/[^a-z0-9]/g, '')}`
+                                }
+                            } as Source));
+                    }
+                } catch {}
+                return [] as Source[];
+            })()
+        ]);
 
-        // Fallback: TrendiMovies
-        try {
-            const downloads: any = await Promise.race([
-                (trendimovies as any).getDownloads(media.tmdbId, media.type, (media as any).s, (media as any).e),
-                timeout(2200)
-            ]);
-            if (downloads && Array.isArray(downloads) && downloads.length > 0) {
-                const sources: Source[] = downloads
-                    .filter((l: any) => l?.url && l.active !== false)
-                    .map((l: any) => ({
-                        url: l.url,
-                        quality: l.quality || 'HD',
-                        type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
-                        server: `Direct ${l.quality || 'HD'}`,
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        provider: {
-                            name: `${this.name} (${l.quality || 'Direct'})`,
-                            id: `${this.id}-${(l.quality || 'direct').toLowerCase().replace(/[^a-z0-9]/g, '')}`
-                        }
-                    }));
-                if (sources.length > 0) return { sources, subtitles: [], diagnostics: [] };
-            }
-        } catch {}
+        const nativeSources = nativeSettled.status === 'fulfilled' ? nativeSettled.value : [];
+        const riveSources = riveSettled.status === 'fulfilled' ? riveSettled.value : [];
+        const v2Sources = v2Settled.status === 'fulfilled' ? v2Settled.value.sources : [];
+        const v2Subs = v2Settled.status === 'fulfilled' ? v2Settled.value.subtitles : [];
+        const trendiSources = trendiSettled.status === 'fulfilled' ? trendiSettled.value : [];
 
-        return { sources: [], subtitles: [], diagnostics: [] };
+        return {
+            sources: mergeProviderSources(nativeSources, trendiSources, v2Sources, riveSources),
+            subtitles: v2Subs,
+            diagnostics: []
+        };
     }
 }

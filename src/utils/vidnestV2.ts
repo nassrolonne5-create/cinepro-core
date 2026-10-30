@@ -104,6 +104,7 @@ export function isCleanEnglishStream(url: string, server: string = '', quality: 
     const s = (server || '').toLowerCase();
     const q = (quality || '').toLowerCase();
     if (!u || (!u.startsWith('http://') && !u.startsWith('https://'))) return false;
+    const isHlsTxt = u.includes('master.txt') || u.includes('index.txt') || u.includes('playlist.txt') || u.includes('/hls');
     if (
         u.includes('boomchick') ||
         u.includes('streamflix') ||
@@ -128,17 +129,32 @@ export function isCleanEnglishStream(url: string, server: string = '', quality: 
         u.includes('steman.cyou') ||
         u.includes('hlnom.com') ||
         u.includes('klnwm.com') ||
-        u.endsWith('.txt') ||
-        u.includes('.txt?') ||
+        ((u.endsWith('.txt') || u.includes('.txt?')) && !isHlsTxt) ||
         s.includes('vanguard') ||
         s.includes('apogee') ||
         s.includes('tcloud') ||
-        q.includes('hindi') || q.includes('tamil') || q.includes('telugu') || q.includes('punjabi') || q.includes('dublado') || q.includes('latino') ||
-        s.includes('hindi') || s.includes('tamil') || s.includes('telugu') || s.includes('punjabi') || s.includes('dublado') || s.includes('latino')
+        q.includes('hindi') || q.includes('tamil') || q.includes('telugu') || q.includes('punjabi') || q.includes('dublado') || q.includes('latino') || q.includes('kannada') ||
+        s.includes('hindi') || s.includes('tamil') || s.includes('telugu') || s.includes('punjabi') || s.includes('dublado') || s.includes('latino') || s.includes('kannada')
     ) {
         return false;
     }
     return true;
+}
+
+export function mergeProviderSources(...sourceLists: Array<Source[] | undefined | null>): Source[] {
+    const out: Source[] = [];
+    const seen = new Set<string>();
+    for (const list of sourceLists) {
+        if (!Array.isArray(list)) continue;
+        for (const src of list) {
+            if (!src?.url) continue;
+            const key = `${src.url}::${src.server || ''}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            out.push(src);
+        }
+    }
+    return out;
 }
 
 export interface VidnestBackendSpec {
@@ -153,35 +169,64 @@ export const DEFAULT_VIDNEST_BACKENDS: VidnestBackendSpec[] = [
 
 async function fetchVidnestBackendRaw(path: string, segment: string, timeoutMs: number): Promise<any | null> {
     const cacheKey = `vidnestv2:${path}:${segment}`;
-    return cachedSingleFlight(
+    const sharedPromise = cachedSingleFlight(
         cacheKey,
         async () => {
-            try {
-                const reqUrl = withVidnestNonce(`${VIDNEST_BASE}/${path}/${segment}`);
-                const res = await fetch(reqUrl, {
-                    headers: VIDNEST_HEADERS,
-                    signal: AbortSignal.timeout(timeoutMs)
-                });
-                if (!res.ok) return null;
-                const json = (await res.json()) as any;
-                if (!json) return null;
-
-                let data: any = json;
-                if (json.v === 2 && typeof json.d === 'string' && typeof json.n === 'string') {
-                    data = decryptVidnestV2(json.d, json.n);
-                } else if (json.encrypted && typeof json.data === 'string') {
-                    const raw = decodeLegacyVidnestBase64(json.data);
-                    data = typeof raw === 'string' ? JSON.parse(raw) : raw;
-                } else if (json.data) {
-                    data = typeof json.data === 'string' ? JSON.parse(json.data) : json.data;
+            for (let attempt = 0; attempt < 3; attempt++) {
+                if (attempt > 0) {
+                    await new Promise((r) => setTimeout(r, 250 * attempt));
                 }
-                return data && typeof data === 'object' ? data : null;
-            } catch {
-                return null;
+                try {
+                    const reqUrl = withVidnestNonce(`${VIDNEST_BASE}/${path}/${segment}`);
+                    const res = await fetch(reqUrl, {
+                        headers: VIDNEST_HEADERS,
+                        signal: AbortSignal.timeout(4500)
+                    });
+                    if (!res.ok) continue;
+                    const json = (await res.json()) as any;
+                    if (!json) continue;
+
+                    let data: any = json;
+                    if (json.v === 2 && typeof json.d === 'string' && typeof json.n === 'string') {
+                        data = decryptVidnestV2(json.d, json.n);
+                    } else if (json.encrypted && typeof json.data === 'string') {
+                        const raw = decodeLegacyVidnestBase64(json.data);
+                        data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                    } else if (json.data) {
+                        data = typeof json.data === 'string' ? JSON.parse(json.data) : json.data;
+                    }
+                    if (data && typeof data === 'object' && (data.url || (Array.isArray(data.streams) && data.streams.length > 0) || (Array.isArray(data.sources) && data.sources.length > 0))) {
+                        return data;
+                    }
+                } catch {}
             }
+            return null;
         },
         (val) => Boolean(val && (val.url || (Array.isArray(val.streams) && val.streams.length > 0) || (Array.isArray(val.sources) && val.sources.length > 0)))
     );
+
+    const callerTimeout = Math.max(timeoutMs, 4200);
+    return Promise.race([
+        sharedPromise,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), callerTimeout))
+    ]);
+}
+
+export function prewarmSharedUpstreams(media: { tmdbId: string; type: 'movie' | 'tv'; season?: number; episode?: number }): void {
+    const season = Number(media.season || 1) || 1;
+    const episode = Number(media.episode || 1) || 1;
+    const segment = media.type === 'tv'
+        ? `tv/${media.tmdbId}/${season}/${episode}`
+        : `movie/${media.tmdbId}`;
+    fetchVidnestBackendRaw('flixhq', segment, 5500).catch(() => {});
+    fetchVidnestBackendRaw('nextgencloudfabric', segment, 5500).catch(() => {});
+    resolveRiveStreamClean(
+        { tmdbId: media.tmdbId, type: media.type, season, episode, s: season, e: episode } as any,
+        'prewarm',
+        'Prewarm',
+        (u) => u,
+        5500
+    ).catch(() => {});
 }
 
 /**
@@ -487,13 +532,13 @@ export async function resolveRiveStreamClean(
     const { season, episode } = getMediaSeasonEpisode(media);
     const segmentKey = media.type === 'tv' ? `tv:${media.tmdbId}:${season}:${episode}` : `movie:${media.tmdbId}`;
 
-    const rawData = await cachedSingleFlight(
+    const sharedPromise = cachedSingleFlight(
         `rivestream:${segmentKey}`,
         async () => {
             try {
                 const data: any = await Promise.race([
                     rivestream.fetchSources(media.tmdbId, media.type, season, episode),
-                    new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), timeoutMs))
+                    new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 5500))
                 ]);
                 return data && Array.isArray(data.sources) && data.sources.length > 0 ? data : null;
             } catch {
@@ -502,6 +547,12 @@ export async function resolveRiveStreamClean(
         },
         (val) => Boolean(val && Array.isArray(val.sources) && val.sources.length > 0)
     );
+
+    const callerTimeout = Math.max(timeoutMs, 3600);
+    const rawData = await Promise.race([
+        sharedPromise,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), callerTimeout))
+    ]);
 
     const sources: Source[] = [];
     const seen = new Set<string>();

@@ -7,6 +7,7 @@ import type {
     AudioTrack
 } from '@omss/framework';
 import * as cheerio from 'cheerio';
+import { resolveVidnestV2, mergeProviderSources } from '../../utils/vidnestV2.js';
 
 export class StreamXProvider extends BaseProvider {
     readonly id = 'streamx';
@@ -23,27 +24,59 @@ export class StreamXProvider extends BaseProvider {
     };
 
     async getMovieSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return Promise.race([
+        const nativeTask = Promise.race([
             this.scrapeMovie(media),
             new Promise<ProviderResult>((resolve) =>
-                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 5500)
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 3500)
             )
-        ]).catch((err) => {
-            console.warn(`[StreamX] getMovieSources error:`, err?.message || err);
-            return { sources: [], subtitles: [], diagnostics: [] };
-        });
+        ]).catch(() => ({ sources: [] as Source[], subtitles: [], diagnostics: [] }));
+
+        const v2Task = resolveVidnestV2(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            [
+                { name: 'StreamX 4K', path: 'flixhq' },
+                { name: 'StreamX Cloud', path: 'nextgencloudfabric' }
+            ],
+            2800
+        ).catch(() => ({ sources: [] as Source[], subtitles: [] }));
+
+        const [nativeRes, v2] = await Promise.all([nativeTask, v2Task]);
+        return {
+            sources: mergeProviderSources(nativeRes.sources, v2.sources),
+            subtitles: v2.subtitles,
+            diagnostics: []
+        };
     }
 
     async getTVSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        return Promise.race([
+        const nativeTask = Promise.race([
             this.scrapeTV(media),
             new Promise<ProviderResult>((resolve) =>
-                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 5500)
+                setTimeout(() => resolve({ sources: [], subtitles: [], diagnostics: [] }), 3500)
             )
-        ]).catch((err) => {
-            console.warn(`[StreamX] getTVSources error:`, err?.message || err);
-            return { sources: [], subtitles: [], diagnostics: [] };
-        });
+        ]).catch(() => ({ sources: [] as Source[], subtitles: [], diagnostics: [] }));
+
+        const v2Task = resolveVidnestV2(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            [
+                { name: 'StreamX 4K', path: 'flixhq' },
+                { name: 'StreamX Cloud', path: 'nextgencloudfabric' }
+            ],
+            2800
+        ).catch(() => ({ sources: [] as Source[], subtitles: [] }));
+
+        const [nativeRes, v2] = await Promise.all([nativeTask, v2Task]);
+        return {
+            sources: mergeProviderSources(nativeRes.sources, v2.sources),
+            subtitles: v2.subtitles,
+            diagnostics: []
+        };
     }
 
     async healthCheck(): Promise<boolean> {
@@ -309,6 +342,9 @@ export class StreamXProvider extends BaseProvider {
         // 3. Normalize & Proxy Streams
         for (const item of streamItems) {
             let fullSrc = item.url.trim();
+            if (!fullSrc || fullSrc.includes('netflix.mp4') || fullSrc.includes('sample.mp4')) {
+                continue;
+            }
             if (fullSrc.startsWith('//')) {
                 fullSrc = `https:${fullSrc}`;
             } else if (fullSrc.startsWith('/')) {

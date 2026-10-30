@@ -10,7 +10,8 @@ import { lmscript } from 'kaizoku-core';
 import {
     getMediaSeasonEpisode,
     resolveVidnestV2,
-    resolveRiveStreamClean
+    resolveRiveStreamClean,
+    mergeProviderSources
 } from '../../utils/vidnestV2.js';
 
 export class LmscriptProvider extends BaseProvider {
@@ -46,46 +47,44 @@ export class LmscriptProvider extends BaseProvider {
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         const { season, episode } = getMediaSeasonEpisode(media);
-        const sources: Source[] = [];
 
-        // 1. Native LMScript for movies
-        if (media.type === 'movie') {
-            try {
-                const data: any = await Promise.race([
-                    lmscript.fetchSources(media.tmdbId, 'movie', season, episode),
-                    new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 3500))
-                ]);
-                if (Array.isArray(data?.sources) && data.sources.length > 0) {
-                    const headers = data.headers || {};
-                    let idx = 0;
-                    for (const src of data.sources) {
-                        if (!src?.url) continue;
-                        idx++;
-                        const proxiedUrl = Object.keys(headers).length > 0
-                            ? this.createProxyUrl(src.url, headers)
-                            : src.url;
-                        const sLabel = src.server || `Server ${idx}`;
-                        sources.push({
-                            url: proxiedUrl,
-                            quality: src.quality || '1080p',
-                            type: getSourceType(src.url, src.isM3U8),
-                            server: sLabel,
-                            audioTracks: [{ language: 'en', label: 'English' }],
-                            provider: {
-                                name: `${this.name} (${sLabel})`,
-                                id: `${this.id}-${idx}`
-                            }
-                        });
+        const nativeTask = (async () => {
+            const sources: Source[] = [];
+            if (media.type === 'movie') {
+                try {
+                    const data: any = await Promise.race([
+                        lmscript.fetchSources(media.tmdbId, 'movie', season, episode),
+                        new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
+                    ]);
+                    if (Array.isArray(data?.sources) && data.sources.length > 0) {
+                        const headers = data.headers || {};
+                        let idx = 0;
+                        for (const src of data.sources) {
+                            if (!src?.url) continue;
+                            idx++;
+                            const proxiedUrl = Object.keys(headers).length > 0
+                                ? this.createProxyUrl(src.url, headers)
+                                : src.url;
+                            const sLabel = src.server || `Server ${idx}`;
+                            sources.push({
+                                url: proxiedUrl,
+                                quality: src.quality || '1080p',
+                                type: getSourceType(src.url, src.isM3U8),
+                                server: sLabel,
+                                audioTracks: [{ language: 'en', label: 'English' }],
+                                provider: {
+                                    name: `${this.name} (${sLabel})`,
+                                    id: `${this.id}-${idx}`
+                                }
+                            });
+                        }
                     }
-                    if (sources.length > 0) {
-                        return { sources, subtitles: [], diagnostics: [] };
-                    }
-                }
-            } catch {}
-        }
+                } catch {}
+            }
+            return sources;
+        })();
 
-        // 2. VidNest v2 for TV episodes and movie fallback
-        const v2 = await resolveVidnestV2(
+        const v2Task = resolveVidnestV2(
             media,
             this.id,
             this.name,
@@ -94,21 +93,21 @@ export class LmscriptProvider extends BaseProvider {
                 { name: 'Script HD', path: 'flixhq' },
                 { name: 'Script Cloud', path: 'nextgencloudfabric' }
             ],
-            3200
-        );
-        if (v2.sources.length > 0) {
-            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
-        }
+            2800
+        ).catch(() => ({ sources: [] as Source[], subtitles: [] }));
 
-        // 3. Clean RiveStream fallback
-        const riveSources = await resolveRiveStreamClean(
+        const riveTask = resolveRiveStreamClean(
             media,
             this.id,
             this.name,
             (u, h) => this.createProxyUrl(u, h),
-            3000
-        );
-        return { sources: riveSources, subtitles: [], diagnostics: [] };
+            2800
+        ).catch(() => [] as Source[]);
+
+        const [nativeSources, v2, riveSources] = await Promise.all([nativeTask, v2Task, riveTask]);
+        const merged = mergeProviderSources(nativeSources, v2.sources, riveSources);
+
+        return { sources: merged, subtitles: v2.subtitles, diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

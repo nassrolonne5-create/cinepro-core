@@ -9,7 +9,8 @@ import { trendimovies } from 'kaizoku-core';
 import {
     getMediaSeasonEpisode,
     resolveVidnestV2,
-    resolveRiveStreamClean
+    resolveRiveStreamClean,
+    mergeProviderSources
 } from '../../utils/vidnestV2.js';
 
 export class CinesuProvider extends BaseProvider {
@@ -43,61 +44,64 @@ export class CinesuProvider extends BaseProvider {
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         const { season, episode } = getMediaSeasonEpisode(media);
 
-        // 1. Clean unwrapped RiveStream
-        const riveSources = await resolveRiveStreamClean(
-            media,
-            this.id,
-            this.name,
-            (u, h) => this.createProxyUrl(u, h),
-            3500
-        );
-        if (riveSources.length > 0) {
-            return { sources: riveSources, subtitles: [], diagnostics: [] };
-        }
+        const [riveSettled, v2Settled, trendiSettled] = await Promise.allSettled([
+            resolveRiveStreamClean(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                3200
+            ),
+            resolveVidnestV2(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                [
+                    { name: 'Prime HD', path: 'flixhq' },
+                    { name: 'Mirror Cloud', path: 'nextgencloudfabric' }
+                ],
+                3200
+            ),
+            (async () => {
+                try {
+                    const downloads: any = await Promise.race([
+                        (trendimovies as any).getDownloads(media.tmdbId, media.type, season, episode),
+                        new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 2600))
+                    ]);
+                    if (Array.isArray(downloads) && downloads.length > 0) {
+                        return downloads
+                            .filter((l: any) => l?.url && l.active !== false)
+                            .map((l: any) => {
+                                const q = l.quality || '1080p';
+                                return {
+                                    url: l.url,
+                                    quality: q,
+                                    type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
+                                    server: `Direct ${q}`,
+                                    audioTracks: [{ language: 'en', label: 'English' }],
+                                    provider: {
+                                        name: `${this.name} (Direct ${q})`,
+                                        id: `${this.id}-direct-${q.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+                                    }
+                                } as Source;
+                            });
+                    }
+                } catch {}
+                return [] as Source[];
+            })()
+        ]);
 
-        // 2. VidNest v2 mirror
-        const v2 = await resolveVidnestV2(
-            media,
-            this.id,
-            this.name,
-            (u, h) => this.createProxyUrl(u, h),
-            [
-                { name: 'Prime HD', path: 'flixhq' },
-                { name: 'Mirror Cloud', path: 'nextgencloudfabric' }
-            ],
-            3200
-        );
-        if (v2.sources.length > 0) {
-            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
-        }
+        const riveSources = riveSettled.status === 'fulfilled' ? riveSettled.value : [];
+        const v2Sources = v2Settled.status === 'fulfilled' ? v2Settled.value.sources : [];
+        const v2Subs = v2Settled.status === 'fulfilled' ? v2Settled.value.subtitles : [];
+        const trendiSources = trendiSettled.status === 'fulfilled' ? trendiSettled.value : [];
 
-        // 3. TrendiMovies direct downloads
-        try {
-            const downloads: any = await Promise.race([
-                (trendimovies as any).getDownloads(media.tmdbId, media.type, season, episode),
-                new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 2800))
-            ]);
-            if (Array.isArray(downloads) && downloads.length > 0) {
-                const sources: Source[] = downloads
-                    .filter((l: any) => l?.url && l.active !== false)
-                    .map((l: any) => ({
-                        url: l.url,
-                        quality: l.quality || 'HD',
-                        type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
-                        server: `${this.name} (Direct)`,
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        provider: {
-                            name: `${this.name} (Direct)`,
-                            id: `${this.id}-direct`
-                        }
-                    }));
-                if (sources.length > 0) {
-                    return { sources, subtitles: [], diagnostics: [] };
-                }
-            }
-        } catch {}
-
-        return { sources: [], subtitles: [], diagnostics: [] };
+        return {
+            sources: mergeProviderSources(trendiSources, v2Sources, riveSources),
+            subtitles: v2Subs,
+            diagnostics: []
+        };
     }
 
     async healthCheck(): Promise<boolean> {

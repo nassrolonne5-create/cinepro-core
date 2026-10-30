@@ -9,7 +9,8 @@ import { trendimovies } from 'kaizoku-core';
 import {
     getMediaSeasonEpisode,
     resolveVidnestV2,
-    resolveRiveStreamClean
+    resolveRiveStreamClean,
+    mergeProviderSources
 } from '../../utils/vidnestV2.js';
 
 export class VixsrcProvider extends BaseProvider {
@@ -43,38 +44,36 @@ export class VixsrcProvider extends BaseProvider {
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         const { season, episode } = getMediaSeasonEpisode(media);
 
-        // 1. Direct HD downloads/streams from trendimovies (fast, reliable)
-        try {
-            const downloads: any = await Promise.race([
-                (trendimovies as any).getDownloads(media.tmdbId, media.type, season, episode),
-                new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000))
-            ]);
-            if (Array.isArray(downloads) && downloads.length > 0) {
-                const sources: Source[] = downloads
-                    .filter((l: any) => l?.url && l.active !== false)
-                    .map((l: any) => {
-                        const q = l.quality || 'HD';
-                        const serverName = `${this.name} (${q})`;
-                        return {
-                            url: l.url,
-                            quality: q,
-                            type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
-                            server: serverName,
-                            audioTracks: [{ language: 'en', label: 'English' }],
-                            provider: {
-                                name: serverName,
-                                id: `${this.id}-${q.toLowerCase().replace(/[^a-z0-9]/g, '')}`
-                            }
-                        };
-                    });
-                if (sources.length > 0) {
-                    return { sources, subtitles: [], diagnostics: [] };
+        const directTask = (async () => {
+            try {
+                const downloads: any = await Promise.race([
+                    (trendimovies as any).getDownloads(media.tmdbId, media.type, season, episode),
+                    new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 2800))
+                ]);
+                if (Array.isArray(downloads) && downloads.length > 0) {
+                    return downloads
+                        .filter((l: any) => l?.url && l.active !== false)
+                        .map((l: any) => {
+                            const q = l.quality || 'HD';
+                            const serverName = `Direct ${q}`;
+                            return {
+                                url: l.url,
+                                quality: q,
+                                type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
+                                server: serverName,
+                                audioTracks: [{ language: 'en', label: 'English' }],
+                                provider: {
+                                    name: `${this.name} (${q})`,
+                                    id: `${this.id}-${q.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+                                }
+                            } as Source;
+                        });
                 }
-            }
-        } catch {}
+            } catch {}
+            return [] as Source[];
+        })();
 
-        // 2. VidNest v2 (Vix 4K & Vix Cloud)
-        const v2 = await resolveVidnestV2(
+        const v2Task = resolveVidnestV2(
             media,
             this.id,
             this.name,
@@ -83,21 +82,21 @@ export class VixsrcProvider extends BaseProvider {
                 { name: 'Vix 4K', path: 'flixhq' },
                 { name: 'Vix Cloud', path: 'nextgencloudfabric' }
             ],
-            3200
-        );
-        if (v2.sources.length > 0) {
-            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
-        }
+            2800
+        ).catch(() => ({ sources: [] as Source[], subtitles: [] }));
 
-        // 3. Clean RiveStream fallback
-        const riveSources = await resolveRiveStreamClean(
+        const riveTask = resolveRiveStreamClean(
             media,
             this.id,
             this.name,
             (u, h) => this.createProxyUrl(u, h),
-            3000
-        );
-        return { sources: riveSources, subtitles: [], diagnostics: [] };
+            2800
+        ).catch(() => [] as Source[]);
+
+        const [directSources, v2, riveSources] = await Promise.all([directTask, v2Task, riveTask]);
+        const merged = mergeProviderSources(directSources, v2.sources, riveSources);
+
+        return { sources: merged, subtitles: v2.subtitles, diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

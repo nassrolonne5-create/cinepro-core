@@ -130,21 +130,23 @@ export class IcefyProvider extends BaseProvider {
                                 for (const r of resolved) {
                                     if (r.status === 'fulfilled' && r.value) {
                                         const { serverName, file } = r.value;
-                                        const isM3U8 = file.includes('.m3u8');
+                                        const isM3U8 = file.includes('.m3u8') || file.includes('master.txt') || file.includes('index.txt');
                                         const streamHeaders = {
                                             'User-Agent': this.HEADERS['User-Agent'],
                                             'Referer': `${this.BASE_URL}/`
                                         };
                                         const proxiedUrl = this.createProxyUrl(file, streamHeaders);
+                                        const srvSlug = serverName.toLowerCase().replace(/[^a-z0-9]/g, '');
 
                                         sources.push({
                                             url: proxiedUrl,
                                             quality: '1080p',
-                                            type: getSourceType(file, isM3U8),
+                                            type: isM3U8 ? 'hls' : getSourceType(file, isM3U8),
+                                            server: serverName,
                                             audioTracks: [{ language: 'en', label: 'English' }],
                                             provider: {
                                                 name: `${this.name} (${serverName})`,
-                                                id: this.id
+                                                id: `${this.id.toLowerCase()}-${srvSlug}`
                                             }
                                         });
                                     }
@@ -158,7 +160,7 @@ export class IcefyProvider extends BaseProvider {
                 const subUrlMatch = embedHtml.match(/var\s+suburl\s*=\s*"([^"]+)"/);
                 if (subUrlMatch && subUrlMatch[1]) {
                     try {
-                        const subRes = await fetch(subUrlMatch[1], { signal: AbortSignal.timeout(3000) });
+                        const subRes = await fetch(subUrlMatch[1], { signal: AbortSignal.timeout(2500) });
                         if (subRes.ok) {
                             const subJson = (await subRes.json()) as any[];
                             if (Array.isArray(subJson)) {
@@ -177,34 +179,31 @@ export class IcefyProvider extends BaseProvider {
                     } catch {}
                 }
             }
-
-            if (sources.length > 0) {
-                return { sources, subtitles, diagnostics: [] };
-            }
         } catch {}
 
-        // 2. High-speed resilient fallback (VidNest)
+        // 2. Also resolve VidNest v2 (Icefy 4K & Icefy Cloud) to maximize server availability
         try {
-            const data = await vidnest.fetchSources(media.tmdbId, media.type, media.s, media.e);
-            if (data?.sources?.length) {
-                const vidnestSources: Source[] = data.sources.map(src => {
-                    const ext = src.isM3U8 || src.url.includes('.m3u8') ? '.m3u8' : '.mp4';
-                    return {
-                        url: src.url + (src.url.includes('?') ? '&' : '?') + 'provider=' + this.id + '&ext=' + ext,
-                        quality: src.quality || 'auto',
-                        type: getSourceType(src.url, src.isM3U8),
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        provider: {
-                            name: `${this.name} (Mirror)`,
-                            id: this.id
-                        }
-                    };
-                });
-                return { sources: vidnestSources, subtitles, diagnostics: [] };
-            }
+            const { resolveVidnestV2, mergeProviderSources } = await import('../../utils/vidnestV2.js');
+            const v2 = await resolveVidnestV2(
+                media,
+                this.id.toLowerCase(),
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                [
+                    { name: 'Icefy 4K', path: 'flixhq' },
+                    { name: 'Icefy Cloud', path: 'nextgencloudfabric' }
+                ],
+                2800
+            );
+            const merged = mergeProviderSources(sources, v2.sources);
+            return {
+                sources: merged,
+                subtitles: subtitles.length > 0 ? subtitles : v2.subtitles,
+                diagnostics: []
+            };
         } catch {}
 
-        return { sources: [], subtitles: [], diagnostics: [] };
+        return { sources, subtitles, diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

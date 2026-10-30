@@ -79,14 +79,14 @@ export class RivestreamProvider extends BaseProvider {
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
+        const sources: Source[] = [];
         try {
             const season = Number((media as any).season || (media as any).s || 1);
             const episode = Number((media as any).episode || (media as any).e || 1);
             const data: any = await Promise.race([
                 rivestream.fetchSources(media.tmdbId, media.type, season, episode),
-                new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 3800))
+                new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 3200))
             ]);
-            const sources: Source[] = [];
 
             if (data && Array.isArray(data.sources)) {
                 const defaultHeaders = data.headers || {};
@@ -104,8 +104,8 @@ export class RivestreamProvider extends BaseProvider {
                         sLower.includes('guru') || sLower.includes('asiacloud') ||
                         urlLower.includes('boomchick') || urlLower.includes('streamflix') ||
                         urlLower.includes('onlinevisibilitysystem.site') || urlLower.includes('highperformanceread.com') ||
-                        qLower.includes('hindi') || qLower.includes('punjabi') || qLower.includes('tamil') || qLower.includes('telugu') ||
-                        sLower.includes('hindi') || sLower.includes('punjabi') || sLower.includes('tamil') || sLower.includes('telugu')
+                        qLower.includes('hindi') || qLower.includes('punjabi') || qLower.includes('tamil') || qLower.includes('telugu') || qLower.includes('kannada') ||
+                        sLower.includes('hindi') || sLower.includes('punjabi') || sLower.includes('tamil') || sLower.includes('telugu') || sLower.includes('kannada')
                     ) {
                         continue;
                     }
@@ -131,13 +131,10 @@ export class RivestreamProvider extends BaseProvider {
                     });
                 }
             }
-            if (sources.length > 0) {
-                return { sources, subtitles: [], diagnostics: [] };
-            }
-        } catch (e) {}
+        } catch {}
 
         try {
-            const { resolveVidnestV2 } = await import('../../utils/vidnestV2.js');
+            const { resolveVidnestV2, mergeProviderSources } = await import('../../utils/vidnestV2.js');
             const v2 = await resolveVidnestV2(
                 media,
                 this.id,
@@ -147,11 +144,15 @@ export class RivestreamProvider extends BaseProvider {
                     { name: 'Mirage 4K', path: 'flixhq' },
                     { name: 'PrimeVids', path: 'nextgencloudfabric' }
                 ],
-                3200
+                3000
             );
-            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
+            return {
+                sources: mergeProviderSources(sources, v2.sources),
+                subtitles: v2.subtitles,
+                diagnostics: []
+            };
         } catch {
-            return { sources: [], subtitles: [], diagnostics: [] };
+            return { sources, subtitles: [], diagnostics: [] };
         }
     }
 

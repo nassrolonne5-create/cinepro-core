@@ -161,6 +161,7 @@ export class WatchflixProvider extends BaseProvider {
                         const proxiedUrl = `http://localhost:3000/v1/proxy?data=${encodeURIComponent(proxyData)}&provider=${this.id}&ext=${ext}`;
 
                         const serverName = srv.name || 'Core';
+                        const serverSlug = serverName.toLowerCase().replace(/[^a-z0-9]/g, '');
                         const srcObj: any = {
                             url: proxiedUrl,
                             quality,
@@ -169,7 +170,7 @@ export class WatchflixProvider extends BaseProvider {
                             audioTracks: [{ language: 'en', label: 'English' }],
                             provider: {
                                 name: `${this.name} (${serverName})`,
-                                id: this.id
+                                id: `${this.id}-${serverSlug}`
                             }
                         };
                         return srcObj as Source;
@@ -186,15 +187,17 @@ export class WatchflixProvider extends BaseProvider {
                     sources.push(r.value);
                 }
             }
-
-            if (sources.length > 0) {
-                return { sources, subtitles: [], diagnostics: [] };
-            }
         } catch {
-            // Proceed to mirror fallback
+            // Proceed to mirror merge
         }
 
-        return this.fallbackVidVault(media, season, episode);
+        const mirrorRes = await this.fallbackVidVault(media, season, episode);
+        const { mergeProviderSources } = await import('../../utils/vidnestV2.js');
+        return {
+            sources: mergeProviderSources(sources, mirrorRes.sources),
+            subtitles: mirrorRes.subtitles,
+            diagnostics: []
+        };
     }
 
     private async fallbackVidVault(media: ProviderMediaObject, season: number, episode: number): Promise<ProviderResult> {
@@ -203,29 +206,37 @@ export class WatchflixProvider extends BaseProvider {
         (media as any).s = season;
         (media as any).e = episode;
 
-        const v2 = await resolveVidnestV2(
-            media,
-            this.id,
-            this.name,
-            (u, h) => this.createProxyUrl(u, h),
-            [
-                { name: 'Supreme HD', path: 'flixhq' },
-                { name: 'Prime Cloud', path: 'nextgencloudfabric' }
-            ],
-            3200
-        );
-        if (v2.sources.length > 0) {
-            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
-        }
+        const { mergeProviderSources } = await import('../../utils/vidnestV2.js');
+        const [v2Settled, riveSettled] = await Promise.allSettled([
+            resolveVidnestV2(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                [
+                    { name: 'Supreme HD', path: 'flixhq' },
+                    { name: 'Prime Cloud', path: 'nextgencloudfabric' }
+                ],
+                3000
+            ),
+            resolveRiveStreamClean(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                2800
+            )
+        ]);
 
-        const riveSources = await resolveRiveStreamClean(
-            media,
-            this.id,
-            this.name,
-            (u, h) => this.createProxyUrl(u, h),
-            3000
-        );
-        return { sources: riveSources, subtitles: [], diagnostics: [] };
+        const v2Sources = v2Settled.status === 'fulfilled' ? v2Settled.value.sources : [];
+        const v2Subs = v2Settled.status === 'fulfilled' ? v2Settled.value.subtitles : [];
+        const riveSources = riveSettled.status === 'fulfilled' ? riveSettled.value : [];
+
+        return {
+            sources: mergeProviderSources(v2Sources, riveSources),
+            subtitles: v2Subs,
+            diagnostics: []
+        };
     }
 
     async healthCheck(): Promise<boolean> {

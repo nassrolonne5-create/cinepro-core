@@ -54,13 +54,12 @@ export class CinemaArmyProvider extends BaseProvider {
     }
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
-        const sources: Source[] = [];
         try {
+            const { getMediaSeasonEpisode, resolveVidnestV2, resolveRiveStreamClean, mergeProviderSources } = await import('../../utils/vidnestV2.js');
+            const { season, episode } = getMediaSeasonEpisode(media);
             const tmdbId = media.tmdbId;
             const token = generateStreamToken(tmdbId);
             const isTv = media.type === 'tv';
-            const season = Number((media as any).season || (media as any).s || 1);
-            const episode = Number((media as any).episode || (media as any).e || 1);
 
             const targets = isTv ? [
                 { name: 'Baker', method: 'POST', endpoint: `/cookiebakers/tv/${tmdbId}/${season}/${episode}` },
@@ -78,50 +77,79 @@ export class CinemaArmyProvider extends BaseProvider {
                 ? `${BASE_URL}/watch?id=${tmdbId}&type=tv&season=${season}&episode=${episode}`
                 : `${BASE_URL}/watch?id=${tmdbId}&type=movie`;
 
-            const promises = targets.map(async (t) => {
-                try {
-                    const res = await fetch(`${BASE_URL}/api${t.endpoint}`, {
-                        method: t.method,
-                        headers: {
-                            ...this.HEADERS,
-                            'X-Stream-Token': token,
-                            'Referer': referer
-                        },
-                        signal: AbortSignal.timeout(5000)
-                    });
-                    if (!res.ok) return null;
-                    const json = (await res.json()) as any;
-                    const rawUrl = json?.stream?.url;
-                    if (!rawUrl) return null;
+            const nativeTask = (async () => {
+                const list: Source[] = [];
+                const settled = await Promise.allSettled(targets.map(async (t) => {
+                    try {
+                        const res = await fetch(`${BASE_URL}/api${t.endpoint}`, {
+                            method: t.method,
+                            headers: {
+                                ...this.HEADERS,
+                                'X-Stream-Token': token,
+                                'Referer': referer
+                            },
+                            signal: AbortSignal.timeout(2400)
+                        });
+                        if (!res.ok) return null;
+                        const json = (await res.json()) as any;
+                        const rawUrl = json?.stream?.url;
+                        if (!rawUrl) return null;
 
-                    const decodedUrl = decodeStreamUrl(rawUrl);
-                    if (!decodedUrl || !decodedUrl.startsWith('http')) return null;
+                        const decodedUrl = decodeStreamUrl(rawUrl);
+                        if (!decodedUrl || !decodedUrl.startsWith('http')) return null;
 
-                    const srcObj: any = {
-                        url: decodedUrl,
-                        quality: '1080p',
-                        type: 'hls',
-                        server: t.name,
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        provider: {
-                            name: `${this.name} (${t.name})`,
-                            id: this.id
-                        }
-                    };
-                    return srcObj as Source;
-                } catch {
-                    return null;
+                        return {
+                            url: decodedUrl,
+                            quality: '1080p',
+                            type: 'hls',
+                            server: t.name,
+                            audioTracks: [{ language: 'en', label: 'English' }],
+                            provider: {
+                                name: `${this.name} (${t.name})`,
+                                id: `${this.id}-${t.name.toLowerCase()}`
+                            }
+                        } as Source;
+                    } catch {
+                        return null;
+                    }
+                }));
+                for (const item of settled) {
+                    if (item.status === 'fulfilled' && item.value) {
+                        list.push(item.value);
+                    }
                 }
-            });
+                return list;
+            })();
 
-            const settled = await Promise.allSettled(promises);
-            for (const item of settled) {
-                if (item.status === 'fulfilled' && item.value) {
-                    sources.push(item.value);
-                }
-            }
+            const [nativeSettled, v2Settled, riveSettled] = await Promise.allSettled([
+                nativeTask,
+                resolveVidnestV2(
+                    media,
+                    this.id,
+                    this.name,
+                    (u, h) => this.createProxyUrl(u, h),
+                    [
+                        { name: 'Army 4K', path: 'flixhq' },
+                        { name: 'Army Cloud', path: 'nextgencloudfabric' }
+                    ],
+                    2800
+                ),
+                resolveRiveStreamClean(
+                    media,
+                    this.id,
+                    this.name,
+                    (u, h) => this.createProxyUrl(u, h),
+                    2800
+                )
+            ]);
 
-            return { sources, subtitles: [], diagnostics: [] };
+            const nativeSources = nativeSettled.status === 'fulfilled' ? nativeSettled.value : [];
+            const v2Sources = v2Settled.status === 'fulfilled' ? v2Settled.value.sources : [];
+            const v2Subs = v2Settled.status === 'fulfilled' ? v2Settled.value.subtitles : [];
+            const riveSources = riveSettled.status === 'fulfilled' ? riveSettled.value : [];
+
+            const sources = mergeProviderSources(nativeSources, v2Sources, riveSources);
+            return { sources, subtitles: v2Subs, diagnostics: [] };
         } catch {
             return { sources: [], subtitles: [], diagnostics: [] };
         }

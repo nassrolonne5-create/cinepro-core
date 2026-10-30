@@ -9,7 +9,8 @@ import { vidrock } from 'kaizoku-core';
 import {
     getMediaSeasonEpisode,
     isCleanEnglishStream,
-    resolveVidnestV2
+    resolveVidnestV2,
+    mergeProviderSources
 } from '../../utils/vidnestV2.js';
 
 export class VidrockProvider extends BaseProvider {
@@ -32,42 +33,39 @@ export class VidrockProvider extends BaseProvider {
 
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         const { season, episode } = getMediaSeasonEpisode(media);
-        const sources: Source[] = [];
         const timeout = (ms: number) => new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
 
-        // 1. Native VidRock API (Atlas, Luna, Orion)
-        try {
-            const data: any = await Promise.race([
-                vidrock.fetchSources(media.tmdbId, media.type, season, episode),
-                timeout(4500)
-            ]);
-            const headers = data?.headers || {};
+        const nativeTask = (async () => {
+            const sources: Source[] = [];
+            try {
+                const data: any = await Promise.race([
+                    vidrock.fetchSources(media.tmdbId, media.type, season, episode),
+                    timeout(3000)
+                ]);
+                const headers = data?.headers || {};
 
-            for (const src of (data?.sources || [])) {
-                if (!src?.url || !isCleanEnglishStream(src.url, src.server, src.quality)) continue;
-                const srvName = src.server || 'Orion';
-                const srvId = `${this.id}-${srvName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
-                const url = Object.keys(headers).length > 0 ? this.createProxyUrl(src.url, headers) : src.url;
-                sources.push({
-                    url,
-                    quality: src.quality || '1080p',
-                    type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
-                    server: srvName,
-                    audioTracks: [{ language: 'en', label: 'English' }],
-                    provider: {
-                        name: `${this.name} (${srvName})`,
-                        id: srvId
-                    }
-                } as Source);
-            }
-        } catch {}
+                for (const src of (data?.sources || [])) {
+                    if (!src?.url || !isCleanEnglishStream(src.url, src.server, src.quality)) continue;
+                    const srvName = src.server || 'Orion';
+                    const srvId = `${this.id}-${srvName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+                    const url = Object.keys(headers).length > 0 ? this.createProxyUrl(src.url, headers) : src.url;
+                    sources.push({
+                        url,
+                        quality: src.quality || '1080p',
+                        type: src.isM3U8 || src.url.includes('.m3u8') ? 'hls' : 'mp4',
+                        server: srvName,
+                        audioTracks: [{ language: 'en', label: 'English' }],
+                        provider: {
+                            name: `${this.name} (${srvName})`,
+                            id: srvId
+                        }
+                    } as Source);
+                }
+            } catch {}
+            return sources;
+        })();
 
-        if (sources.length > 0) {
-            return { sources, subtitles: [], diagnostics: [] };
-        }
-
-        // 2. Fallback: VidNest v2 (Atlas HD & Orion Cloud)
-        const v2 = await resolveVidnestV2(
+        const v2Task = resolveVidnestV2(
             media,
             this.id,
             this.name,
@@ -76,9 +74,13 @@ export class VidrockProvider extends BaseProvider {
                 { name: 'Atlas HD', path: 'flixhq' },
                 { name: 'Orion Cloud', path: 'nextgencloudfabric' }
             ],
-            3200
-        );
-        return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
+            2800
+        ).catch(() => ({ sources: [] as Source[], subtitles: [] }));
+
+        const [nativeSources, v2] = await Promise.all([nativeTask, v2Task]);
+        const merged = mergeProviderSources(nativeSources, v2.sources);
+
+        return { sources: merged, subtitles: v2.subtitles, diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

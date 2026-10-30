@@ -11,7 +11,8 @@ import {
     getMediaSeasonEpisode,
     isCleanEnglishStream,
     resolveVidnestV2,
-    resolveRiveStreamClean
+    resolveRiveStreamClean,
+    mergeProviderSources
 } from '../../utils/vidnestV2.js';
 
 export class VidgodProvider extends BaseProvider {
@@ -47,59 +48,60 @@ export class VidgodProvider extends BaseProvider {
         const { season, episode } = getMediaSeasonEpisode(media);
         const timeout = (ms: number) => new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
 
-        try {
-            const data: any = await Promise.race([
-                vidgod.fetchSources(media.tmdbId, media.type, season, episode),
-                timeout(2800)
-            ]);
+        const nativeTask = (async () => {
             const sources: Source[] = [];
-
-            if (data && Array.isArray(data.sources)) {
-                for (const src of data.sources) {
-                    if (!isCleanEnglishStream(src.url, src.server, src.quality)) continue;
-                    const sName = src.server || 'Pulsar';
-                    sources.push({
-                        url: src.url,
-                        quality: src.quality || '1080p',
-                        type: getSourceType(src.url, src.isM3U8),
-                        server: sName,
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        provider: {
-                            name: `${this.name} (${sName})`,
-                            id: `${this.id}-${sName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
-                        }
-                    });
+            try {
+                const data: any = await Promise.race([
+                    vidgod.fetchSources(media.tmdbId, media.type, season, episode),
+                    timeout(2600)
+                ]);
+                if (data && Array.isArray(data.sources)) {
+                    for (const src of data.sources) {
+                        if (!isCleanEnglishStream(src.url, src.server, src.quality)) continue;
+                        const sName = src.server || 'Pulsar';
+                        sources.push({
+                            url: src.url,
+                            quality: src.quality || '1080p',
+                            type: getSourceType(src.url, src.isM3U8),
+                            server: sName,
+                            audioTracks: [{ language: 'en', label: 'English' }],
+                            provider: {
+                                name: `${this.name} (${sName})`,
+                                id: `${this.id}-${sName.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+                            }
+                        });
+                    }
                 }
-            }
-            if (sources.length > 0) return { sources, subtitles: [], diagnostics: [] };
-        } catch {}
+            } catch {}
+            return sources;
+        })();
 
-        // Fallback: Direct TrendiMovies
-        try {
-            const downloads: any = await Promise.race([
-                (trendimovies as any).getDownloads(media.tmdbId, media.type, season, episode),
-                timeout(2500)
-            ]);
-            if (Array.isArray(downloads) && downloads.length > 0) {
-                const sources: Source[] = downloads
-                    .filter((l: any) => l?.url && l.active !== false)
-                    .map((l: any) => ({
-                        url: l.url,
-                        quality: l.quality || 'HD',
-                        type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
-                        server: `Direct ${l.quality || 'HD'}`,
-                        audioTracks: [{ language: 'en', label: 'English' }],
-                        provider: {
-                            name: `${this.name} (${l.quality || 'Direct'})`,
-                            id: `${this.id}-${(l.quality || 'direct').toLowerCase().replace(/[^a-z0-9]/g, '')}`
-                        }
-                    }));
-                if (sources.length > 0) return { sources, subtitles: [], diagnostics: [] };
-            }
-        } catch {}
+        const trendiTask = (async () => {
+            try {
+                const downloads: any = await Promise.race([
+                    (trendimovies as any).getDownloads(media.tmdbId, media.type, season, episode),
+                    timeout(2500)
+                ]);
+                if (Array.isArray(downloads) && downloads.length > 0) {
+                    return downloads
+                        .filter((l: any) => l?.url && l.active !== false)
+                        .map((l: any) => ({
+                            url: l.url,
+                            quality: l.quality || 'HD',
+                            type: l.url.includes('.m3u8') ? 'hls' : 'mp4',
+                            server: `Direct ${l.quality || 'HD'}`,
+                            audioTracks: [{ language: 'en', label: 'English' }],
+                            provider: {
+                                name: `${this.name} (${l.quality || 'Direct'})`,
+                                id: `${this.id}-${(l.quality || 'direct').toLowerCase().replace(/[^a-z0-9]/g, '')}`
+                            }
+                        })) as Source[];
+                }
+            } catch {}
+            return [] as Source[];
+        })();
 
-        // Fallback: VidNest v2 (Pulsar 4K & Orion Cloud)
-        const v2 = await resolveVidnestV2(
+        const v2Task = resolveVidnestV2(
             media,
             this.id,
             this.name,
@@ -108,21 +110,26 @@ export class VidgodProvider extends BaseProvider {
                 { name: 'Pulsar 4K', path: 'flixhq' },
                 { name: 'Orion Cloud', path: 'nextgencloudfabric' }
             ],
-            3000
-        );
-        if (v2.sources.length > 0) {
-            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
-        }
+            2800
+        ).catch(() => ({ sources: [] as Source[], subtitles: [] }));
 
-        // Fallback: Clean RiveStream
-        const riveSources = await resolveRiveStreamClean(
+        const riveTask = resolveRiveStreamClean(
             media,
             this.id,
             this.name,
             (u, h) => this.createProxyUrl(u, h),
             2800
-        );
-        return { sources: riveSources, subtitles: [], diagnostics: [] };
+        ).catch(() => [] as Source[]);
+
+        const [nativeSources, trendiSources, v2, riveSources] = await Promise.all([
+            nativeTask,
+            trendiTask,
+            v2Task,
+            riveTask
+        ]);
+
+        const merged = mergeProviderSources(nativeSources, trendiSources, v2.sources, riveSources);
+        return { sources: merged, subtitles: v2.subtitles, diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

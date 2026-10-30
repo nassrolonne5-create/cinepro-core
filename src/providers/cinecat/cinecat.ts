@@ -7,7 +7,8 @@ import type {
 import {
     getMediaSeasonEpisode,
     resolveVidnestV2,
-    resolveRiveStreamClean
+    resolveRiveStreamClean,
+    mergeProviderSources
 } from '../../utils/vidnestV2.js';
 
 export class CinecatProvider extends BaseProvider {
@@ -46,31 +47,36 @@ export class CinecatProvider extends BaseProvider {
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         getMediaSeasonEpisode(media);
 
-        // 1. Clean unwrapped RiveStream (Mirage 4K, Zephyr 4K, PrimeVids, Citadel)
-        const riveSources = await resolveRiveStreamClean(
-            media,
-            this.id,
-            this.name,
-            (u, h) => this.createProxyUrl(u, h),
-            3500
-        );
-        if (riveSources.length > 0) {
-            return { sources: riveSources, subtitles: [], diagnostics: [] };
-        }
+        const [riveSettled, v2Settled] = await Promise.allSettled([
+            resolveRiveStreamClean(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                3200
+            ),
+            resolveVidnestV2(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                [
+                    { name: 'Zephyr 4K', path: 'flixhq' },
+                    { name: 'Prime Cloud', path: 'nextgencloudfabric' }
+                ],
+                3200
+            )
+        ]);
 
-        // 2. Fallback: VidNest v2
-        const v2 = await resolveVidnestV2(
-            media,
-            this.id,
-            this.name,
-            (u, h) => this.createProxyUrl(u, h),
-            [
-                { name: 'Zephyr 4K', path: 'flixhq' },
-                { name: 'Prime Cloud', path: 'nextgencloudfabric' }
-            ],
-            3200
-        );
-        return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
+        const riveSources = riveSettled.status === 'fulfilled' ? riveSettled.value : [];
+        const v2Sources = v2Settled.status === 'fulfilled' ? v2Settled.value.sources : [];
+        const v2Subs = v2Settled.status === 'fulfilled' ? v2Settled.value.subtitles : [];
+
+        return {
+            sources: mergeProviderSources(riveSources, v2Sources),
+            subtitles: v2Subs,
+            diagnostics: []
+        };
     }
 
     async healthCheck(): Promise<boolean> {

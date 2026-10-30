@@ -109,29 +109,31 @@ export class SuperStreamProvider extends BaseProvider {
             })()
         ]);
 
-        if (allSources.length > 0) {
-            return { sources: allSources, subtitles: [], diagnostics: [] };
-        }
+        const [v2Settled] = await Promise.allSettled([
+            (async () => {
+                const { resolveVidnestV2 } = await import('../../utils/vidnestV2.js');
+                return resolveVidnestV2(
+                    media,
+                    this.id,
+                    this.name,
+                    (u, h) => this.createProxyUrl(u, h),
+                    [
+                        { name: 'VIP 4K', path: 'flixhq' },
+                        { name: 'SuperCloud', path: 'nextgencloudfabric' }
+                    ],
+                    3200
+                );
+            })()
+        ]);
 
-        // Fallback upstream mirror via VidNest v2
-        try {
-            const { resolveVidnestV2 } = await import('../../utils/vidnestV2.js');
-            const v2 = await resolveVidnestV2(
-                media,
-                this.id,
-                this.name,
-                (u, h) => this.createProxyUrl(u, h),
-                [
-                    { name: 'VIP 4K', path: 'flixhq' },
-                    { name: 'SuperCloud', path: 'nextgencloudfabric' }
-                ],
-                3200
-            );
-            if (v2.sources.length > 0) {
-                return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
-            }
-        } catch {}
+        const v2Sources = v2Settled.status === 'fulfilled' ? v2Settled.value.sources : [];
+        const v2Subs = v2Settled.status === 'fulfilled' ? v2Settled.value.subtitles : [];
+        const { mergeProviderSources } = await import('../../utils/vidnestV2.js');
 
-        return { sources: [], subtitles: [], diagnostics: [] };
+        return {
+            sources: mergeProviderSources(allSources, v2Sources),
+            subtitles: v2Subs,
+            diagnostics: []
+        };
     }
 }

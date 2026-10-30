@@ -242,49 +242,37 @@ export class VidfastProvider extends BaseProvider {
         (media as any).e = Number((media as any).episode || (media as any).e || 1);
         const activeDomain = BASE_URL;
 
-        // 1. Try native 2-stage decrypted stream (with 5000ms ceiling so fallbacks always have time)
-        try {
-            const nativeSources = await this.callWithTimeout(
-                this.resolveVidfast(media, activeDomain),
-                5000
-            );
-            if (nativeSources && nativeSources.length > 0) {
-                const subtitles = await this.fetchSubtitles(media, activeDomain);
-                return { sources: nativeSources, subtitles, diagnostics: [] };
-            }
-        } catch {}
+        const { resolveRiveStreamClean, resolveVidnestV2, mergeProviderSources } = await import('../../utils/vidnestV2.js');
 
-        // 2. High-speed fallback via cached RiveStream & VidNest v2
-        try {
-            const { resolveRiveStreamClean, resolveVidnestV2 } = await import('../../utils/vidnestV2.js');
-            const riveSources = await resolveRiveStreamClean(
-                media,
-                this.id,
-                this.name,
-                (u, h) => this.createProxyUrl(u, h),
-                2800
-            );
-            if (riveSources.length > 0) {
-                return { sources: riveSources, subtitles: [], diagnostics: [] };
-            }
+        const nativeTask = this.callWithTimeout(
+            this.resolveVidfast(media, activeDomain),
+            3500
+        ).catch(() => [] as Source[]);
 
-            const v2 = await resolveVidnestV2(
-                media,
-                this.id,
-                this.name,
-                (u, h) => this.createProxyUrl(u, h),
-                [
-                    { name: 'Bravo', path: 'flixhq' },
-                    { name: 'Cobra', path: 'nextgencloudfabric' }
-                ],
-                2800
-            );
-            if (v2.sources.length > 0) {
-                return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
-            }
-        } catch {}
+        const riveTask = resolveRiveStreamClean(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            2800
+        ).catch(() => [] as Source[]);
 
-        return { sources: [], subtitles: [], diagnostics: [] };
+        const v2Task = resolveVidnestV2(
+            media,
+            this.id,
+            this.name,
+            (u, h) => this.createProxyUrl(u, h),
+            [
+                { name: 'Bravo', path: 'flixhq' },
+                { name: 'Cobra', path: 'nextgencloudfabric' }
+            ],
+            2800
+        ).catch(() => ({ sources: [] as Source[], subtitles: [] }));
+
+        const [nativeSources, riveSources, v2] = await Promise.all([nativeTask, riveTask, v2Task]);
+        const merged = mergeProviderSources(nativeSources || [], v2.sources, riveSources);
+
+        return { sources: merged, subtitles: v2.subtitles || [], diagnostics: [] };
     }
 
     async healthCheck(): Promise<boolean> {

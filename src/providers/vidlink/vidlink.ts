@@ -124,35 +124,43 @@ export class VidlinkProvider extends BaseProvider {
             }
         } catch {}
 
-        if (sources.length > 0) {
-            return { sources, subtitles, diagnostics: [] };
+        // 2. Also resolve VidNest v2 (Hexa HD & Zeta Cloud) and RiveStream in parallel to maximize server count
+        const [v2, riveSources] = await Promise.all([
+            resolveVidnestV2(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                [
+                    { name: 'Hexa HD', path: 'flixhq' },
+                    { name: 'Zeta Cloud', path: 'nextgencloudfabric' }
+                ],
+                2800
+            ).catch(() => ({ sources: [] as Source[], subtitles: [] as Subtitle[] })),
+            resolveRiveStreamClean(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                2800
+            ).catch(() => [] as Source[])
+        ]);
+
+        const merged = [...sources];
+        const seen = new Set(sources.map(s => `${s.server || ''}::${s.quality || ''}::${s.url}`));
+        for (const s of [...v2.sources, ...riveSources]) {
+            const key = `${s.server || ''}::${s.quality || ''}::${s.url}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                merged.push(s);
+            }
         }
 
-        // 2. Fallback: VidNest v2 (Beta HD & Zeta Cloud)
-        const v2 = await resolveVidnestV2(
-            media,
-            this.id,
-            this.name,
-            (u, h) => this.createProxyUrl(u, h),
-            [
-                { name: 'Hexa HD', path: 'flixhq' },
-                { name: 'Zeta Cloud', path: 'nextgencloudfabric' }
-            ],
-            3200
-        );
-        if (v2.sources.length > 0) {
-            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
-        }
-
-        // 3. Fallback: Clean RiveStream
-        const riveSources = await resolveRiveStreamClean(
-            media,
-            this.id,
-            this.name,
-            (u, h) => this.createProxyUrl(u, h),
-            3000
-        );
-        return { sources: riveSources, subtitles: [], diagnostics: [] };
+        return {
+            sources: merged,
+            subtitles: subtitles.length > 0 ? subtitles : v2.subtitles,
+            diagnostics: []
+        };
     }
 
     async healthCheck(): Promise<boolean> {

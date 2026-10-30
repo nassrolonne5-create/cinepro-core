@@ -8,7 +8,8 @@ import {
     getMediaSeasonEpisode,
     resolveVidupNative,
     resolveVidnestV2,
-    resolveRiveStreamClean
+    resolveRiveStreamClean,
+    mergeProviderSources
 } from '../../utils/vidnestV2.js';
 
 export class VidupProvider extends BaseProvider {
@@ -43,43 +44,45 @@ export class VidupProvider extends BaseProvider {
     private async fetchSources(media: ProviderMediaObject): Promise<ProviderResult> {
         getMediaSeasonEpisode(media);
 
-        // 1. Native VidUp 2-stage encryption (Euro, CineX, Zenith, Premier, Eclipse)
-        const native = await resolveVidupNative(
-            media,
-            this.id,
-            this.name,
-            (u, h) => this.createProxyUrl(u, h),
-            4200
-        );
-        if (native.sources.length > 0) {
-            return { sources: native.sources, subtitles: native.subtitles, diagnostics: [] };
-        }
+        const [nativeSettled, v2Settled, riveSettled] = await Promise.allSettled([
+            resolveVidupNative(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                3200
+            ),
+            resolveVidnestV2(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                [
+                    { name: 'Euro HD', path: 'flixhq' },
+                    { name: 'Zenith Cloud', path: 'nextgencloudfabric' }
+                ],
+                3200
+            ),
+            resolveRiveStreamClean(
+                media,
+                this.id,
+                this.name,
+                (u, h) => this.createProxyUrl(u, h),
+                3000
+            )
+        ]);
 
-        // 2. Fallback: VidNest v2
-        const v2 = await resolveVidnestV2(
-            media,
-            this.id,
-            this.name,
-            (u, h) => this.createProxyUrl(u, h),
-            [
-                { name: 'Euro HD', path: 'flixhq' },
-                { name: 'Zenith Cloud', path: 'nextgencloudfabric' }
-            ],
-            3200
-        );
-        if (v2.sources.length > 0) {
-            return { sources: v2.sources, subtitles: v2.subtitles, diagnostics: [] };
-        }
+        const nativeSources = nativeSettled.status === 'fulfilled' ? nativeSettled.value.sources : [];
+        const nativeSubs = nativeSettled.status === 'fulfilled' ? nativeSettled.value.subtitles : [];
+        const v2Sources = v2Settled.status === 'fulfilled' ? v2Settled.value.sources : [];
+        const v2Subs = v2Settled.status === 'fulfilled' ? v2Settled.value.subtitles : [];
+        const riveSources = riveSettled.status === 'fulfilled' ? riveSettled.value : [];
 
-        // 3. Fallback: Clean RiveStream
-        const riveSources = await resolveRiveStreamClean(
-            media,
-            this.id,
-            this.name,
-            (u, h) => this.createProxyUrl(u, h),
-            3000
-        );
-        return { sources: riveSources, subtitles: [], diagnostics: [] };
+        return {
+            sources: mergeProviderSources(nativeSources, v2Sources, riveSources),
+            subtitles: [...nativeSubs, ...v2Subs],
+            diagnostics: []
+        };
     }
 
     async healthCheck(): Promise<boolean> {

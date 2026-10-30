@@ -129,6 +129,7 @@ async function main() {
                         const provName = (s.provider?.name || s.provider?.id || s.provider || '').toLowerCase();
 
                         // Dead, blocked, 404, or Cloudflare captcha hosts (including BoomChick, Neward WRONG HASH, 4pa.top timeouts)
+                        const isHlsTxt = url.includes('master.txt') || url.includes('index.txt') || url.includes('playlist.txt') || url.includes('/hls');
                         if (
                             url.includes('boomchick.org') ||
                             url.includes('boomchick') ||
@@ -149,8 +150,7 @@ async function main() {
                             url.includes('onlinevisibilitysystem.site') ||
                             url.includes('highperformanceread.com') ||
                             url.includes('moon.zenoak.top/s/') ||
-                            url.endsWith('.txt') ||
-                            url.includes('.txt?')
+                            ((url.endsWith('.txt') || url.includes('.txt?')) && !isHlsTxt)
                         ) return false;
 
                         // Promotional teaser / sample short videos (e.g. 12s/21s promo clips)
