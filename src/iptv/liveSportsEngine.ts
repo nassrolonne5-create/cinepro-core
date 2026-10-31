@@ -5456,32 +5456,14 @@ export function parseHlsMasterVariants(
         const targetSingleUrl = canonicalManifestUrl || manifestBaseUrl;
         const baseProxied = buildLiveProxyUrl(targetSingleUrl, publicBaseUrl, headers, channelId);
         const is720 = defaultQuality.includes('720');
-        variants.push(
-            {
-                label: is720 ? '720p HD (Native)' : '1080p FHD 50fps',
-                resolution: is720 ? '1280x720' : '1920x1080',
-                bandwidth: is720 ? 3200000 : 5800000,
-                fps: 50,
-                url: baseProxied,
-                rawUrl: targetSingleUrl
-            },
-            {
-                label: '720p HD (Balanced)',
-                resolution: '1280x720',
-                bandwidth: 2800000,
-                fps: 50,
-                url: `${baseProxied}&profile=720p`,
-                rawUrl: targetSingleUrl
-            },
-            {
-                label: '480p SD (Data Saver)',
-                resolution: '854x480',
-                bandwidth: 1400000,
-                fps: 30,
-                url: `${baseProxied}&profile=480p`,
-                rawUrl: targetSingleUrl
-            }
-        );
+        variants.push({
+            label: is720 ? '720p HD (Native)' : '1080p FHD 50fps',
+            resolution: is720 ? '1280x720' : '1920x1080',
+            bandwidth: is720 ? 3200000 : 5800000,
+            fps: 50,
+            url: baseProxied,
+            rawUrl: targetSingleUrl
+        });
     }
 
     return { variants, audioTracks };
@@ -7379,15 +7361,8 @@ export async function resolveChannelStreams(
                     ? probe.audioTracks
                     : [{ language: item.language, label: defaultLangLabel }];
 
-            const qualities: HlsQualityVariant[] = [
-                {
-                    label: 'Auto (ABR + Anti-Freeze)',
-                    resolution: 'Adaptive',
-                    bandwidth: 6000000,
-                    url: masterPlaylistUrl,
-                    rawUrl: item.url
-                },
-                ...(probe.variants && probe.variants.length > 0
+            const realVariants: HlsQualityVariant[] =
+                probe.variants && probe.variants.length > 0
                     ? probe.variants
                     : [
                           {
@@ -7397,24 +7372,18 @@ export async function resolveChannelStreams(
                               fps: 50,
                               url: proxiedUrl,
                               rawUrl: item.url
-                          },
-                          {
-                              label: '720p HD (Balanced)',
-                              resolution: '1280x720',
-                              bandwidth: 2800000,
-                              fps: 50,
-                              url: `${proxiedUrl}&profile=720p`,
-                              rawUrl: item.url
-                          },
-                          {
-                              label: '480p SD (Data Saver)',
-                              resolution: '854x480',
-                              bandwidth: 1400000,
-                              fps: 30,
-                              url: `${proxiedUrl}&profile=480p`,
-                              rawUrl: item.url
                           }
-                      ])
+                      ];
+
+            const qualities: HlsQualityVariant[] = [
+                {
+                    label: 'Auto (Direct Anti-Freeze)',
+                    resolution: realVariants.length > 1 ? 'Adaptive' : realVariants[0].resolution,
+                    bandwidth: realVariants[0].bandwidth,
+                    url: proxiedUrl,
+                    rawUrl: item.url
+                },
+                ...realVariants
             ];
 
             const backupRole: LiveStreamSource['backupRole'] =
@@ -7431,7 +7400,7 @@ export async function resolveChannelStreams(
                 server: `${item.label}${nowPlayingSuffix}`,
                 url: proxiedUrl,
                 rawUrl: item.url,
-                masterUrl: masterPlaylistUrl,
+                masterUrl: proxiedUrl,
                 quality: item.quality,
                 qualities,
                 language: item.language,
@@ -7493,50 +7462,34 @@ export async function resolveChannelStreams(
 
     const finalSources = verifiedStreams.length > 0 ? [...verifiedStreams] : probed.map((item) => item.sourceObj);
 
-    // Ensure every channel provides same-channel Backup Anti-Freeze Relay and ABR Master servers (zero cross-channel conflict)
-    if (finalSources.length >= 1) {
+    // Ensure every channel has at least a secondary Anti-Freeze Relay server if only 1 upstream is configured
+    if (finalSources.length === 1) {
         const primary = finalSources[0];
         const nowPlayingSuffix = channelEpg?.nowPlaying?.isLive
             ? ` • LIVE: ${channelEpg.nowPlaying.title}`
             : '';
 
-        if (finalSources.length === 1) {
-            const relayUrl = `${primary.url}&relay=2`;
-            const relayQualities = (primary.qualities || []).map((q) =>
-                q.label.startsWith('Auto') ? q : { ...q, url: `${q.url}&relay=2` }
-            );
-            const backupRelay: LiveStreamSource = {
-                ...primary,
-                id: `${channel.id}-s2-relay`,
-                server: `${channel.shortName} (Server 2 Anti-Freeze Relay 1080p)${nowPlayingSuffix}`,
-                url: relayUrl,
-                qualities: relayQualities,
-                backupRole: 'relay',
-                provider: {
-                    id: `iptv-${channel.id}-relay-2`,
-                    name: `${channel.shortName} Backup Relay [${primary.quality}]${nowPlayingSuffix}`
-                }
-            };
-            finalSources.push(backupRelay);
-            if (primary.verified && onStreamVerified) {
-                onStreamVerified(backupRelay);
-            }
-        }
-
-        const abrServer: LiveStreamSource = {
+        const relayUrl = `${primary.url}&relay=2`;
+        const relayQualities = (primary.qualities || []).map((q) => ({
+            ...q,
+            url: `${q.url}&relay=2`
+        }));
+        const backupRelay: LiveStreamSource = {
             ...primary,
-            id: `${channel.id}-s${finalSources.length + 1}-abr`,
-            server: `${channel.shortName} (Server ${finalSources.length + 1} Adaptive Multi-Quality ABR)${nowPlayingSuffix}`,
-            url: masterPlaylistUrl,
-            backupRole: 'backup-2',
+            id: `${channel.id}-s2-relay`,
+            server: `${channel.shortName} (Server 2 Anti-Freeze Relay 1080p)${nowPlayingSuffix}`,
+            url: relayUrl,
+            masterUrl: relayUrl,
+            qualities: relayQualities,
+            backupRole: 'relay',
             provider: {
-                id: `iptv-${channel.id}-abr-master`,
-                name: `${channel.shortName} Multi-Quality ABR [Auto 1080p/720p/480p]${nowPlayingSuffix}`
+                id: `iptv-${channel.id}-relay-2`,
+                name: `${channel.shortName} Backup Relay [${primary.quality}]${nowPlayingSuffix}`
             }
         };
-        finalSources.push(abrServer);
+        finalSources.push(backupRelay);
         if (primary.verified && onStreamVerified) {
-            onStreamVerified(abrServer);
+            onStreamVerified(backupRelay);
         }
     }
 
@@ -7562,8 +7515,8 @@ export async function resolveChannelStreams(
 }
 
 /**
- * Synthesizes a Virtual Multi-Quality & Multi-Server Master HLS Playlist (/v1/live/master/:channelId.m3u8).
- * Enables automatic Adaptive Bitrate (1080p / 720p / 480p) AND transparent multi-server failover in hls.js, VLC, and Safari.
+ * Synthesizes a Virtual Master HLS Playlist (/v1/live/master/:channelId.m3u8).
+ * Emits only genuine verified stream variants from the primary server (zero fake ABR profiles).
  */
 export async function generateChannelMasterPlaylist(
     channelId: string,
@@ -7574,10 +7527,9 @@ export async function generateChannelMasterPlaylist(
         return null;
     }
 
-    const lines: string[] = ['#EXTM3U', '#EXT-X-VERSION:3', '#EXT-X-INDEPENDENT-SEGMENTS'];
+    const lines: string[] = ['#EXTM3U', '#EXT-X-VERSION:3'];
     const seenUrls = new Set<string>([resolved.masterPlaylistUrl]);
 
-    // Emit ABR variants from the primary verified server only so hls.js never mixes different upstream PTS clocks/sample rates without #EXT-X-DISCONTINUITY
     const primaryServers = resolved.sources
         .filter((src) => src.url !== resolved.masterPlaylistUrl && !src.id.endsWith('-abr'))
         .slice(0, 1);
@@ -7591,12 +7543,9 @@ export async function generateChannelMasterPlaylist(
                 if (seenUrls.has(v.url)) continue;
                 seenUrls.add(v.url);
                 const adjustedBw = Math.max(800000, v.bandwidth - sIdx * 150000);
-                const fpsAttr = v.fps ? `,FRAME-RATE=${v.fps}.000` : '';
-                const codecsAttr = v.codecs ? `,CODECS="${v.codecs}"` : ',CODECS="avc1.64002a,mp4a.40.2"';
+                const codecsAttr = v.codecs ? `,CODECS="${v.codecs}"` : '';
                 lines.push(
-                    `#EXT-X-STREAM-INF:BANDWIDTH=${adjustedBw},AVERAGE-BANDWIDTH=${Math.round(
-                        adjustedBw * 0.9
-                    )},RESOLUTION=${v.resolution}${fpsAttr}${codecsAttr},NAME="${v.label} (${serverTag})"`
+                    `#EXT-X-STREAM-INF:BANDWIDTH=${adjustedBw},RESOLUTION=${v.resolution}${codecsAttr},NAME="${v.label} (${serverTag})"`
                 );
                 lines.push(v.url);
             }
@@ -7604,7 +7553,7 @@ export async function generateChannelMasterPlaylist(
             seenUrls.add(src.url);
             const bw = Math.max(1500000, 5600000 - sIdx * 400000);
             lines.push(
-                `#EXT-X-STREAM-INF:BANDWIDTH=${bw},RESOLUTION=1920x1080,FRAME-RATE=50.000,CODECS="avc1.64002a,mp4a.40.2",NAME="${src.quality} (${serverTag})"`
+                `#EXT-X-STREAM-INF:BANDWIDTH=${bw},RESOLUTION=1920x1080,NAME="${src.quality} (${serverTag})"`
             );
             lines.push(src.url);
         }
@@ -9407,156 +9356,6 @@ export function rewriteLiveHlsManifest(
             });
             lines = [...adjustedHeaders, ...keptPairs.flatMap((p) => [...p.prefixTags, p.inf, p.uri])];
         }
-    } else if (
-        manifestContent.includes('#EXTINF') &&
-        !manifestContent.includes('#EXT-X-STREAM-INF') &&
-        !manifestContent.includes('#EXT-X-ENDLIST')
-    ) {
-        // RAM-Backed Contiguous Rolling Window (8 segments for standard HLS / Bluetier / Kwikmotion, 10 for Edge CDN):
-        // Expands shallow 3-4 segment upstream playlists into a deep 8-segment cushion.
-        // For standard HLS servers, rolled-off segments are strictly retained ONLY if they are verified present
-        // in unwrappedSegmentCache (RAM) or segmentInFlight and form an unbroken contiguous sequence,
-        // guaranteeing 0% 404 risk and 100% invariant EXT-X-MEDIA-SEQUENCE numbers across polls.
-        const headerLines: string[] = [];
-        const incomingSegments: RollingSegmentEntry[] = [];
-        let pendingInf = '';
-        let pendingPrefixTags: string[] = [];
-        let seenFirstSegment = false;
-        let baseSeq = 0;
-        let hasSeqHeader = false;
-
-        for (const l of lines) {
-            const t = l.trim();
-            if (!t) continue;
-            const seqMatch = t.match(/^#EXT-X-MEDIA-SEQUENCE:(\d+)/i);
-            if (seqMatch) {
-                baseSeq = Number(seqMatch[1]);
-                hasSeqHeader = true;
-            }
-            if (t.startsWith('#EXTINF')) {
-                seenFirstSegment = true;
-                pendingInf = l;
-            } else if (!t.startsWith('#')) {
-                if (pendingInf && !/\.m3u8(\?|$)/i.test(t)) {
-                    const absSegUrl = resolveRelative(t);
-                    const cacheKey = getSegmentCacheKey(absSegUrl);
-                    const normKey = isEdgeParent ? cacheKey : t.split('?')[0].split('/').slice(-2).join('/');
-                    const segSeq = baseSeq + incomingSegments.length;
-                    incomingSegments.push({
-                        prefixTags: pendingPrefixTags,
-                        inf: pendingInf,
-                        uri: l,
-                        normKey,
-                        cacheKey,
-                        seq: segSeq
-                    });
-                    pendingInf = '';
-                    pendingPrefixTags = [];
-                }
-            } else if (
-                seenFirstSegment ||
-                t.startsWith('#EXT-X-DISCONTINUITY') ||
-                t.startsWith('#EXT-X-PROGRAM-DATE-TIME')
-            ) {
-                if (t !== '#EXT-X-ENDLIST') {
-                    pendingPrefixTags.push(l);
-                }
-            } else {
-                headerLines.push(l);
-            }
-        }
-
-        if (incomingSegments.length > 0 && hasSeqHeader) {
-            const rollingKey = `${channelId || ''}::${baseUrl.split('?')[0]}`;
-            const now = Date.now();
-            const prev = rollingLivePlaylistCache.get(rollingKey);
-            const incomingLatestSeq = incomingSegments[incomingSegments.length - 1].seq;
-            const maxWindowSegments = isEdgeParent ? 10 : 8;
-            let mergedSegments = incomingSegments;
-
-            if (prev && now - prev.updatedAt < 60_000) {
-                const seqDelta = incomingLatestSeq - prev.lastLatestSeq;
-                if (seqDelta >= 0 && seqDelta <= 6) {
-                    if (isEdgeParent) {
-                        const byKey = new Map<string, RollingSegmentEntry>();
-                        for (const seg of prev.segments) {
-                            byKey.set(seg.normKey, seg);
-                        }
-                        for (const seg of incomingSegments) {
-                            const existing = byKey.get(seg.normKey);
-                            byKey.set(seg.normKey, existing ? { ...seg, seq: existing.seq } : seg);
-                        }
-                        mergedSegments = Array.from(byKey.values()).slice(-maxWindowSegments);
-                    } else {
-                        // Standard HLS (Bluetier, Kwikmotion, Amagi): prepend older contiguous segments ONLY if in RAM
-                        const incomingFirstSeq = incomingSegments[0].seq;
-                        const olderBySeq = new Map<number, RollingSegmentEntry>();
-                        for (const seg of prev.segments) {
-                            if (seg.seq < incomingFirstSeq) {
-                                olderBySeq.set(seg.seq, seg);
-                            }
-                        }
-                        const retainedOlder: RollingSegmentEntry[] = [];
-                        let cursorSeq = incomingFirstSeq - 1;
-                        while (
-                            retainedOlder.length + incomingSegments.length < maxWindowSegments &&
-                            olderBySeq.has(cursorSeq)
-                        ) {
-                            const candidate = olderBySeq.get(cursorSeq)!;
-                            const inRam = unwrappedSegmentCache.get(candidate.cacheKey);
-                            const isAvailableInRam =
-                                (inRam && now < inRam.expiresAt) || segmentInFlight.has(candidate.cacheKey);
-                            if (!isAvailableInRam) {
-                                break; // Stop immediately to guarantee an unbroken contiguous sequence
-                            }
-                            retainedOlder.unshift(candidate);
-                            cursorSeq -= 1;
-                        }
-                        mergedSegments = [...retainedOlder, ...incomingSegments];
-                    }
-                }
-            }
-
-            rollingLivePlaylistCache.set(rollingKey, {
-                segments: mergedSegments,
-                lastLatestSeq: incomingLatestSeq,
-                updatedAt: now
-            });
-
-            if (rollingLivePlaylistCache.size > 400) {
-                const oldestKey = rollingLivePlaylistCache.keys().next().value;
-                if (oldestKey) rollingLivePlaylistCache.delete(oldestKey);
-            }
-
-            const effectiveStartSeq = isEdgeParent
-                ? Math.max(0, incomingLatestSeq - mergedSegments.length + 1)
-                : mergedSegments[0].seq;
-            let hasStartOffset = false;
-            const adjustedHeaders = headerLines.map((h) => {
-                if (/^#EXT-X-START:/i.test(h.trim())) {
-                    hasStartOffset = true;
-                }
-                if (/^#EXT-X-MEDIA-SEQUENCE:\d+/i.test(h.trim())) {
-                    return `#EXT-X-MEDIA-SEQUENCE:${effectiveStartSeq}`;
-                }
-                return h;
-            });
-
-            if (isEdgeParent && !hasStartOffset && mergedSegments.length >= 6) {
-                adjustedHeaders.push('#EXT-X-START:TIME-OFFSET=-25.0,PRECISE=YES');
-            }
-
-            lines = [
-                ...adjustedHeaders,
-                ...mergedSegments.flatMap((p, idx) => {
-                    const cleanPrefix =
-                        idx === 0
-                            ? p.prefixTags.filter((tag) => !tag.trim().startsWith('#EXT-X-DISCONTINUITY'))
-                            : p.prefixTags;
-                    return [...cleanPrefix, p.inf, p.uri];
-                })
-            ];
-        }
     }
 
     const rewritten: string[] = [];
@@ -9707,7 +9506,7 @@ function checkManifestFrozen(manifestUrl: string, rawManifestText: string): bool
 
     prev.stagnantPolls += 1;
     const stuckDurationMs = now - prev.lastAdvancedAt;
-    return prev.stagnantPolls >= 6 && stuckDurationMs > 32000;
+    return prev.stagnantPolls >= 12 && stuckDurationMs > 45000;
 }
 
 /**
@@ -9876,24 +9675,9 @@ function ensureActiveStreamPumpLoop(): void {
                     const textPeek = buf.subarray(0, 16).toString('utf8').trim();
                     if (!textPeek.startsWith('#EXTM3U') && !textPeek.startsWith('#EXT')) return;
                     const rawM3UText = buf.toString('utf8');
-                    // Pre-warm the latest 4 segments into RAM before rewriting the rolling playlist
+                    // Pre-warm the latest 4 segments into RAM in the background so player segment requests hit 0ms RAM cache,
+                    // without overwriting lastGoodManifestCache timestamps (so player manifest polls always see real-time sequence updates).
                     warmStreamSegments(rawM3UText, finalResolvedUrl, entry.effectiveHeaders, entry.channelId, 4);
-                    const rewritten = rewriteLiveHlsManifest(
-                        rawM3UText,
-                        finalResolvedUrl,
-                        entry.publicBaseUrl,
-                        entry.effectiveHeaders,
-                        entry.channelId
-                    );
-                    const updatedAt = Date.now();
-                    lastGoodManifestCache.set(entry.manifestCacheKey, {
-                        content: rewritten,
-                        updatedAt
-                    });
-                    lastGoodManifestCache.set(`${entry.publicBaseUrl}::${entry.effectiveUrl}`, {
-                        content: rewritten,
-                        updatedAt
-                    });
                 } catch {
                     // Ignore transient background pump errors
                 } finally {
@@ -10097,12 +9881,11 @@ export async function handleLiveHlsProxyRequest(
 
     let hadInflightFailure = false;
 
-    // 1. Fast micro-cache (1800ms) for rapid concurrent manifest polls + Active Stream Background Pump
+    // 1. Sub-second request coalescer (350ms) to deduplicate simultaneous identical manifest polls + trigger background segment pre-warmer
     if (isM3U8Url && relaySlot === '1') {
-        const wasAlreadyActive = activeStreamPumps.has(manifestCacheKey);
         touchActiveStreamPump(manifestCacheKey, effectiveUrl, effectiveHeaders, publicBaseUrl, parsed.channelId);
         const recentManifest = lastGoodManifestCache.get(manifestCacheKey);
-        if (wasAlreadyActive && recentManifest && Date.now() - recentManifest.updatedAt < 1800) {
+        if (recentManifest && Date.now() - recentManifest.updatedAt < 350) {
             return reply
                 .code(200)
                 .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
@@ -10168,12 +9951,12 @@ export async function handleLiveHlsProxyRequest(
                     parsed.channelId,
                     `http_${status}`
                 );
-                // Shield transient 1-2 poll upstream hiccups with lastGoodManifestCache BEFORE jumping servers
+                // Shield transient upstream hiccups with lastGoodManifestCache BEFORE switching servers mid-stream
                 const fallbackManifest = lastGoodManifestCache.get(manifestCacheKey);
                 if (
                     fallbackManifest &&
-                    Date.now() - fallbackManifest.updatedAt < 18000 &&
-                    updatedHealth.consecutiveFailures < 3
+                    Date.now() - fallbackManifest.updatedAt < 25000 &&
+                    updatedHealth.consecutiveFailures < 6
                 ) {
                     return reply
                         .code(200)
