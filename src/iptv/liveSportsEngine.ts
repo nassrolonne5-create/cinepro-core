@@ -4062,17 +4062,34 @@ export const CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS: Record<string, string> = {
     'tennis-channel': 'TennisChannel'
 };
 
-// Strip throttled wideiptv.top / bluetier.top / dead primetv streams from CORE_SPORTS_CHANNELS at startup
-// so Edge CDN 1080p50 (tiktokcdn-us.com, ~180ms-700ms per segment) is always Server 1 Primary.
+// Promote WideIPTV Bluetier direct hardware MPEG-TS broadcast (100% continuous PTS, zero discontinuities)
+// to Server 1 (Primary) for all mapped channels while keeping Edge CDN and iptv-org as failover backups.
 for (const ch of CORE_SPORTS_CHANNELS) {
     const cleanStreams = ch.streams.filter(
         (s) =>
-            !s.url.includes('wideiptv.top') &&
-            !s.url.includes('bluetier.top') &&
             !s.url.includes('primetv.cc.cd') &&
             !s.url.includes('andro.mangeinde4.lat')
     );
-    if (cleanStreams.length > 0) {
+    const wideSlug = CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS[ch.id];
+    if (wideSlug) {
+        const wideUrl = `https://wideiptv.top/player/${wideSlug}/index.m3u8`;
+        const otherStreams = cleanStreams.filter(
+            (s) => !s.url.includes('wideiptv.top') && !s.url.includes('bluetier.top')
+        );
+        ch.streams = [
+            {
+                label: `${ch.shortName} (Server 1 — Primary 1080p 50fps Direct Broadcast)`,
+                url: wideUrl,
+                quality: ch.quality || '1080p',
+                language: ch.language,
+                headers: WIDEIPTV_HEADERS
+            },
+            ...otherStreams.map((s, idx) => ({
+                ...s,
+                label: s.label.replace(/Server \d+/i, `Server ${idx + 2}`)
+            }))
+        ];
+    } else if (cleanStreams.length > 0) {
         ch.streams = cleanStreams;
     }
 }
@@ -6989,6 +7006,12 @@ async function probeStreamLiveness(
 
         if (isM3U && publicBaseUrl && cacheKey) {
             const finalBase = res.url || resolved.url;
+            if (shouldPrefetchSegments) {
+                warmStreamSegments(chunk, finalBase, resolved.headers, channelId, 4);
+                if (proxyManifestKey) {
+                    touchActiveStreamPump(proxyManifestKey, url, resolved.headers, publicBaseUrl, channelId);
+                }
+            }
             const rewritten = rewriteLiveHlsManifest(chunk, finalBase, publicBaseUrl, resolved.headers, channelId);
             const nowMs = Date.now();
             lastGoodManifestCache.set(cacheKey, {
@@ -7003,9 +7026,6 @@ async function probeStreamLiveness(
                         updatedAt: nowMs
                     });
                 }
-            }
-            if (shouldPrefetchSegments) {
-                prefetchLatestSegment(chunk, finalBase, resolved.headers, channelId);
             }
             const extracted = parseHlsMasterVariants(
                 chunk,
@@ -7162,9 +7182,7 @@ export function getLiveChannels(
         const validStreams = ch.streams.filter(
             (st) =>
                 !st.url.includes('primetv.cc.cd') &&
-                !st.url.includes('andro.mangeinde4.lat') &&
-                !st.url.includes('wideiptv.top') &&
-                !st.url.includes('bluetier.top')
+                !st.url.includes('andro.mangeinde4.lat')
         );
         const effectiveStreams = validStreams.length > 0 ? validStreams : ch.streams;
         const primaryStream = effectiveStreams[0];
@@ -7288,9 +7306,7 @@ export async function resolveChannelStreams(
         for (const st of channel.streams) {
             if (
                 st.url.includes('primetv.cc.cd') ||
-                st.url.includes('andro.mangeinde4.lat') ||
-                st.url.includes('wideiptv.top') ||
-                st.url.includes('bluetier.top')
+                st.url.includes('andro.mangeinde4.lat')
             ) {
                 continue;
             }
@@ -7395,7 +7411,7 @@ export async function resolveChannelStreams(
                 probeTimeoutMs,
                 publicBaseUrl,
                 channel.id,
-                false
+                index === 0
             );
         });
 
@@ -9352,10 +9368,13 @@ interface RollingSegmentEntry {
     normKey: string;
     cacheKey: string;
     seq: number;
+    duration: number;
+    hasDiscontinuity: boolean;
 }
 interface RollingPlaylistState {
     segments: RollingSegmentEntry[];
     lastLatestSeq: number;
+    discontinuitySequence: number;
     updatedAt: number;
 }
 const rollingLivePlaylistCache = new Map<string, RollingPlaylistState>();
@@ -9430,6 +9449,181 @@ export function rewriteLiveHlsManifest(
         }
     }
 
+    // RAM-Backed Rolling DVR Window & Discontinuity Sequence Stabilizer for Live Media Playlists:
+    // 1. Expands short 4-segment upstream windows (e.g. Flussonic 20s window) up to 8 segments (~40s)
+    //    using older segments that are already cached in `unwrappedSegmentCache` (or in-flight),
+    //    preventing 404 Not Found errors when players with `liveSyncDuration: 18` request seg[0]/seg[1].
+    // 2. Stabilizes `#EXT-X-DISCONTINUITY-SEQUENCE` whenever a segment carrying `#EXT-X-DISCONTINUITY`
+    //    rolls off the top of the sliding window, preventing hls.js from resetting `cc` and flushing MSE.
+    const isLiveMediaPlaylist =
+        lines.some((l) => l.trim().startsWith('#EXTINF')) &&
+        !lines.some((l) => l.trim() === '#EXT-X-ENDLIST');
+
+    if (isLiveMediaPlaylist && !baseUrl.includes('chunks_dvr.m3u8')) {
+        const headerLines: string[] = [];
+        const parsedSegments: RollingSegmentEntry[] = [];
+        let pendingInf = '';
+        let pendingPrefixTags: string[] = [];
+        let seenFirstSegment = false;
+        let upstreamMediaSeq = 0;
+        let upstreamDiscSeq: number | null = null;
+        let declaredTargetDuration = 6;
+
+        for (const l of lines) {
+            const t = l.trim();
+            if (!t) continue;
+            const seqMatch = t.match(/^#EXT-X-MEDIA-SEQUENCE:(\d+)/i);
+            if (seqMatch) {
+                upstreamMediaSeq = Number(seqMatch[1]);
+                headerLines.push(t);
+                continue;
+            }
+            const discSeqMatch = t.match(/^#EXT-X-DISCONTINUITY-SEQUENCE:(\d+)/i);
+            if (discSeqMatch) {
+                upstreamDiscSeq = Number(discSeqMatch[1]);
+                headerLines.push(t);
+                continue;
+            }
+            const tdMatch = t.match(/^#EXT-X-TARGETDURATION:(\d+)/i);
+            if (tdMatch) {
+                declaredTargetDuration = Number(tdMatch[1]);
+                headerLines.push(t);
+                continue;
+            }
+            if (t.startsWith('#EXTINF')) {
+                seenFirstSegment = true;
+                pendingInf = t;
+            } else if (!t.startsWith('#')) {
+                if (pendingInf) {
+                    const absSegUrl = resolveRelative(t);
+                    const cacheKey = getSegmentCacheKey(absSegUrl);
+                    const durMatch = pendingInf.match(/^#EXTINF:([\d.]+)/i);
+                    const duration = durMatch ? Number(durMatch[1]) : 5;
+                    const hasDiscontinuity = pendingPrefixTags.some((pt) =>
+                        pt.trim().startsWith('#EXT-X-DISCONTINUITY')
+                    );
+                    parsedSegments.push({
+                        prefixTags: pendingPrefixTags,
+                        inf: pendingInf,
+                        uri: t,
+                        normKey: absSegUrl.split('?')[0],
+                        cacheKey,
+                        seq: upstreamMediaSeq + parsedSegments.length,
+                        duration,
+                        hasDiscontinuity
+                    });
+                    pendingInf = '';
+                    pendingPrefixTags = [];
+                }
+            } else if (
+                seenFirstSegment ||
+                t.startsWith('#EXT-X-DISCONTINUITY') ||
+                t.startsWith('#EXT-X-PROGRAM-DATE-TIME')
+            ) {
+                pendingPrefixTags.push(t);
+            } else {
+                headerLines.push(t);
+            }
+        }
+
+        if (parsedSegments.length > 0) {
+            const streamKey = `${channelId || 'live'}::${baseUrl.split('?')[0]}`;
+            const nowMs = Date.now();
+            const prevRolling = rollingLivePlaylistCache.get(streamKey);
+            let combinedSegments = [...parsedSegments];
+            let discSeq = upstreamDiscSeq ?? prevRolling?.discontinuitySequence ?? 0;
+
+            if (prevRolling && nowMs - prevRolling.updatedAt < 45_000) {
+                const firstNewSeq = parsedSegments[0].seq;
+                // Count any segments with #EXT-X-DISCONTINUITY that rolled off the top of the window
+                if (upstreamDiscSeq === null) {
+                    for (const oldSeg of prevRolling.segments) {
+                        if (oldSeg.seq < firstNewSeq && oldSeg.hasDiscontinuity) {
+                            // Only increment if this segment will not be retained below
+                        }
+                    }
+                }
+
+                // Retain up to 4 immediately preceding older segments ONLY if they are already in RAM cache
+                // (or currently in-flight), guaranteeing 0ms RAM hits and zero 404 errors on Flussonic CDNs
+                const maxRetain = Math.max(0, 8 - parsedSegments.length);
+                if (maxRetain > 0 && firstNewSeq > prevRolling.segments[0]?.seq) {
+                    const olderCandidates = prevRolling.segments.filter((s) => s.seq < firstNewSeq);
+                    const retainedOlder: RollingSegmentEntry[] = [];
+                    let expectedSeq = firstNewSeq - 1;
+                    for (let i = olderCandidates.length - 1; i >= 0 && retainedOlder.length < maxRetain; i--) {
+                        const cand = olderCandidates[i];
+                        if (cand.seq !== expectedSeq) break;
+                        const cachedEntry = unwrappedSegmentCache.get(cand.cacheKey);
+                        const isCachedOrInflight =
+                            (cachedEntry && nowMs < cachedEntry.expiresAt) ||
+                            segmentInFlight.has(cand.cacheKey);
+                        if (!isCachedOrInflight) break;
+                        retainedOlder.unshift(cand);
+                        expectedSeq -= 1;
+                    }
+                    if (retainedOlder.length > 0) {
+                        combinedSegments = [...retainedOlder, ...parsedSegments];
+                    }
+                }
+
+                if (upstreamDiscSeq === null) {
+                    const newStartSeq = combinedSegments[0].seq;
+                    for (const oldSeg of prevRolling.segments) {
+                        if (oldSeg.seq < newStartSeq && oldSeg.hasDiscontinuity) {
+                            discSeq += 1;
+                        }
+                    }
+                }
+            }
+
+            const effectiveMediaSeq = combinedSegments[0].seq;
+            const maxSegDur = combinedSegments.reduce((acc, s) => Math.max(acc, Math.ceil(s.duration)), declaredTargetDuration);
+            const hasAnyDiscontinuity = combinedSegments.some((s) => s.hasDiscontinuity) || discSeq > 0;
+
+            rollingLivePlaylistCache.set(streamKey, {
+                segments: combinedSegments,
+                lastLatestSeq: combinedSegments[combinedSegments.length - 1].seq,
+                discontinuitySequence: discSeq,
+                updatedAt: nowMs
+            });
+
+            const outHeaderLines: string[] = [];
+            let wroteMediaSeq = false;
+            let wroteDiscSeq = false;
+            let wroteTargetDur = false;
+
+            for (const h of headerLines) {
+                if (/^#EXT-X-MEDIA-SEQUENCE:/i.test(h)) {
+                    outHeaderLines.push(`#EXT-X-MEDIA-SEQUENCE:${effectiveMediaSeq}`);
+                    wroteMediaSeq = true;
+                } else if (/^#EXT-X-DISCONTINUITY-SEQUENCE:/i.test(h)) {
+                    outHeaderLines.push(`#EXT-X-DISCONTINUITY-SEQUENCE:${discSeq}`);
+                    wroteDiscSeq = true;
+                } else if (/^#EXT-X-TARGETDURATION:/i.test(h)) {
+                    outHeaderLines.push(`#EXT-X-TARGETDURATION:${maxSegDur}`);
+                    wroteTargetDur = true;
+                } else {
+                    outHeaderLines.push(h);
+                }
+            }
+            if (!wroteTargetDur) {
+                outHeaderLines.push(`#EXT-X-TARGETDURATION:${maxSegDur}`);
+            }
+            if (!wroteMediaSeq) {
+                outHeaderLines.push(`#EXT-X-MEDIA-SEQUENCE:${effectiveMediaSeq}`);
+            }
+            if (!wroteDiscSeq && hasAnyDiscontinuity) {
+                outHeaderLines.push(`#EXT-X-DISCONTINUITY-SEQUENCE:${discSeq}`);
+            }
+
+            lines = [
+                ...outHeaderLines,
+                ...combinedSegments.flatMap((s) => [...s.prefixTags, s.inf, s.uri])
+            ];
+        }
+    }
+
     const rewritten: string[] = [];
     let discontinuityInserted = !injectDiscontinuity;
 
@@ -9483,13 +9677,13 @@ export function rewriteLiveHlsManifest(
 }
 
 // ============================================================================
-// PILLAR 2 & 4: ANTI-FREEZE ZOMBIE DETECTOR, BOUNDED 220MB RAM SEGMENT CACHE & MULTI-SEGMENT STREAM PUMP
+// PILLAR 2 & 4: ANTI-FREEZE ZOMBIE DETECTOR, BOUNDED 96MB RAM SEGMENT CACHE & MULTI-SEGMENT STREAM PUMP
 // ============================================================================
 const lastGoodManifestCache = new Map<string, { content: string; updatedAt: number }>();
 const unwrappedSegmentCache = new Map<string, { buffer: Buffer; contentType: string; expiresAt: number }>();
 const segmentInFlight = new Map<string, Promise<{ buffer: Buffer; contentType: string }>>();
-const MAX_CACHED_SEGMENTS = 320;
-const MAX_CACHE_BYTES = 220 * 1024 * 1024; // 220 MB RAM cap
+const MAX_CACHED_SEGMENTS = 160;
+const MAX_CACHE_BYTES = 96 * 1024 * 1024; // 96 MB RAM cap (safe for 512MB Render containers)
 let currentCachedBytes = 0;
 let totalCacheHits = 0;
 let totalCacheMisses = 0;
@@ -9547,7 +9741,7 @@ function setCachedSegment(url: string, buffer: Buffer, contentType: string): voi
 
 /**
  * Checks whether an upstream live media manifest's segment list is advancing or frozen (zombie encoder).
- * Returns true if the manifest has been stuck on the exact same last segment for >32 seconds across 6+ polls.
+ * Returns true if the manifest has been stuck on the exact same last segment for >16 seconds across 5+ polls.
  */
 function checkManifestFrozen(manifestUrl: string, rawManifestText: string): boolean {
     const lines = rawManifestText.split(/\r?\n/);
@@ -9578,22 +9772,23 @@ function checkManifestFrozen(manifestUrl: string, rawManifestText: string): bool
 
     prev.stagnantPolls += 1;
     const stuckDurationMs = now - prev.lastAdvancedAt;
-    return prev.stagnantPolls >= 12 && stuckDurationMs > 45000;
+    return prev.stagnantPolls >= 5 && stuckDurationMs > 16000;
 }
 
 /**
- * Immediately pre-warms the latest N segments (N-2, N-1, N) into RAM with 0ms artificial delay
- * so both initial playback and continuous live edge polling hit local RAM (<5ms) instead of waiting on upstream CDNs.
+ * Immediately pre-warms all active live window segments (up to 4 segments, oldest-to-newest) into RAM
+ * so players starting 3 segments back (`liveSyncDuration: 18`) and continuous live edge polling
+ * hit local RAM (<5ms) and never suffer 404 Not Found when short-window CDNs (Flussonic) evict seg[0].
  */
 function warmStreamSegments(
     rawManifestText: string,
     baseUrl: string,
     headers?: Record<string, string>,
     channelId?: string,
-    maxCount = 1,
+    maxCount = 4,
     depth = 0
 ): void {
-    if (segmentInFlight.size >= 4) return;
+    if (segmentInFlight.size >= 8) return;
 
     const lines = rawManifestText.split(/\r?\n/);
     const mediaLines: string[] = [];
@@ -9637,10 +9832,12 @@ function warmStreamSegments(
     }
 
     const isEdgeParent = /https?:\/\/edge\.[a-z0-9.-]+/i.test(baseUrl);
+    // Warm in chronological order (oldest seg[0] first -> newest seg[3] last) so seg[0] is captured
+    // before 4-segment Flussonic ring buffers evict it on the next 5s sequence tick.
     const targetLines = mediaLines.slice(-maxCount);
 
     for (const segRel of targetLines) {
-        if (segmentInFlight.size >= 4) break;
+        if (segmentInFlight.size >= 8) break;
         let absSegUrl = segRel;
         if (!/^https?:\/\//i.test(segRel)) {
             try {
@@ -9706,7 +9903,7 @@ function prefetchLatestSegment(
     headers?: Record<string, string>,
     channelId?: string
 ): void {
-    warmStreamSegments(rawManifestText, baseUrl, headers, channelId, 1);
+    warmStreamSegments(rawManifestText, baseUrl, headers, channelId, 4);
 }
 
 interface ActiveStreamPumpEntry {
@@ -9726,7 +9923,7 @@ function ensureActiveStreamPumpLoop(): void {
     activeStreamPumpInterval = setInterval(() => {
         const now = Date.now();
         for (const [key, entry] of activeStreamPumps.entries()) {
-            if (now - entry.lastViewerActivityAt > 12_000) {
+            if (now - entry.lastViewerActivityAt > 18_000) {
                 activeStreamPumps.delete(key);
                 continue;
             }
@@ -9747,7 +9944,7 @@ function ensureActiveStreamPumpLoop(): void {
                     const textPeek = buf.subarray(0, 16).toString('utf8').trim();
                     if (!textPeek.startsWith('#EXTM3U') && !textPeek.startsWith('#EXT')) return;
                     const rawM3UText = buf.toString('utf8');
-                    warmStreamSegments(rawM3UText, finalResolvedUrl, entry.effectiveHeaders, entry.channelId, 1);
+                    warmStreamSegments(rawM3UText, finalResolvedUrl, entry.effectiveHeaders, entry.channelId, 4);
                 } catch {
                     // Ignore transient background pump errors
                 } finally {
@@ -9755,7 +9952,7 @@ function ensureActiveStreamPumpLoop(): void {
                 }
             })();
         }
-    }, 3500);
+    }, 2000);
     if (typeof activeStreamPumpInterval.unref === 'function') {
         activeStreamPumpInterval.unref();
     }
@@ -9776,7 +9973,7 @@ function touchActiveStreamPump(
         existing.effectiveHeaders = effectiveHeaders;
         return;
     }
-    if (activeStreamPumps.size >= 2) {
+    if (activeStreamPumps.size >= 6) {
         const oldestKey = activeStreamPumps.keys().next().value;
         if (oldestKey) activeStreamPumps.delete(oldestKey);
     }
@@ -9860,9 +10057,8 @@ async function attemptChannelFailoverManifest(
     ].filter(
         (s) =>
             s.url !== failedUrl &&
-            !s.url.includes('wideiptv.top') &&
-            !s.url.includes('bluetier.top') &&
-            !s.url.includes('primetv.cc.cd')
+            !s.url.includes('primetv.cc.cd') &&
+            !s.url.includes('andro.mangeinde4.lat')
     );
 
     for (const backup of candidates) {
@@ -9881,7 +10077,7 @@ async function attemptChannelFailoverManifest(
             const failedState = getOrCreateHealthState(failedUrl, channelId);
             failedState.failoverCount += 1;
             recordStreamHealthResult(backup.url, true, 150, channelId);
-            warmStreamSegments(text, finalResolvedUrl, backup.headers, channelId, 3);
+            warmStreamSegments(text, finalResolvedUrl, backup.headers, channelId, 4);
 
             // Pin this channel + failedUrl to the healthy backup for 3 minutes so future polls don't jump back and forth
             const pinKey = `${channelId}::${failedUrl}`;
@@ -10097,7 +10293,7 @@ export async function handleLiveHlsProxyRequest(
                 }
 
                 recordStreamHealthResult(effectiveUrl, true, Date.now() - t0, parsed.channelId);
-                warmStreamSegments(rawM3UText, finalResolvedUrl, effectiveHeaders, parsed.channelId, 1);
+                warmStreamSegments(rawM3UText, finalResolvedUrl, effectiveHeaders, parsed.channelId, 4);
 
                 const rewritten = rewriteLiveHlsManifest(
                     rawM3UText,
