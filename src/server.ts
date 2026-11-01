@@ -88,9 +88,19 @@ async function main() {
         
         cors: {
             origin: getEnv('CORS_ORIGIN', '*'),
-            methods: ['GET', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'Authorization'],
-            exposedHeaders: ['Content-Range', 'Accept-Ranges', 'ETag'],
+            methods: ['GET', 'HEAD', 'POST', 'OPTIONS'],
+            allowedHeaders: [
+                'Content-Type',
+                'Authorization',
+                'Range',
+                'Accept',
+                'Origin',
+                'Referer',
+                'Cache-Control',
+                'Pragma',
+                'X-Requested-With'
+            ],
+            exposedHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length', 'ETag', 'X-Cache', 'X-Stream-Failover'],
             preflightContinue: false,
             optionsSuccessStatus: 204
         }
@@ -453,11 +463,33 @@ async function main() {
         // Push initial heartbeat/connected event
         reply.raw.write(`event: connected\ndata: ${JSON.stringify({ status: 'connected', cacheKey })}\n\n`);
 
+        // Helper to rewrite localhost URLs in SSE payloads to the caller's public origin
+        const rewriteSseSourceOrigin = (src: any, baseUrl: string) => {
+            if (!src || typeof src !== 'object') return src;
+            try {
+                const rawJson = JSON.stringify(src);
+                if (!rawJson.includes('localhost:3000') && !rawJson.includes('127.0.0.1:3000')) {
+                    return src;
+                }
+                return JSON.parse(
+                    rawJson
+                        .replace(/https?:\/\/localhost:3000/g, baseUrl)
+                        .replace(/https?:\/\/127\.0\.0\.1:3000/g, baseUrl)
+                        .replace(/https?%3A%2F%2Flocalhost%3A3000/gi, encodeURIComponent(baseUrl))
+                        .replace(/https?%3A%2F%2F127\.0\.0\.1%3A3000/gi, encodeURIComponent(baseUrl))
+                );
+            } catch {
+                return src;
+            }
+        };
+
+        const reqBaseUrl = getRequestPublicBaseUrl(request);
+
         // Check cache first: if already resolved, stream immediately
         const cached = await (server as any).sourceService.cache.get(cacheKey);
         if (cached && Array.isArray(cached.sources) && cached.sources.length > 0) {
             for (const s of cached.sources) {
-                reply.raw.write(`event: source\ndata: ${JSON.stringify(s)}\n\n`);
+                reply.raw.write(`event: source\ndata: ${JSON.stringify(rewriteSseSourceOrigin(s, reqBaseUrl))}\n\n`);
             }
             reply.raw.write(`event: done\ndata: ${JSON.stringify({ status: 'complete', count: cached.sources.length })}\n\n`);
             reply.raw.end();
@@ -467,7 +499,7 @@ async function main() {
         // Subscribe to real-time provider source events as scrapers complete
         const unsubscribe = subscribeToStreams(cacheKey, (event: any) => {
             if (event.type === 'source') {
-                reply.raw.write(`event: source\ndata: ${JSON.stringify(event.data)}\n\n`);
+                reply.raw.write(`event: source\ndata: ${JSON.stringify(rewriteSseSourceOrigin(event.data, reqBaseUrl))}\n\n`);
             } else if (event.type === 'done') {
                 reply.raw.write(`event: done\ndata: ${JSON.stringify(event.data)}\n\n`);
                 reply.raw.end();
@@ -488,6 +520,7 @@ async function main() {
         const s = Number(request.params.s || 1);
         const e = Number(request.params.e || 1);
         const cacheKey = `tv:${id}:s${s}:e${e}`;
+        const reqBaseUrl = getRequestPublicBaseUrl(request);
 
         reply.raw.writeHead(200, {
             'Content-Type': 'text/event-stream',
@@ -499,10 +532,29 @@ async function main() {
 
         reply.raw.write(`event: connected\ndata: ${JSON.stringify({ status: 'connected', cacheKey })}\n\n`);
 
+        const rewriteSseSourceOrigin = (src: any, baseUrl: string) => {
+            if (!src || typeof src !== 'object') return src;
+            try {
+                const rawJson = JSON.stringify(src);
+                if (!rawJson.includes('localhost:3000') && !rawJson.includes('127.0.0.1:3000')) {
+                    return src;
+                }
+                return JSON.parse(
+                    rawJson
+                        .replace(/https?:\/\/localhost:3000/g, baseUrl)
+                        .replace(/https?:\/\/127\.0\.0\.1:3000/g, baseUrl)
+                        .replace(/https?%3A%2F%2Flocalhost%3A3000/gi, encodeURIComponent(baseUrl))
+                        .replace(/https?%3A%2F%2F127\.0\.0\.1%3A3000/gi, encodeURIComponent(baseUrl))
+                );
+            } catch {
+                return src;
+            }
+        };
+
         const cached = await (server as any).sourceService.cache.get(cacheKey);
         if (cached && Array.isArray(cached.sources) && cached.sources.length > 0) {
             for (const src of cached.sources) {
-                reply.raw.write(`event: source\ndata: ${JSON.stringify(src)}\n\n`);
+                reply.raw.write(`event: source\ndata: ${JSON.stringify(rewriteSseSourceOrigin(src, reqBaseUrl))}\n\n`);
             }
             reply.raw.write(`event: done\ndata: ${JSON.stringify({ status: 'complete', count: cached.sources.length })}\n\n`);
             reply.raw.end();
@@ -511,7 +563,7 @@ async function main() {
 
         const unsubscribe = subscribeToStreams(cacheKey, (event: any) => {
             if (event.type === 'source') {
-                reply.raw.write(`event: source\ndata: ${JSON.stringify(event.data)}\n\n`);
+                reply.raw.write(`event: source\ndata: ${JSON.stringify(rewriteSseSourceOrigin(event.data, reqBaseUrl))}\n\n`);
             } else if (event.type === 'done') {
                 reply.raw.write(`event: done\ndata: ${JSON.stringify(event.data)}\n\n`);
                 reply.raw.end();
@@ -526,13 +578,23 @@ async function main() {
     });
 
     // Helper to resolve public origin for Live IPTV URLs
-    const getRequestPublicBaseUrl = (request: any): string => {
+    function getRequestPublicBaseUrl(request: any): string {
         if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL.replace(/\/$/, '');
         if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '');
-        const proto = request.headers['x-forwarded-proto'] || (request.socket?.encrypted ? 'https' : 'http');
-        const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:3000';
-        return `${proto}://${host}`;
-    };
+        const rawProto = String(request.headers['x-forwarded-proto'] || (request.socket?.encrypted ? 'https' : 'http'))
+            .split(',')[0]
+            .trim();
+        const rawHost = String(request.headers['x-forwarded-host'] || request.headers.host || 'localhost:3000')
+            .split(',')[0]
+            .trim();
+        const isLocal = rawHost.startsWith('localhost') || rawHost.startsWith('127.0.0.1');
+        const proto = !isLocal ? 'https' : rawProto;
+        const resolvedUrl = `${proto}://${rawHost}`;
+        if (!isLocal) {
+            process.env.DETECTED_PUBLIC_URL = resolvedUrl;
+        }
+        return resolvedUrl;
+    }
 
     // 1. Live Sports Channels Directory API (beIN AR/EN/FR/TR/ES, SSC Sports, Fox Sports, ESPN, Eurosport, etc. + Real-Time EPG)
     app.get('/v1/live/channels', async (request: any, reply: any) => {
@@ -823,6 +885,92 @@ async function main() {
     });
 
     app.get('/v1/live/proxy/segment.ts', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const q = (request.query || {}) as { data?: string; relay?: string; profile?: string };
+        return handleLiveHlsProxyRequest(String(q.data || ''), baseUrl, reply, {
+            relay: q.relay,
+            profile: q.profile
+        });
+    });
+
+    // 7. Route Aliases (/live/* and alternative M3U/Master playlist paths) for maximum IPTV player compatibility
+    app.get('/v1/live/channels/:channelId/master.m3u8', handleMasterPlaylist);
+    app.get('/v1/live/stream/:channelId/master.m3u8', handleMasterPlaylist);
+    app.get('/live/master/:channelId.m3u8', handleMasterPlaylist);
+    app.get('/live/master/:channelId', handleMasterPlaylist);
+    app.get('/live/channels/:channelId/master.m3u8', handleMasterPlaylist);
+    app.get('/v1/live/playlist.m3u', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const query = (request.query || {}) as { lang?: string; category?: string; proxy?: string };
+        const useProxy = query.proxy !== 'false' && query.proxy !== '0';
+        await getLiveSportEvents(baseUrl).catch(() => {});
+        const m3u = generateSportsM3UPlaylist(baseUrl, {
+            lang: query.lang,
+            category: query.category,
+            useProxy
+        });
+        return reply
+            .code(200)
+            .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
+            .header('Content-Disposition', 'inline; filename="cinepro-live-sports.m3u"')
+            .header('Access-Control-Allow-Origin', '*')
+            .send(m3u);
+    });
+    app.get('/live/playlist.m3u8', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const query = (request.query || {}) as { lang?: string; category?: string; proxy?: string };
+        const useProxy = query.proxy !== 'false' && query.proxy !== '0';
+        await getLiveSportEvents(baseUrl).catch(() => {});
+        const m3u = generateSportsM3UPlaylist(baseUrl, {
+            lang: query.lang,
+            category: query.category,
+            useProxy
+        });
+        return reply
+            .code(200)
+            .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
+            .header('Access-Control-Allow-Origin', '*')
+            .send(m3u);
+    });
+    app.get('/live/channels', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const query = (request.query || {}) as { lang?: string; category?: string; q?: string };
+        await getLiveSportEvents(baseUrl).catch(() => {});
+        const channels = getLiveChannels(baseUrl, {
+            lang: query.lang,
+            category: query.category,
+            query: query.q
+        });
+        return reply.code(200).send({ status: 'ok', count: channels.length, channels });
+    });
+    app.get('/live/stream/:channelId', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const channelId = String(request.params.channelId || '');
+        const resolved = await resolveChannelStreams(channelId, baseUrl);
+        if (!resolved.channel) {
+            return reply.code(404).send({
+                error: 'CHANNEL_NOT_FOUND',
+                message: `No live sports channel found matching '${channelId}'`
+            });
+        }
+        return reply.code(200).send({
+            status: 'ok',
+            channel: resolved.channel,
+            epg: resolved.epg,
+            masterPlaylistUrl: resolved.masterPlaylistUrl,
+            count: resolved.sources.length,
+            sources: resolved.sources
+        });
+    });
+    app.get('/live/proxy/manifest.m3u8', async (request: any, reply: any) => {
+        const baseUrl = getRequestPublicBaseUrl(request);
+        const q = (request.query || {}) as { data?: string; relay?: string; profile?: string };
+        return handleLiveHlsProxyRequest(String(q.data || ''), baseUrl, reply, {
+            relay: q.relay,
+            profile: q.profile
+        });
+    });
+    app.get('/live/proxy/segment.ts', async (request: any, reply: any) => {
         const baseUrl = getRequestPublicBaseUrl(request);
         const q = (request.query || {}) as { data?: string; relay?: string; profile?: string };
         return handleLiveHlsProxyRequest(String(q.data || ''), baseUrl, reply, {

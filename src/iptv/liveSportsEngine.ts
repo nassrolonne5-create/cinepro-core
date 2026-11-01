@@ -371,10 +371,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports 8 AR (Server 1 — WideIPTV Bluetier HD Primary)', url: 'https://wideiptv.top/player/beINAR8/index.m3u8', quality: '1080p', language: 'ar', headers: WIDEIPTV_HEADERS },
-            { label: 'beIN Sports 8 AR (Server 2 — Edge CDN 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium98/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 8 AR (Server 3 — Edge Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium98/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 8 AR (Server 4 — iptv-org MENA 1080p)', url: 'http://primetv.cc.cd/beinfhd88/index.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'beIN Sports 8 AR (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium98/index.m3u8`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 8 AR (Server 2 — Edge Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium98/index.m3u8?backup=2`, quality: '1080p', language: 'ar', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -804,9 +802,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports MAX 8 France (Server 1 — WideIPTV Bluetier HD Primary)', url: 'https://wideiptv.top/player/beINMAX8FR/index.m3u8', quality: '1080p', language: 'fr', headers: WIDEIPTV_HEADERS },
-            { label: 'beIN Sports MAX 8 France (Server 2 — Edge CDN 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium498/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports MAX 8 France (Server 3 — Edge Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium498/index.m3u8?backup=2`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports MAX 8 France (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium498/index.m3u8`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports MAX 8 France (Server 2 — Edge Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium498/index.m3u8?backup=2`, quality: '1080p', language: 'fr', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -4065,29 +4062,103 @@ export const CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS: Record<string, string> = {
     'tennis-channel': 'TennisChannel'
 };
 
-// Promote verified Bluetier Flussonic Hardware HLS servers to Server 1 (Primary) while retaining all existing servers
+// Strip throttled wideiptv.top / bluetier.top / dead primetv streams from CORE_SPORTS_CHANNELS at startup
+// so Edge CDN 1080p50 (tiktokcdn-us.com, ~180ms-700ms per segment) is always Server 1 Primary.
 for (const ch of CORE_SPORTS_CHANNELS) {
-    const bluetierSlug = CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS[ch.id];
-    if (!bluetierSlug) continue;
-    const targetWideUrl = `https://wideiptv.top/player/${bluetierSlug}/index.m3u8`;
-    const existingIdx = ch.streams.findIndex(
-        (s) => s.url.toLowerCase() === targetWideUrl.toLowerCase() || s.url.includes(`wideiptv.top/player/${bluetierSlug}/`)
+    const cleanStreams = ch.streams.filter(
+        (s) =>
+            !s.url.includes('wideiptv.top') &&
+            !s.url.includes('bluetier.top') &&
+            !s.url.includes('primetv.cc.cd') &&
+            !s.url.includes('andro.mangeinde4.lat')
     );
-    const primaryBluetierStream = {
-        label: `${ch.shortName} (Server 1 — Bluetier Hardware HLS 1080p Primary)`,
-        url: targetWideUrl,
-        quality: '1080p',
-        language: ch.language,
-        headers: WIDEIPTV_HEADERS
-    };
-    if (existingIdx === 0) {
-        ch.streams[0] = primaryBluetierStream;
-    } else if (existingIdx > 0) {
-        const others = ch.streams.filter((_, idx) => idx !== existingIdx);
-        ch.streams = [primaryBluetierStream, ...others];
-    } else {
-        ch.streams = [primaryBluetierStream, ...ch.streams];
+    if (cleanStreams.length > 0) {
+        ch.streams = cleanStreams;
     }
+}
+
+const CHANNEL_SLUG_ALIASES: Record<string, string> = {
+    'bein-1': 'bein-sports-1-ar',
+    'bein-2': 'bein-sports-2-ar',
+    'bein-3': 'bein-sports-3-ar',
+    'bein-4': 'bein-sports-4-ar',
+    'bein-5': 'bein-sports-5-ar',
+    'bein-6': 'bein-sports-6-ar',
+    'bein-7': 'bein-sports-7-ar',
+    'bein-8': 'bein-sports-8-ar',
+    'bein-9': 'bein-sports-9-ar',
+    'bein-sports-1': 'bein-sports-1-ar',
+    'bein-sports-2': 'bein-sports-2-ar',
+    'bein-sports-3': 'bein-sports-3-ar',
+    'bein-sports-4': 'bein-sports-4-ar',
+    'bein-sports-5': 'bein-sports-5-ar',
+    'bein-sports-6': 'bein-sports-6-ar',
+    'bein-sports-7': 'bein-sports-7-ar',
+    'bein-sports-8': 'bein-sports-8-ar',
+    'bein-sports-9': 'bein-sports-9-ar',
+    'bein-sports-1-en': 'bein-sports-en-1',
+    'bein-sports-2-en': 'bein-sports-en-2',
+    'bein-sports-3-en': 'bein-sports-en-3',
+    'bein-sports-1-fr': 'bein-sports-fr-1',
+    'bein-sports-2-fr': 'bein-sports-fr-2',
+    'bein-sports-3-fr': 'bein-sports-fr-3',
+    'bein-sports-1-tr': 'bein-sports-1-tr',
+    'bein-sports-tr-1': 'bein-sports-1-tr',
+    'bein-sports-tr-2': 'bein-sports-2-tr',
+    'bein-sports-tr-3': 'bein-sports-3-tr',
+    'bein-sports-tr-4': 'bein-sports-4-tr',
+    'bein-sports-tr-5': 'bein-sports-5-tr',
+    'bein-premium-1': 'bein-sports-premium-1-ar',
+    'bein-premium-2': 'bein-sports-premium-2-ar',
+    'bein-premium-3': 'bein-sports-premium-3-ar',
+    'ssc-1': 'ssc-sport-1-ar',
+    'ssc-2': 'ssc-sport-2-ar',
+    'ssc-3': 'ssc-sport-3-ar',
+    'ssc-4': 'ssc-sport-4-ar',
+    'ssc-5': 'ssc-sport-5-ar',
+    'ssc-extra-1': 'ssc-sport-extra-1-ar',
+    'ssc-extra-2': 'ssc-sport-extra-2-ar',
+    'ssc-extra-3': 'ssc-sport-extra-3-ar',
+    'ssc-sport-1': 'ssc-sport-1-ar',
+    'ssc-sport-2': 'ssc-sport-2-ar',
+    'ssc-sport-3': 'ssc-sport-3-ar',
+    'ssc-sport-4': 'ssc-sport-4-ar',
+    'ssc-sport-5': 'ssc-sport-5-ar',
+    'ssc-sports-1': 'ssc-sport-1-ar',
+    'ssc-sports-2': 'ssc-sport-2-ar',
+    'ssc-sports-3': 'ssc-sport-3-ar',
+    'espn': 'espn-hd',
+    'espn-1': 'espn-hd',
+    'espn-2': 'espn-2-hd',
+    'espn2': 'espn-2-hd',
+    'espnu': 'espnu-hd',
+    'fs1': 'fox-sports-1',
+    'fs2': 'fox-sports-2',
+    'tnt-sports-1-uk': 'tnt-sports-1',
+    'tnt-sports-2-uk': 'tnt-sports-2',
+    'tnt-sports-3-uk': 'tnt-sports-3',
+    'tnt-sports-4-uk': 'tnt-sports-4',
+    'dazn-1-es': 'dazn-laliga-es',
+    'dazn-laliga': 'dazn-laliga-es',
+    'dazn-f1': 'dazn-f1-es',
+    'sky-sports-epl': 'sky-sports-premier-league',
+    'sky-main-event': 'sky-sports-main-event'
+};
+
+export function resolveCanonicalChannel(rawInput: string): LiveChannel | null {
+    const cleaned = String(rawInput || '')
+        .toLowerCase()
+        .trim()
+        .replace(/\.m3u8$/i, '')
+        .replace(/^live[-:]/i, '');
+    if (!cleaned) return null;
+    const targetId = CHANNEL_SLUG_ALIASES[cleaned] || cleaned;
+    return (
+        CORE_SPORTS_CHANNELS.find((c) => c.id === targetId) ||
+        CORE_SPORTS_CHANNELS.find((c) => c.shortName.toLowerCase().replace(/\s+/g, '-') === targetId) ||
+        CORE_SPORTS_CHANNELS.find((c) => c.name.toLowerCase().replace(/\s+/g, '-') === targetId) ||
+        null
+    );
 }
 
 // ============================================================================
@@ -7089,7 +7160,11 @@ export function getLiveChannels(
 
     return list.map((ch) => {
         const validStreams = ch.streams.filter(
-            (st) => !st.url.includes('primetv.cc.cd') && !st.url.includes('andro.mangeinde4.lat')
+            (st) =>
+                !st.url.includes('primetv.cc.cd') &&
+                !st.url.includes('andro.mangeinde4.lat') &&
+                !st.url.includes('wideiptv.top') &&
+                !st.url.includes('bluetier.top')
         );
         const effectiveStreams = validStreams.length > 0 ? validStreams : ch.streams;
         const primaryStream = effectiveStreams[0];
@@ -7159,11 +7234,7 @@ export async function resolveChannelStreams(
         getLiveSportEvents(publicBaseUrl).catch(() => {});
     }
 
-    const normalizedId = channelId.toLowerCase().trim();
-    const baseChannel =
-        CORE_SPORTS_CHANNELS.find((c) => c.id === normalizedId) ||
-        CORE_SPORTS_CHANNELS.find((c) => c.shortName.toLowerCase().replace(/\s+/g, '-') === normalizedId) ||
-        null;
+    const baseChannel = resolveCanonicalChannel(channelId);
 
     if (!baseChannel) {
         return { channel: null, epg: null, masterPlaylistUrl: '', sources: [] };
@@ -7215,7 +7286,12 @@ export async function resolveChannelStreams(
         }> = [];
 
         for (const st of channel.streams) {
-            if (st.url.includes('primetv.cc.cd') || st.url.includes('andro.mangeinde4.lat')) {
+            if (
+                st.url.includes('primetv.cc.cd') ||
+                st.url.includes('andro.mangeinde4.lat') ||
+                st.url.includes('wideiptv.top') ||
+                st.url.includes('bluetier.top')
+            ) {
                 continue;
             }
             const slugMatch = st.url.match(/\/(premium\d+)\//i);
@@ -7313,14 +7389,13 @@ export async function resolveChannelStreams(
         // give backup servers a 180ms grace window so a slow secondary server never delays tune-in
         const rawProbePromises = candidateStreams.map((item, index) => {
             const probeTimeoutMs = index < curatedCount ? 3400 : 1600;
-            const shouldPrefetch = index === 0;
             return probeStreamLiveness(
                 item.url,
                 item.headers,
                 probeTimeoutMs,
                 publicBaseUrl,
                 channel.id,
-                shouldPrefetch
+                false
             );
         });
 
@@ -7532,7 +7607,7 @@ export async function generateChannelMasterPlaylist(
 
     const primaryServers = resolved.sources
         .filter((src) => src.url !== resolved.masterPlaylistUrl && !src.id.endsWith('-abr'))
-        .slice(0, 1);
+        .slice(0, 2);
 
     primaryServers.forEach((src, sIdx) => {
         const serverTag = sIdx === 0 ? 'Primary' : `Backup-${sIdx}`;
@@ -8816,10 +8891,7 @@ function getNetworkEPGTemplates(ch: LiveChannel): EPGTemplateSlot[] {
  * and enriches live matches with real-time ESPN live scores and team logos.
  */
 export function getChannelEPG(channelId: string, publicBaseUrl: string): ChannelEPG | null {
-    const normalizedId = channelId.toLowerCase().trim();
-    const ch =
-        CORE_SPORTS_CHANNELS.find((c) => c.id === normalizedId) ||
-        CORE_SPORTS_CHANNELS.find((c) => c.shortName.toLowerCase().replace(/\s+/g, '-') === normalizedId);
+    const ch = resolveCanonicalChannel(channelId);
 
     if (!ch) return null;
 
@@ -9518,10 +9590,10 @@ function warmStreamSegments(
     baseUrl: string,
     headers?: Record<string, string>,
     channelId?: string,
-    maxCount = 3,
+    maxCount = 1,
     depth = 0
 ): void {
-    if (segmentInFlight.size >= 8) return;
+    if (segmentInFlight.size >= 4) return;
 
     const lines = rawManifestText.split(/\r?\n/);
     const mediaLines: string[] = [];
@@ -9568,7 +9640,7 @@ function warmStreamSegments(
     const targetLines = mediaLines.slice(-maxCount);
 
     for (const segRel of targetLines) {
-        if (segmentInFlight.size >= 8) break;
+        if (segmentInFlight.size >= 4) break;
         let absSegUrl = segRel;
         if (!/^https?:\/\//i.test(segRel)) {
             try {
@@ -9597,8 +9669,8 @@ function warmStreamSegments(
                 effectiveHeaders,
                 {
                     maxAttempts: 2,
-                    stallTimeoutMs: 2600,
-                    timeoutMs: 5500
+                    stallTimeoutMs: 4500,
+                    timeoutMs: 9500
                 }
             );
             if (!ok || rawBuf.length === 0) throw new Error(`prefetch_http_${status}`);
@@ -9634,7 +9706,7 @@ function prefetchLatestSegment(
     headers?: Record<string, string>,
     channelId?: string
 ): void {
-    warmStreamSegments(rawManifestText, baseUrl, headers, channelId, 3);
+    warmStreamSegments(rawManifestText, baseUrl, headers, channelId, 1);
 }
 
 interface ActiveStreamPumpEntry {
@@ -9654,7 +9726,7 @@ function ensureActiveStreamPumpLoop(): void {
     activeStreamPumpInterval = setInterval(() => {
         const now = Date.now();
         for (const [key, entry] of activeStreamPumps.entries()) {
-            if (now - entry.lastViewerActivityAt > 40_000) {
+            if (now - entry.lastViewerActivityAt > 12_000) {
                 activeStreamPumps.delete(key);
                 continue;
             }
@@ -9675,9 +9747,7 @@ function ensureActiveStreamPumpLoop(): void {
                     const textPeek = buf.subarray(0, 16).toString('utf8').trim();
                     if (!textPeek.startsWith('#EXTM3U') && !textPeek.startsWith('#EXT')) return;
                     const rawM3UText = buf.toString('utf8');
-                    // Pre-warm the latest 4 segments into RAM in the background so player segment requests hit 0ms RAM cache,
-                    // without overwriting lastGoodManifestCache timestamps (so player manifest polls always see real-time sequence updates).
-                    warmStreamSegments(rawM3UText, finalResolvedUrl, entry.effectiveHeaders, entry.channelId, 4);
+                    warmStreamSegments(rawM3UText, finalResolvedUrl, entry.effectiveHeaders, entry.channelId, 1);
                 } catch {
                     // Ignore transient background pump errors
                 } finally {
@@ -9685,7 +9755,7 @@ function ensureActiveStreamPumpLoop(): void {
                 }
             })();
         }
-    }, 2000);
+    }, 3500);
     if (typeof activeStreamPumpInterval.unref === 'function') {
         activeStreamPumpInterval.unref();
     }
@@ -9706,7 +9776,7 @@ function touchActiveStreamPump(
         existing.effectiveHeaders = effectiveHeaders;
         return;
     }
-    if (activeStreamPumps.size >= 16) {
+    if (activeStreamPumps.size >= 2) {
         const oldestKey = activeStreamPumps.keys().next().value;
         if (oldestKey) activeStreamPumps.delete(oldestKey);
     }
@@ -9743,7 +9813,7 @@ async function attemptChannelFailoverManifest(
     failedUrl: string,
     publicBaseUrl: string
 ): Promise<string | null> {
-    const ch = CORE_SPORTS_CHANNELS.find((c) => c.id === channelId);
+    const ch = resolveCanonicalChannel(channelId);
     if (!ch) return null;
 
     const dynBackups = dynamicChannelCache.get(ch.id) || [];
@@ -9787,7 +9857,13 @@ async function attemptChannelFailoverManifest(
             headers: d.headers
         })),
         ...sameEventSimulcasts
-    ].filter((s) => s.url !== failedUrl);
+    ].filter(
+        (s) =>
+            s.url !== failedUrl &&
+            !s.url.includes('wideiptv.top') &&
+            !s.url.includes('bluetier.top') &&
+            !s.url.includes('primetv.cc.cd')
+    );
 
     for (const backup of candidates) {
         const health = getOrCreateHealthState(backup.url, channelId);
@@ -10021,8 +10097,7 @@ export async function handleLiveHlsProxyRequest(
                 }
 
                 recordStreamHealthResult(effectiveUrl, true, Date.now() - t0, parsed.channelId);
-                // Immediately pre-warm the latest 4 segments (0ms delay) BEFORE rewriting the rolling manifest
-                warmStreamSegments(rawM3UText, finalResolvedUrl, effectiveHeaders, parsed.channelId, 4);
+                warmStreamSegments(rawM3UText, finalResolvedUrl, effectiveHeaders, parsed.channelId, 1);
 
                 const rewritten = rewriteLiveHlsManifest(
                     rawM3UText,
@@ -10059,15 +10134,15 @@ export async function handleLiveHlsProxyRequest(
             }
         }
 
-        // Binary Segment Download with Chunk-Activity Stall Watchdog (2.6s stall timeout, 6.0s max ceiling)
+        // Binary Segment Download with Chunk-Activity Stall Watchdog (4.5s stall timeout, 10.5s max ceiling for 6.5MB 1080p50 segments)
         const segPromise = (async () => {
             const { buffer: rawBuf, ok, status, contentType } = await fetchUpstreamBufferWithRetry(
                 parsed.url,
                 parsed.headers,
                 {
                     maxAttempts: hadInflightFailure ? 2 : 3,
-                    stallTimeoutMs: 2600,
-                    timeoutMs: 6000
+                    stallTimeoutMs: 4500,
+                    timeoutMs: 10500
                 }
             );
             if (!ok || rawBuf.length === 0) {
@@ -10154,6 +10229,17 @@ export async function handleLiveHlsProxyRequest(
                     .header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
                     .header('Access-Control-Allow-Origin', '*')
                     .send(fallbackManifest.content);
+            }
+        } else if (parsed.channelId) {
+            const ch = resolveCanonicalChannel(parsed.channelId);
+            if (ch && ch.streams[0]) {
+                recordStreamHealthResult(
+                    ch.streams[0].url,
+                    false,
+                    Date.now() - t0,
+                    ch.id,
+                    err?.message || 'segment_error'
+                );
             }
         }
         return reply

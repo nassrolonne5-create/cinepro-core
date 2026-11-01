@@ -763,32 +763,55 @@ export function setupThreePillarArchitecture(server: any) {
         return !/^\d{1,20}$/.test(str);
     };
 
-    const resolveDirectIptvSource = async (type: 'movie' | 'tv', id: string) => {
-        const publicBaseUrl = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
+    const resolveDirectIptvSource = async (type: 'movie' | 'tv', id: string, season = 1, episode = 1) => {
+        const cacheKey = type === 'movie' ? `movie:${id}` : `tv:${id}:s${season}:e${episode}`;
+        const publicBaseUrl =
+            process.env.PUBLIC_URL ||
+            process.env.RENDER_EXTERNAL_URL ||
+            process.env.DETECTED_PUBLIC_URL ||
+            'http://localhost:3000';
         const iptvProvider = sourceService.registry.getProviders().find((p: any) => p.id === 'iptvsports');
-        if (!iptvProvider) {
-            throw OMSSErrors.invalidTmdbId(id);
+        try {
+            if (!iptvProvider) {
+                throw OMSSErrors.invalidTmdbId(id);
+            }
+            const mediaObj = {
+                tmdbId: id,
+                imdbId: '',
+                title: id,
+                type,
+                year: new Date().getFullYear(),
+                season,
+                episode,
+                s: season,
+                e: episode
+            };
+            const res = type === 'movie'
+                ? await iptvProvider.getMovieSources(mediaObj)
+                : await iptvProvider.getTVSources(mediaObj);
+            if (!res || !Array.isArray(res.sources) || res.sources.length === 0) {
+                throw OMSSErrors.noSourcesAvailable(id, 1);
+            }
+            const built = sourceService.buildResponse([res]);
+            built.sources = formatAndNamespaceSources(built.sources, publicBaseUrl);
+
+            const listeners = sseListeners.get(cacheKey);
+            if (listeners && listeners.size > 0) {
+                for (const src of built.sources) {
+                    for (const l of listeners) {
+                        try { l({ type: 'source', data: src }); } catch {}
+                    }
+                }
+            }
+            return built;
+        } finally {
+            const listeners = sseListeners.get(cacheKey);
+            if (listeners && listeners.size > 0) {
+                for (const l of listeners) {
+                    try { l({ type: 'done', data: { status: 'complete' } }); } catch {}
+                }
+            }
         }
-        const mediaObj = {
-            tmdbId: id,
-            imdbId: '',
-            title: id,
-            type,
-            year: new Date().getFullYear(),
-            season: 1,
-            episode: 1,
-            s: 1,
-            e: 1
-        };
-        const res = type === 'movie'
-            ? await iptvProvider.getMovieSources(mediaObj)
-            : await iptvProvider.getTVSources(mediaObj);
-        if (!res || !Array.isArray(res.sources) || res.sources.length === 0) {
-            throw OMSSErrors.noSourcesAvailable(id, 1);
-        }
-        const built = sourceService.buildResponse([res]);
-        built.sources = formatAndNamespaceSources(built.sources, publicBaseUrl);
-        return built;
     };
 
     // Override getMovieSources
@@ -803,7 +826,7 @@ export function setupThreePillarArchitecture(server: any) {
     // Override getTVSources
     sourceService.getTVSources = async function (tmdbId: string, season: number, episode: number) {
         if (isLiveChannelRequest(tmdbId)) {
-            return await resolveDirectIptvSource('tv', tmdbId);
+            return await resolveDirectIptvSource('tv', tmdbId, season, episode);
         }
         await sourceService.tmdbValidator.validateTVEpisode(tmdbId, season, episode);
         return await executeThreePillars('tv', tmdbId, season, episode);

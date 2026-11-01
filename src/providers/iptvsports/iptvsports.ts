@@ -7,6 +7,7 @@ import type {
 } from '@omss/framework';
 import {
     CORE_SPORTS_CHANNELS,
+    resolveCanonicalChannel,
     resolveChannelStreams
 } from '../../iptv/liveSportsEngine.js';
 
@@ -27,14 +28,13 @@ export class IptvSportsProvider extends BaseProvider {
         const rawId = String(media.tmdbId || '').toLowerCase().trim().replace(/^live[-:]/, '');
         const title = String(media.title || '').toLowerCase().trim();
 
-        const byId = CORE_SPORTS_CHANNELS.find(
-            (ch) =>
-                ch.id === rawId ||
-                ch.shortName.toLowerCase().replace(/\s+/g, '-') === rawId
-        );
-        if (byId) return byId.id;
+        const canonicalById = resolveCanonicalChannel(rawId);
+        if (canonicalById) return canonicalById.id;
 
         if (title) {
+            const canonicalByTitle = resolveCanonicalChannel(title);
+            if (canonicalByTitle) return canonicalByTitle.id;
+
             const exactTitle = CORE_SPORTS_CHANNELS.find(
                 (ch) =>
                     ch.name.toLowerCase() === title ||
@@ -69,6 +69,7 @@ export class IptvSportsProvider extends BaseProvider {
         const publicBaseUrl =
             process.env.PUBLIC_URL ||
             process.env.RENDER_EXTERNAL_URL ||
+            process.env.DETECTED_PUBLIC_URL ||
             (this as any).proxyConfig?.proxyBaseUrl ||
             'http://localhost:3000';
 

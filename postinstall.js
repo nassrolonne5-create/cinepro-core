@@ -47,6 +47,10 @@ if (fs.existsSync(validationFile)) {
     let code = fs.readFileSync(validationFile, 'utf8');
     code = code.replace(/const result = await tmdbService\.validateMovie\(tmdbId\);/g, 'const result = { exists: true, released: true };');
     code = code.replace(/const result = await tmdbService\.validateTVEpisode\(tmdbId, season, episode\);/g, 'const result = { exists: true, released: true };');
+    code = code.replace(
+        /export async function validateContentType\(request, reply\) \{[\s\S]*?\n\}/,
+        'export async function validateContentType(request, reply) {\n    return;\n}'
+    );
     fs.writeFileSync(validationFile, code);
     console.log("Patched validation.js successfully.");
 }
