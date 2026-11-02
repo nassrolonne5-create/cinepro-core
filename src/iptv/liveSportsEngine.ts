@@ -4585,7 +4585,9 @@ async function fetchUpstreamWithRetry(
     let lastStatus = 0;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        const forceRefreshToken = attempt > 0 && (lastStatus === 401 || lastStatus === 403);
+        const isDynamicWide = /wideiptv|bluetier/i.test(rawUrl);
+        const forceRefreshToken =
+            attempt > 0 && (lastStatus === 401 || lastStatus === 403 || (lastStatus === 404 && isDynamicWide));
         const resolved = await resolveDynamicManifestUrl(rawUrl, headers, forceRefreshToken);
         lastResolvedUrl = resolved.url;
 
@@ -4608,7 +4610,11 @@ async function fetchUpstreamWithRetry(
 
             lastResponse = res;
             lastStatus = res.status;
-            if ([401, 403, 408, 429, 500, 502, 503, 504].includes(res.status) && attempt < maxAttempts - 1) {
+            if (
+                ([401, 403, 408, 429, 500, 502, 503, 504].includes(res.status) ||
+                    (res.status === 404 && isDynamicWide)) &&
+                attempt < maxAttempts - 1
+            ) {
                 await new Promise((r) => setTimeout(r, 90 * (attempt + 1)));
                 continue;
             }
@@ -4644,11 +4650,13 @@ async function fetchUpstreamBufferWithRetry(
     let lastError: any = null;
     let lastStatus = 502;
     let lastResolvedUrl = rawUrl;
+    const isDynamicWide = /wideiptv|bluetier/i.test(rawUrl);
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        // Only force-refresh token if the previous attempt actually returned 401/403 (expired token),
+        // Only force-refresh token if the previous attempt actually returned 401/403 (or 404 on wideiptv),
         // never on a transient socket timeout
-        const forceRefreshToken = attempt > 0 && (lastStatus === 401 || lastStatus === 403);
+        const forceRefreshToken =
+            attempt > 0 && (lastStatus === 401 || lastStatus === 403 || (lastStatus === 404 && isDynamicWide));
         const resolved = await resolveDynamicManifestUrl(rawUrl, headers, forceRefreshToken);
         lastResolvedUrl = resolved.url;
 
@@ -4751,7 +4759,11 @@ async function fetchUpstreamBufferWithRetry(
                 return result;
             }
 
-            if ([401, 403, 408, 429, 500, 502, 503, 504].includes(result.status) && attempt < maxAttempts - 1) {
+            if (
+                ([401, 403, 408, 429, 500, 502, 503, 504].includes(result.status) ||
+                    (result.status === 404 && isDynamicWide)) &&
+                attempt < maxAttempts - 1
+            ) {
                 await new Promise((r) => setTimeout(r, 60 * (attempt + 1)));
                 continue;
             }
@@ -9682,8 +9694,8 @@ export function rewriteLiveHlsManifest(
 const lastGoodManifestCache = new Map<string, { content: string; updatedAt: number }>();
 const unwrappedSegmentCache = new Map<string, { buffer: Buffer; contentType: string; expiresAt: number }>();
 const segmentInFlight = new Map<string, Promise<{ buffer: Buffer; contentType: string }>>();
-const MAX_CACHED_SEGMENTS = 160;
-const MAX_CACHE_BYTES = 96 * 1024 * 1024; // 96 MB RAM cap (safe for 512MB Render containers)
+const MAX_CACHED_SEGMENTS = 240;
+const MAX_CACHE_BYTES = 160 * 1024 * 1024; // 160 MB RAM cap
 let currentCachedBytes = 0;
 let totalCacheHits = 0;
 let totalCacheMisses = 0;
@@ -9741,7 +9753,9 @@ function setCachedSegment(url: string, buffer: Buffer, contentType: string): voi
 
 /**
  * Checks whether an upstream live media manifest's segment list is advancing or frozen (zombie encoder).
- * Returns true if the manifest has been stuck on the exact same last segment for >16 seconds across 5+ polls.
+ * Note: During live matches, Flussonic (cdn.wideiptv.top) occasionally encodes variable-GOP segments up to
+ * 18.5 seconds long (e.g., 18360ms). Only mark as frozen if stuck on the exact same segment for >38 seconds
+ * across 10+ polls so we never falsely hijack a working wideiptv stream mid-match.
  */
 function checkManifestFrozen(manifestUrl: string, rawManifestText: string): boolean {
     const lines = rawManifestText.split(/\r?\n/);
@@ -9772,7 +9786,7 @@ function checkManifestFrozen(manifestUrl: string, rawManifestText: string): bool
 
     prev.stagnantPolls += 1;
     const stuckDurationMs = now - prev.lastAdvancedAt;
-    return prev.stagnantPolls >= 5 && stuckDurationMs > 16000;
+    return prev.stagnantPolls >= 10 && stuckDurationMs > 38000;
 }
 
 /**
@@ -10008,7 +10022,8 @@ const channelFailoverPinMap = new Map<
 async function attemptChannelFailoverManifest(
     channelId: string,
     failedUrl: string,
-    publicBaseUrl: string
+    publicBaseUrl: string,
+    rootUrl?: string
 ): Promise<string | null> {
     const ch = resolveCanonicalChannel(channelId);
     if (!ch) return null;
@@ -10079,14 +10094,24 @@ async function attemptChannelFailoverManifest(
             recordStreamHealthResult(backup.url, true, 150, channelId);
             warmStreamSegments(text, finalResolvedUrl, backup.headers, channelId, 4);
 
-            // Pin this channel + failedUrl to the healthy backup for 3 minutes so future polls don't jump back and forth
-            const pinKey = `${channelId}::${failedUrl}`;
-            channelFailoverPinMap.set(pinKey, {
+            // Pin this channel + failedUrl (and rootUrl if different) to the healthy backup for 3 minutes
+            // so future polls don't ping-pong back and forth between incompatible EXT-X-MEDIA-SEQUENCE counters
+            const pinEntry = {
                 backupUrl: backup.url,
                 backupHeaders: backup.headers,
                 pinnedAt: Date.now(),
                 needsDiscontinuity: false
-            });
+            };
+            const pinKey = `${channelId}::${failedUrl}`;
+            channelFailoverPinMap.set(pinKey, pinEntry);
+            if (rootUrl && rootUrl !== failedUrl) {
+                const rootPinKey = `${channelId}::${rootUrl}`;
+                if (backup.url === rootUrl) {
+                    channelFailoverPinMap.delete(rootPinKey);
+                } else {
+                    channelFailoverPinMap.set(rootPinKey, pinEntry);
+                }
+            }
 
             return rewriteLiveHlsManifest(
                 text,
@@ -10242,7 +10267,8 @@ export async function handleLiveHlsProxyRequest(
                     const failoverM3U = await attemptChannelFailoverManifest(
                         parsed.channelId,
                         effectiveUrl,
-                        publicBaseUrl
+                        publicBaseUrl,
+                        parsed.url
                     );
                     if (failoverM3U) {
                         return reply
@@ -10279,7 +10305,8 @@ export async function handleLiveHlsProxyRequest(
                     const failoverM3U = await attemptChannelFailoverManifest(
                         parsed.channelId,
                         effectiveUrl,
-                        publicBaseUrl
+                        publicBaseUrl,
+                        parsed.url
                     );
                     if (failoverM3U) {
                         return reply
