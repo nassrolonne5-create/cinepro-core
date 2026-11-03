@@ -216,6 +216,14 @@ const WIDEIPTV_HEADERS: Record<string, string> = {
     Origin: 'https://wideiptv.top',
     Referer: 'https://wideiptv.top/'
 };
+const TOSSEQUIP_HEADERS: Record<string, string> = {
+    Origin: 'https://tossequip.net',
+    Referer: 'https://tossequip.net/'
+};
+const EHGEMBXE_HEADERS: Record<string, string> = {
+    Origin: 'https://ehgembxe.cfd',
+    Referer: 'https://ehgembxe.cfd/'
+};
 
 /**
  * Curated Core Sports, beIN Sports & Movies/Entertainment Channel Matrix (AR / EN / FR / ES / TR + MENA + Global)
@@ -4062,31 +4070,113 @@ export const CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS: Record<string, string> = {
     'tennis-channel': 'TennisChannel'
 };
 
-// Promote WideIPTV Bluetier direct hardware MPEG-TS broadcast (100% continuous PTS, zero discontinuities)
-// to Server 1 (Primary) for all mapped channels while keeping Edge CDN and iptv-org as failover backups.
+// Static pre-resolved embed slugs so top channels resolve directly in 1 hop via Cloudflare without touching dlstreams.st
+const CAST_TOSSEQUIP_EMBED_SLUGS: Record<number, string> = {
+    31: 'qjn6q4rpl0tav', // Sky Sports Main Event UK
+    32: '9pbg9gio7v5az', // Sky Sports Premier League UK
+    60: 'nesznue1swsb2', // ESPN USA
+    91: '86xmv29g1aw01', // beIN Sports 1 AR
+    92: 'd269auac4m2zi', // beIN Sports 2 AR
+    93: 'pq1go379p3ks',  // beIN Sports 3 AR
+    94: 'vg4qdam2zddfv', // beIN Sports 4 AR
+    95: 'd269au3cxb8jq', // beIN Sports 5 AR
+    96: 'twou7x1innxqi', // beIN Sports 6 AR
+    97: 'twou7xhihrzug', // beIN Sports 7 AR
+    98: 'yxterg64xlvlx', // beIN Sports 8 AR
+    99: 'sudwknj5fkz3h', // beIN Sports 9 AR
+    116: 'ul205qusekq4g', // beIN Sports 1 FR
+    117: 'sudwk915fxxop'  // beIN Sports 2 FR
+};
+
+const PLUS_EHGEMBXE_EMBED_SLUGS: Record<number, string> = {
+    31: 'e0lyrkhr-9864', // Sky Sports Main Event UK
+    35: 'a80q8j3i-7473', // TNT Sports 1 UK
+    60: 'f596f98r-3759', // ESPN USA
+    91: 'gh9m7u89-4994', // beIN Sports 1 AR
+    92: 'klk0j7p2-1991', // beIN Sports 2 AR
+    93: 'ketbclv0-3229', // beIN Sports 3 AR
+    94: 'pxx4l615-8801', // beIN Sports 4 AR
+    95: '59b89cub-9253'  // beIN Sports 5 AR
+};
+
+// Promote Cast TossEquip (7odxv0l067ka.net:8443 — 4.000s constant segments, 7-segment 28s window, 6h token, 1080p 50fps),
+// Plus Tims/TikTok US CDN, and WideIPTV Bluetier to top primary/backup servers while keeping Edge CDN & iptv-org as failovers.
 for (const ch of CORE_SPORTS_CHANNELS) {
     const cleanStreams = ch.streams.filter(
         (s) =>
             !s.url.includes('primetv.cc.cd') &&
             !s.url.includes('andro.mangeinde4.lat')
     );
+
+    const edgeStream = cleanStreams.find((s) => /\/premium(\d+)\/index\.m3u8/i.test(s.url));
+    const premiumMatch = edgeStream?.url.match(/\/premium(\d+)\/index\.m3u8/i);
+    const streamIdNum = premiumMatch ? Number(premiumMatch[1]) : 0;
+    const isQuarantined = streamIdNum >= 614 && streamIdNum <= 621;
+
     const wideSlug = CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS[ch.id];
+    const hasStaticCast = streamIdNum > 0 && !isQuarantined && Boolean(CAST_TOSSEQUIP_EMBED_SLUGS[streamIdNum]);
+    const hasStaticPlus = streamIdNum > 0 && !isQuarantined && Boolean(PLUS_EHGEMBXE_EMBED_SLUGS[streamIdNum]);
+    const promotedStreams: typeof ch.streams = [];
+
+    // 1. Server 1 (Primary): Cast TossEquip 1080p 50fps (4.0s constant GOP segments, 7-segment window, 6h token)
+    if (hasStaticCast) {
+        promotedStreams.push({
+            label: `${ch.shortName} (Server 1 — Primary 1080p 50fps Ultra-Stable 4s Broadcast)`,
+            url: `https://dlstreams.st/cast/stream-${streamIdNum}.m3u8`,
+            quality: ch.quality || '1080p',
+            language: ch.language,
+            headers: TOSSEQUIP_HEADERS
+        });
+    }
+
+    // 2. Plus Global CDN 1080p 50fps (tims-001.sytes.net / TikTok US CDN)
+    if (hasStaticPlus) {
+        promotedStreams.push({
+            label: `${ch.shortName} (Server ${promotedStreams.length + 1} — Plus Global CDN 1080p 50fps)`,
+            url: `https://dlstreams.st/plus/stream-${streamIdNum}.m3u8`,
+            quality: ch.quality || '1080p',
+            language: ch.language,
+            headers: EHGEMBXE_HEADERS
+        });
+    }
+
+    // 3. WideIPTV Bluetier Direct Hardware Broadcast
     if (wideSlug) {
-        const wideUrl = `https://wideiptv.top/player/${wideSlug}/index.m3u8`;
-        const otherStreams = cleanStreams.filter(
-            (s) => !s.url.includes('wideiptv.top') && !s.url.includes('bluetier.top')
-        );
+        promotedStreams.push({
+            label: `${ch.shortName} (Server ${promotedStreams.length + 1} — WideIPTV Bluetier 1080p 50fps)`,
+            url: `https://wideiptv.top/player/${wideSlug}/index.m3u8`,
+            quality: ch.quality || '1080p',
+            language: ch.language,
+            headers: WIDEIPTV_HEADERS
+        });
+    }
+
+    // 4. Dynamic Cast fallback for non-pre-mapped channels
+    if (streamIdNum > 0 && !isQuarantined && !hasStaticCast) {
+        promotedStreams.push({
+            label: `${ch.shortName} (Server ${promotedStreams.length + 1} — Cast 1080p 50fps 4s Broadcast)`,
+            url: `https://dlstreams.st/cast/stream-${streamIdNum}.m3u8`,
+            quality: ch.quality || '1080p',
+            language: ch.language,
+            headers: TOSSEQUIP_HEADERS
+        });
+    }
+
+    // 5. Remaining curated streams (Edge CDN, official Aloula KSA, etc.)
+    const otherStreams = cleanStreams.filter(
+        (s) =>
+            !s.url.includes('wideiptv.top') &&
+            !s.url.includes('bluetier.top') &&
+            !s.url.includes('dlstreams.st/cast/') &&
+            !s.url.includes('dlstreams.st/plus/')
+    );
+
+    if (promotedStreams.length > 0) {
         ch.streams = [
-            {
-                label: `${ch.shortName} (Server 1 — Primary 1080p 50fps Direct Broadcast)`,
-                url: wideUrl,
-                quality: ch.quality || '1080p',
-                language: ch.language,
-                headers: WIDEIPTV_HEADERS
-            },
+            ...promotedStreams,
             ...otherStreams.map((s, idx) => ({
                 ...s,
-                label: s.label.replace(/Server \d+/i, `Server ${idx + 2}`)
+                label: s.label.replace(/Server \d+/i, `Server ${promotedStreams.length + idx + 1}`)
             }))
         ];
     } else if (cleanStreams.length > 0) {
@@ -4481,8 +4571,257 @@ async function fetchFreshWideIptvSignedHlsUrl(
     }
 }
 
+// ============================================================================
+// CAST (tossequip.net -> 7odxv0l067ka.net:8443) & PLUS (ehgembxe.cfd -> tims-001.sytes.net) RESOLVERS
+// ============================================================================
+const castSignedHlsCache = new Map<number, { signedUrl: string; headers: Record<string, string>; refreshAt: number; expiresAt: number }>();
+const castSignedHlsInFlight = new Map<number, Promise<{ signedUrl: string; headers: Record<string, string> } | null>>();
+
+const plusSignedHlsCache = new Map<number, { signedUrl: string; headers: Record<string, string>; refreshAt: number; expiresAt: number }>();
+const plusSignedHlsInFlight = new Map<number, Promise<{ signedUrl: string; headers: Record<string, string> } | null>>();
+
+// Polite 1-request-per-1500ms rate limiter for dlstreams.st embed discovery (only used when slug is not in static map)
+let lastDlstreamsScrapeAt = 0;
+let dlstreamsScrapeChain: Promise<void> = Promise.resolve();
+
+async function withPoliteDlstreamsSlot<T>(fn: () => Promise<T>): Promise<T> {
+    const prev = dlstreamsScrapeChain;
+    let release!: () => void;
+    dlstreamsScrapeChain = new Promise<void>((r) => {
+        release = r;
+    });
+    await prev;
+    const waitMs = Math.max(0, 1500 - (Date.now() - lastDlstreamsScrapeAt));
+    if (waitMs > 0) {
+        await new Promise((r) => setTimeout(r, waitMs));
+    }
+    lastDlstreamsScrapeAt = Date.now();
+    try {
+        return await fn();
+    } finally {
+        release();
+    }
+}
+
+function decodeTossEquipConfig(raw: string): { stream_url?: string; stream_url_nop2p?: string } | null {
+    try {
+        const order = [2, 0, 3, 1];
+        const s = Buffer.from(raw, 'base64').toString('binary');
+        const chunkLen = Math.ceil(s.length / 4);
+        const parts: string[] = [];
+        for (let i = 0; i < 4; i++) {
+            parts.push(s.substr(i * chunkLen, chunkLen));
+        }
+        const out: string[] = [];
+        for (let i = 0; i < order.length; i++) {
+            const p = String(parts[i]);
+            const stripped = p.slice(0, 3) + p.slice(4);
+            out[order[i]] = Buffer.from(stripped, 'base64').toString('binary');
+        }
+        return JSON.parse(Buffer.from(out.join(''), 'base64').toString('utf8'));
+    } catch {
+        return null;
+    }
+}
+
+async function getCastTossEquipSignedHlsUrl(
+    streamId: number,
+    forceRefresh = false
+): Promise<{ signedUrl: string; headers: Record<string, string> } | null> {
+    const now = Date.now();
+    const cached = castSignedHlsCache.get(streamId);
+    if (!forceRefresh && cached && now < cached.expiresAt) {
+        if (now >= cached.refreshAt && !castSignedHlsInFlight.has(streamId)) {
+            void fetchFreshCastTossEquipHlsUrl(streamId, cached).catch(() => {});
+        }
+        return { signedUrl: cached.signedUrl, headers: cached.headers };
+    }
+
+    const existing = castSignedHlsInFlight.get(streamId);
+    if (existing) return existing;
+
+    return fetchFreshCastTossEquipHlsUrl(streamId, cached);
+}
+
+async function fetchFreshCastTossEquipHlsUrl(
+    streamId: number,
+    cached?: { signedUrl: string; headers: Record<string, string>; refreshAt: number; expiresAt: number }
+): Promise<{ signedUrl: string; headers: Record<string, string> } | null> {
+    const flight = (async () => {
+        try {
+            let embedSlug = CAST_TOSSEQUIP_EMBED_SLUGS[streamId];
+            if (!embedSlug) {
+                embedSlug = await withPoliteDlstreamsSlot(async () => {
+                    const r1 = await fetch(`https://dlstreams.st/cast/stream-${streamId}.php`, {
+                        headers: {
+                            'User-Agent': DEFAULT_UA,
+                            Referer: `https://dlstreams.st/watch.php?id=${streamId}`
+                        },
+                        signal: AbortSignal.timeout(3500)
+                    });
+                    if (!r1.ok) return '';
+                    const h1 = await r1.text();
+                    const m1 = h1.match(/<iframe[^>]+src=["']https:\/\/tossequip\.net\/e\/([^"']+)["']/i);
+                    if (m1?.[1]) {
+                        CAST_TOSSEQUIP_EMBED_SLUGS[streamId] = m1[1];
+                        return m1[1];
+                    }
+                    return '';
+                });
+            }
+            if (!embedSlug) return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+
+            const embedUrl = `https://tossequip.net/e/${embedSlug}`;
+            const r2 = await fetch(embedUrl, {
+                headers: {
+                    'User-Agent': DEFAULT_UA,
+                    Referer: 'https://dlstreams.st/'
+                },
+                signal: AbortSignal.timeout(4000)
+            });
+            if (!r2.ok) return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+            const h2 = await r2.text();
+            const m2 = h2.match(/window\._econfig\s*=\s*["']([^"']+)["']/);
+            if (!m2?.[1]) return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+
+            const cfg = decodeTossEquipConfig(m2[1]);
+            const signedUrl = (cfg?.stream_url_nop2p || cfg?.stream_url || '').trim();
+            if (!signedUrl.startsWith('http')) {
+                return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+            }
+
+            const entry = {
+                signedUrl,
+                headers: TOSSEQUIP_HEADERS,
+                refreshAt: Date.now() + 45 * 60 * 1000, // Refresh after 45 mins (upstream token TTL is 6 hours)
+                expiresAt: Date.now() + 120 * 60 * 1000 // Valid for 2 hours
+            };
+            castSignedHlsCache.set(streamId, entry);
+            return { signedUrl, headers: TOSSEQUIP_HEADERS };
+        } catch {
+            return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+        }
+    })();
+
+    castSignedHlsInFlight.set(streamId, flight);
+    try {
+        return await flight;
+    } finally {
+        castSignedHlsInFlight.delete(streamId);
+    }
+}
+
+async function getPlusTimsSignedHlsUrl(
+    streamId: number,
+    forceRefresh = false
+): Promise<{ signedUrl: string; headers: Record<string, string> } | null> {
+    const now = Date.now();
+    const cached = plusSignedHlsCache.get(streamId);
+    if (!forceRefresh && cached && now < cached.expiresAt) {
+        if (now >= cached.refreshAt && !plusSignedHlsInFlight.has(streamId)) {
+            void fetchFreshPlusTimsHlsUrl(streamId, cached).catch(() => {});
+        }
+        return { signedUrl: cached.signedUrl, headers: cached.headers };
+    }
+
+    const existing = plusSignedHlsInFlight.get(streamId);
+    if (existing) return existing;
+
+    return fetchFreshPlusTimsHlsUrl(streamId, cached);
+}
+
+async function fetchFreshPlusTimsHlsUrl(
+    streamId: number,
+    cached?: { signedUrl: string; headers: Record<string, string>; refreshAt: number; expiresAt: number }
+): Promise<{ signedUrl: string; headers: Record<string, string> } | null> {
+    const flight = (async () => {
+        try {
+            let embedSlug = PLUS_EHGEMBXE_EMBED_SLUGS[streamId];
+            if (!embedSlug) {
+                embedSlug = await withPoliteDlstreamsSlot(async () => {
+                    const r1 = await fetch(`https://dlstreams.st/plus/stream-${streamId}.php`, {
+                        headers: {
+                            'User-Agent': DEFAULT_UA,
+                            Referer: `https://dlstreams.st/watch.php?id=${streamId}`
+                        },
+                        signal: AbortSignal.timeout(3500)
+                    });
+                    if (!r1.ok) return '';
+                    const h1 = await r1.text();
+                    const m1 = h1.match(/<iframe[^>]+src=["']https:\/\/ehgembxe\.cfd\/([^"']+)["']/i);
+                    if (m1?.[1]) {
+                        PLUS_EHGEMBXE_EMBED_SLUGS[streamId] = m1[1];
+                        return m1[1];
+                    }
+                    return '';
+                });
+            }
+            if (!embedSlug) return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+
+            const r2 = await fetch(`https://ehgembxe.cfd/${embedSlug}`, {
+                headers: {
+                    'User-Agent': DEFAULT_UA,
+                    Referer: 'https://dlstreams.st/'
+                },
+                signal: AbortSignal.timeout(4000)
+            });
+            if (!r2.ok) return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+            const h2 = await r2.text();
+            const xm = h2.match(/\[([0-9,]+)\],\s*_[a-z0-9]+=([0-9]+),\s*_[a-z0-9]+=([0-9]+)/i);
+            if (!xm) return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+
+            const arr = xm[1].split(',').map(Number);
+            const k1 = Number(xm[2]);
+            const k2 = Number(xm[3]);
+            const dec = arr.map((b) => String.fromCharCode(((b ^ k1) - k2 + 256) % 256)).join('');
+            const tm = dec.match(/loadStreamUrl\(["'](https:\/\/[^"']+\/p\/([a-f0-9]+))["']/i);
+            if (!tm?.[1] || !tm?.[2]) return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+
+            const r3 = await fetch(tm[1], {
+                headers: {
+                    'User-Agent': DEFAULT_UA,
+                    ...EHGEMBXE_HEADERS
+                },
+                signal: AbortSignal.timeout(4000)
+            });
+            if (!r3.ok) return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+            const b = new Uint8Array(await r3.arrayBuffer());
+            if (b.length < 2) return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+            const s = b[0];
+            const tk = tm[2];
+            let signedUrl = '';
+            for (let i = 1; i < b.length; i++) {
+                signedUrl += String.fromCharCode(b[i] ^ tk.charCodeAt((i - 1) % tk.length) ^ ((s + i - 1) & 255));
+            }
+            signedUrl = signedUrl.trim();
+            if (!signedUrl.startsWith('http')) {
+                return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+            }
+
+            const entry = {
+                signedUrl,
+                headers: EHGEMBXE_HEADERS,
+                refreshAt: Date.now() + 8 * 60 * 1000,
+                expiresAt: Date.now() + 18 * 60 * 1000
+            };
+            plusSignedHlsCache.set(streamId, entry);
+            return { signedUrl, headers: EHGEMBXE_HEADERS };
+        } catch {
+            return cached ? { signedUrl: cached.signedUrl, headers: cached.headers } : null;
+        }
+    })();
+
+    plusSignedHlsInFlight.set(streamId, flight);
+    try {
+        return await flight;
+    } finally {
+        plusSignedHlsInFlight.delete(streamId);
+    }
+}
+
 /**
- * If a URL targets edge.cowedd4855ws.sbs/premium<ID>/index.m3u8, wideiptv.top/player/<SLUG>/index.m3u8,
+ * If a URL targets dlstreams.st/cast/stream-<ID>.m3u8, dlstreams.st/plus/stream-<ID>.m3u8,
+ * edge.wedd48c.top/premium<ID>/index.m3u8, wideiptv.top/player/<SLUG>/index.m3u8,
  * or live.kwikmotion.com/ksasports<1-3>live, attaches a fresh signed token automatically.
  */
 async function resolveDynamicManifestUrl(
@@ -4494,6 +4833,38 @@ async function resolveDynamicManifestUrl(
         'User-Agent': DEFAULT_UA,
         ...(headers || {})
     };
+
+    const castMatch = rawUrl.match(/dlstreams\.st\/cast\/stream-(\d+)\.(?:m3u8|php)/i);
+    if (castMatch) {
+        const streamId = Number(castMatch[1]);
+        Object.assign(mergedHeaders, TOSSEQUIP_HEADERS);
+        const resolvedCast = await getCastTossEquipSignedHlsUrl(streamId, forceRefreshToken);
+        if (resolvedCast?.signedUrl) {
+            return { url: resolvedCast.signedUrl, headers: { ...mergedHeaders, ...resolvedCast.headers } };
+        }
+        return { url: rawUrl, headers: mergedHeaders };
+    }
+
+    if (/7odxv0l067ka\.net/i.test(rawUrl)) {
+        Object.assign(mergedHeaders, TOSSEQUIP_HEADERS);
+        return { url: rawUrl, headers: mergedHeaders };
+    }
+
+    const plusMatch = rawUrl.match(/dlstreams\.st\/plus\/stream-(\d+)\.(?:m3u8|php)/i);
+    if (plusMatch) {
+        const streamId = Number(plusMatch[1]);
+        Object.assign(mergedHeaders, EHGEMBXE_HEADERS);
+        const resolvedPlus = await getPlusTimsSignedHlsUrl(streamId, forceRefreshToken);
+        if (resolvedPlus?.signedUrl) {
+            return { url: resolvedPlus.signedUrl, headers: { ...mergedHeaders, ...resolvedPlus.headers } };
+        }
+        return { url: rawUrl, headers: mergedHeaders };
+    }
+
+    if (/tims-001\.sytes\.net/i.test(rawUrl)) {
+        Object.assign(mergedHeaders, EHGEMBXE_HEADERS);
+        return { url: rawUrl, headers: mergedHeaders };
+    }
 
     const edgeMatch = rawUrl.match(/https?:\/\/edge\.[a-z0-9.-]+\/(premium\d+)\/index\.m3u8/i);
     if (edgeMatch) {
@@ -4650,10 +5021,10 @@ async function fetchUpstreamBufferWithRetry(
     let lastError: any = null;
     let lastStatus = 502;
     let lastResolvedUrl = rawUrl;
-    const isDynamicWide = /wideiptv|bluetier/i.test(rawUrl);
+    const isDynamicWide = /wideiptv|bluetier|dlstreams\.st\/(cast|plus)\//i.test(rawUrl);
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        // Only force-refresh token if the previous attempt actually returned 401/403 (or 404 on wideiptv),
+        // Only force-refresh token if the previous attempt actually returned 401/403 (or 404 on dynamic token streams),
         // never on a transient socket timeout
         const forceRefreshToken =
             attempt > 0 && (lastStatus === 401 || lastStatus === 403 || (lastStatus === 404 && isDynamicWide));
@@ -6880,8 +7251,14 @@ export async function harvestOfficialXmltvEpg(): Promise<void> {
     return xmltvHarvestPromise;
 }
 
-// Pre-warm 24-hour KSA/SSC Sports & top Bluetier signed HLS tokens in background on boot so first tune-in is instant
+// Pre-warm 6-hour Cast TossEquip (7odxv0l067ka.net:8443), Plus, KSA/SSC Sports & top Bluetier signed HLS tokens on boot
 setTimeout(() => {
+    for (const castId of [91, 92, 93, 94, 95, 31, 32, 60, 116]) {
+        getCastTossEquipSignedHlsUrl(castId).catch(() => {});
+    }
+    for (const plusId of [91, 92, 93, 35]) {
+        getPlusTimsSignedHlsUrl(plusId).catch(() => {});
+    }
     for (const id of [9, 10, 16]) {
         getAloulaSignedHlsUrl(id).catch(() => {});
     }
@@ -9641,7 +10018,7 @@ export function rewriteLiveHlsManifest(
 
     const wrapProxy = (targetUrl: string, isSubManifest: boolean): string => {
         const isTiktokSegment = /tiktokcdn/i.test(targetUrl) || targetUrl.includes('.image');
-        const effectiveHeaders = isTiktokSegment && isEdgeParent ? undefined : headers;
+        const effectiveHeaders = isTiktokSegment ? undefined : headers;
         const payloadObj: Record<string, any> = {
             url: targetUrl,
             headers: {
@@ -9868,7 +10245,7 @@ function warmStreamSegments(
         }
 
         const isTiktokSegment = /tiktokcdn/i.test(absSegUrl) || absSegUrl.includes('.image');
-        const effectiveHeaders = isTiktokSegment && isEdgeParent ? undefined : headers;
+        const effectiveHeaders = isTiktokSegment ? undefined : headers;
 
         const prefetchTask = (async () => {
             const recheck = unwrappedSegmentCache.get(segCacheKey);
