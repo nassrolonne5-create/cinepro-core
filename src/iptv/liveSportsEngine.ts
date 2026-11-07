@@ -9933,9 +9933,10 @@ export function rewriteLiveHlsManifest(
                     }
                 }
 
-                // Retain up to 4 immediately preceding older segments ONLY if they are already in RAM cache
-                // (or currently in-flight), guaranteeing 0ms RAM hits and zero 404 errors on Flussonic CDNs
-                const maxRetain = Math.max(0, 8 - parsedSegments.length);
+                // Retain immediately preceding older segments ONLY if they are already in RAM cache
+                // (or currently in-flight). Use a tighter 6-segment cap for fast 4s/5s streams to minimize live latency.
+                const targetWindowSegments = declaredTargetDuration <= 5 ? 6 : 8;
+                const maxRetain = Math.max(0, targetWindowSegments - parsedSegments.length);
                 if (maxRetain > 0 && firstNewSeq > prevRolling.segments[0]?.seq) {
                     const olderCandidates = prevRolling.segments.filter((s) => s.seq < firstNewSeq);
                     const retainedOlder: RollingSegmentEntry[] = [];
