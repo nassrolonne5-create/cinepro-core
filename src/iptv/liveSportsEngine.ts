@@ -1,5 +1,6 @@
 import { Readable } from 'node:stream';
 import * as zlib from 'node:zlib';
+import * as crypto from 'node:crypto';
 import { promisify } from 'node:util';
 import { spawn } from 'node:child_process';
 
@@ -1846,8 +1847,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'Asharq News HD (Edgenext Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-asharq/10ae30c64e21402c8116a7fb1e5aa789/index.m3u8', quality: '1080p', language: 'ar' },
-            { label: 'Asharq News HD (Direct Live 1080p)', url: 'https://live-news.asharq.com/asharq.m3u8', quality: '1080p', language: 'ar' }
+            { label: 'Asharq News & Documentary HD (Official 1080p)', url: 'https://svs.itworkscdn.net/asharqdocumentarylive/asharqdocumentary.smil/playlist_dvr.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Asharq Discovery HD (Backup 1080p)', url: 'https://svs.itworkscdn.net/asharqdiscoverylive/asharqd.smil/playlist_dvr.m3u8', quality: '1080p', language: 'ar' }
         ]
     },
     {
@@ -4624,13 +4625,27 @@ export const CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS: Record<string, string> = {
     'nfl-network': 'NFLNetwork',
     'nba-tv': 'NBATV',
     'golf-channel-us': 'GolfChannel',
-    'tennis-channel': 'TennisChannel'
+    'tennis-channel': 'TennisChannel',
+
+    // 9. Portugal Sports (Sport TV 1-5, DAZN Eleven 1-5, Benfica TV)
+    'sport-tv-1-pt': 'SPT1',
+    'sport-tv-2-pt': 'SPT2',
+    'sport-tv-3-pt': 'SPT3',
+    'sport-tv-4-pt': 'SPT4',
+    'sport-tv-5-pt': 'SPT5',
+    'eleven-sports-1-pt': 'ELEVEN1',
+    'eleven-sports-2-pt': 'ELEVEN2',
+    'eleven-sports-3-pt': 'ELEVEN3',
+    'eleven-sports-4-pt': 'ELEVEN4',
+    'eleven-sports-5-pt': 'ELEVEN5',
+    'benfica-tv-pt': 'BTV1'
 };
 
 // Static pre-resolved embed slugs so top channels resolve directly in 1 hop via Cloudflare without touching dlstreams.st
 const CAST_TOSSEQUIP_EMBED_SLUGS: Record<number, string> = {
     31: 'qjn6q4rpl0tav', // Sky Sports Main Event UK
     32: '9pbg9gio7v5az', // Sky Sports Premier League UK
+    49: 'r47nrq76lw0y4', // Sport TV 1 PT
     60: 'nesznue1swsb2', // ESPN USA
     91: '86xmv29g1aw01', // beIN Sports 1 AR
     92: 'd269auac4m2zi', // beIN Sports 2 AR
@@ -4642,7 +4657,8 @@ const CAST_TOSSEQUIP_EMBED_SLUGS: Record<number, string> = {
     98: 'yxterg64xlvlx', // beIN Sports 8 AR
     99: 'sudwknj5fkz3h', // beIN Sports 9 AR
     116: 'ul205qusekq4g', // beIN Sports 1 FR
-    117: 'sudwk915fxxop'  // beIN Sports 2 FR
+    117: 'sudwk915fxxop', // beIN Sports 2 FR
+    426: '3hqcx4w07vbzj'  // DAZN 1 DE
 };
 
 const PLUS_EHGEMBXE_EMBED_SLUGS: Record<number, string> = {
@@ -4653,16 +4669,18 @@ const PLUS_EHGEMBXE_EMBED_SLUGS: Record<number, string> = {
     92: 'klk0j7p2-1991', // beIN Sports 2 AR
     93: 'ketbclv0-3229', // beIN Sports 3 AR
     94: 'pxx4l615-8801', // beIN Sports 4 AR
-    95: '59b89cub-9253'  // beIN Sports 5 AR
+    95: '59b89cub-9253', // beIN Sports 5 AR
+    426: '3dk8rxui-7358' // DAZN 1 DE
 };
 
-// Promote Cast TossEquip (7odxv0l067ka.net:8443 — 4.000s constant segments, 7-segment 28s window, 6h token, 1080p 50fps),
-// Plus Tims/TikTok US CDN, and WideIPTV Bluetier to top primary/backup servers while keeping Edge CDN & iptv-org as failovers.
+// Promote WideIPTV Bluetier and Edge CDN (with AES-CTR unsealing) as Primary/Server 1-2,
+// while keeping pre-mapped Plus (ehgembxe.cfd) and Cast (tossequip.net) as backup servers without serial queue bottlenecks.
 for (const ch of CORE_SPORTS_CHANNELS) {
     const cleanStreams = ch.streams.filter(
         (s) =>
             !s.url.includes('primetv.cc.cd') &&
-            !s.url.includes('andro.mangeinde4.lat')
+            !s.url.includes('andro.mangeinde4.lat') &&
+            !s.url.includes('?backup=2')
     );
 
     const edgeStream = cleanStreams.find((s) => /\/premium(\d+)\/index\.m3u8/i.test(s.url));
@@ -4673,62 +4691,7 @@ for (const ch of CORE_SPORTS_CHANNELS) {
     const wideSlug = CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS[ch.id];
     const hasStaticCast = streamIdNum > 0 && !isQuarantined && Boolean(CAST_TOSSEQUIP_EMBED_SLUGS[streamIdNum]);
     const hasStaticPlus = streamIdNum > 0 && !isQuarantined && Boolean(PLUS_EHGEMBXE_EMBED_SLUGS[streamIdNum]);
-    const promotedStreams: typeof ch.streams = [];
 
-    // 1. Server 1 (Primary): Cast TossEquip 1080p 50fps (4.0s constant GOP segments, 7-segment window, 6h token)
-    if (hasStaticCast) {
-        promotedStreams.push({
-            label: `${ch.shortName} (Server 1 — Primary 1080p 50fps Ultra-Stable 4s Broadcast)`,
-            url: `https://dlstreams.st/cast/stream-${streamIdNum}.m3u8`,
-            quality: ch.quality || '1080p',
-            language: ch.language,
-            headers: TOSSEQUIP_HEADERS
-        });
-    }
-
-    // 2. Plus Global CDN 1080p 50fps (tims-001.sytes.net / TikTok US CDN)
-    if (hasStaticPlus) {
-        promotedStreams.push({
-            label: `${ch.shortName} (Server ${promotedStreams.length + 1} — Plus Global CDN 1080p 50fps)`,
-            url: `https://dlstreams.st/plus/stream-${streamIdNum}.m3u8`,
-            quality: ch.quality || '1080p',
-            language: ch.language,
-            headers: EHGEMBXE_HEADERS
-        });
-    }
-
-    // 3. WideIPTV Bluetier Direct Hardware Broadcast
-    if (wideSlug) {
-        promotedStreams.push({
-            label: `${ch.shortName} (Server ${promotedStreams.length + 1} — WideIPTV Bluetier 1080p 50fps)`,
-            url: `https://wideiptv.top/player/${wideSlug}/index.m3u8`,
-            quality: ch.quality || '1080p',
-            language: ch.language,
-            headers: WIDEIPTV_HEADERS
-        });
-    }
-
-    // 4. Dynamic Cast & Plus servers for non-pre-mapped channels
-    if (streamIdNum > 0 && !isQuarantined && !hasStaticCast) {
-        promotedStreams.push({
-            label: `${ch.shortName} (Server ${promotedStreams.length + 1} — Cast 1080p 50fps 4s Broadcast)`,
-            url: `https://dlstreams.st/cast/stream-${streamIdNum}.m3u8`,
-            quality: ch.quality || '1080p',
-            language: ch.language,
-            headers: TOSSEQUIP_HEADERS
-        });
-    }
-    if (streamIdNum > 0 && !isQuarantined && !hasStaticPlus) {
-        promotedStreams.push({
-            label: `${ch.shortName} (Server ${promotedStreams.length + 1} — Plus Global Low-Latency 1080p)`,
-            url: `https://dlstreams.st/plus/stream-${streamIdNum}.m3u8`,
-            quality: ch.quality || '1080p',
-            language: ch.language,
-            headers: EHGEMBXE_HEADERS
-        });
-    }
-
-    // 5. Remaining curated streams (Edge CDN, official Aloula KSA, etc.)
     const otherStreams = cleanStreams.filter(
         (s) =>
             !s.url.includes('wideiptv.top') &&
@@ -4737,14 +4700,51 @@ for (const ch of CORE_SPORTS_CHANNELS) {
             !s.url.includes('dlstreams.st/plus/')
     );
 
-    if (promotedStreams.length > 0) {
-        ch.streams = [
-            ...promotedStreams,
-            ...otherStreams.map((s, idx) => ({
-                ...s,
-                label: s.label.replace(/Server \d+/i, `Server ${promotedStreams.length + idx + 1}`)
-            }))
-        ];
+    const finalOrderedStreams: typeof ch.streams = [];
+
+    // 1. WideIPTV Bluetier Direct Hardware Broadcast (native MPEG-TS, 0ms unwrapping)
+    if (wideSlug) {
+        finalOrderedStreams.push({
+            label: `${ch.shortName} (Server 1 — WideIPTV Bluetier 1080p 50fps)`,
+            url: `https://wideiptv.top/player/${wideSlug}/index.m3u8`,
+            quality: ch.quality || '1080p',
+            language: ch.language,
+            headers: WIDEIPTV_HEADERS
+        });
+    }
+
+    // 2. Curated Primary Streams (Edge CDN AES-CTR 1080p 50fps, Official KSA Aloula, Shahid/Edgenext, Al Jazeera, etc.)
+    for (const st of otherStreams) {
+        finalOrderedStreams.push({
+            ...st,
+            label: st.label.replace(/Server \d+/i, `Server ${finalOrderedStreams.length + 1}`)
+        });
+    }
+
+    // 3. Pre-mapped Plus Global CDN 1080p 50fps (1-hop ehgembxe.cfd, no dlstreams queue)
+    if (hasStaticPlus) {
+        finalOrderedStreams.push({
+            label: `${ch.shortName} (Server ${finalOrderedStreams.length + 1} — Plus Global CDN 1080p 50fps)`,
+            url: `https://dlstreams.st/plus/stream-${streamIdNum}.m3u8`,
+            quality: ch.quality || '1080p',
+            language: ch.language,
+            headers: EHGEMBXE_HEADERS
+        });
+    }
+
+    // 4. Pre-mapped Cast TossEquip Backup Server
+    if (hasStaticCast) {
+        finalOrderedStreams.push({
+            label: `${ch.shortName} (Server ${finalOrderedStreams.length + 1} — Cast Backup 1080p)`,
+            url: `https://dlstreams.st/cast/stream-${streamIdNum}.m3u8`,
+            quality: ch.quality || '1080p',
+            language: ch.language,
+            headers: TOSSEQUIP_HEADERS
+        });
+    }
+
+    if (finalOrderedStreams.length > 0) {
+        ch.streams = finalOrderedStreams;
     } else if (cleanStreams.length > 0) {
         ch.streams = cleanStreams;
     }
@@ -4835,10 +4835,79 @@ export function resolveCanonicalChannel(rawInput: string): LiveChannel | null {
 }
 
 // ============================================================================
-// EDGE CDN TOKEN RESOLVER, SOCKET RETRY & MPEG-TS SEGMENT UNWRAPPER
+// EDGE CDN TOKEN RESOLVER, AES-CTR PLAYLIST UNSEALER & MPEG-TS SEGMENT UNWRAPPER
 // ============================================================================
-const edgeTokenCache = new Map<string, { token: string; refreshAt: number; expiresAt: number; staleToken: string }>();
+const edgeTokenCache = new Map<string, { token: string; k?: string; refreshAt: number; expiresAt: number; staleToken: string }>();
 const edgeTokenInFlight = new Map<string, Promise<string | null>>();
+const edgePlaylistKeys = new Map<string, string>();
+
+function b64urlToBuffer(s: string): Buffer {
+    return Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+}
+
+export function getEdgePlaylistKey(urlOrSlug?: string): string | undefined {
+    if (!urlOrSlug) return undefined;
+    const tokMatch = urlOrSlug.match(/[?&]t=([^&#]+)/);
+    if (tokMatch) {
+        const tok = decodeURIComponent(tokMatch[1]);
+        const byTok = edgePlaylistKeys.get(tok);
+        if (byTok) return byTok;
+    }
+    const slugMatch = urlOrSlug.match(/\/(premium\d+)\//i) || urlOrSlug.match(/^(premium\d+)$/i);
+    if (slugMatch) {
+        const slug = slugMatch[1].toLowerCase();
+        return edgePlaylistKeys.get(slug) || edgeTokenCache.get(slug)?.k;
+    }
+    return undefined;
+}
+
+/**
+ * Decrypts AES-128-CTR / AES-256-CTR sealed segment lines in Edge CDN (`edge.wedd48c.top`) M3U8 playlists.
+ * Matches the upstream `openPlaylist` WebCrypto AES-CTR implementation where the 16-byte counter block
+ * stores the 64-bit big-endian segment media sequence at bytes 8..15.
+ */
+export function unsealEdgePlaylist(manifestText: string, urlOrSlug?: string, explicitKey?: string): string {
+    if (!manifestText || manifestText.includes('://')) {
+        return manifestText;
+    }
+    const kB64Url = explicitKey || getEdgePlaylistKey(urlOrSlug);
+    if (!kB64Url) {
+        return manifestText;
+    }
+    try {
+        const keyBuf = b64urlToBuffer(kB64Url);
+        if (keyBuf.length !== 16 && keyBuf.length !== 24 && keyBuf.length !== 32) {
+            return manifestText;
+        }
+        const algo = keyBuf.length === 16 ? 'aes-128-ctr' : keyBuf.length === 24 ? 'aes-192-ctr' : 'aes-256-ctr';
+        const out: string[] = [];
+        let seq = 0;
+
+        for (const rawLine of manifestText.split(/\r?\n/)) {
+            const line = rawLine.trim();
+            if (!line) {
+                out.push(rawLine);
+                continue;
+            }
+            if (line.startsWith('#')) {
+                const m = /^#EXT-X-MEDIA-SEQUENCE:\s*(\d+)/i.exec(line);
+                if (m) seq = Number(m[1]);
+                out.push(rawLine);
+                continue;
+            }
+            const counter = Buffer.alloc(16, 0);
+            counter.writeUInt32BE(Math.floor(seq / 0x100000000), 8);
+            counter.writeUInt32BE(seq >>> 0, 12);
+            const decipher = crypto.createDecipheriv(algo, keyBuf, counter);
+            const decrypted = Buffer.concat([decipher.update(b64urlToBuffer(line)), decipher.final()]).toString('utf8').trim();
+            out.push(decrypted || rawLine);
+            seq++;
+        }
+        return out.join('\n');
+    } catch {
+        return manifestText;
+    }
+}
 
 /**
  * Dynamically discovers the active Edge CDN base domain from dembed.st/premiumtv/daddy.php
@@ -4885,75 +4954,94 @@ async function getActiveEdgeCdnBase(forceRefresh = false): Promise<string> {
 }
 
 /**
- * Fetches or reuses a short-lived playlist token for edge.wedd48c.top/premium<ID>/index.m3u8
- * Token TTL upstream is 120s; we reuse tokens for up to 75s and trigger a non-blocking background refresh
- * at 35s so manifest polling during playback takes 0ms and never waits on /api/playlist-token.
+ * Fetches or reuses a short-lived playlist token + AES-CTR key (k) for edge.wedd48c.top/premium<ID>/index.m3u8.
+ * Token TTL upstream is 120s; we share the token across the canonical slug and reuse it for up to 112s
+ * to avoid per-IP burst rate limiting on /api/playlist-token.
  */
+let edgeTokenCooldownUntil = 0;
+
 async function getEdgePlaylistToken(slugKey: string, forceRefresh = false): Promise<string | null> {
-    const cleanSlug = slugKey.split('::')[0];
+    const cleanSlug = slugKey.split('::')[0].toLowerCase();
     const now = Date.now();
-    const cached = edgeTokenCache.get(slugKey);
+    const cached = edgeTokenCache.get(cleanSlug);
 
     if (!forceRefresh && cached && now < cached.expiresAt) {
-        if (now >= cached.refreshAt && !edgeTokenInFlight.has(slugKey)) {
-            void fetchFreshEdgeToken(slugKey, cleanSlug, cached).catch(() => {});
+        if (now >= cached.refreshAt && !edgeTokenInFlight.has(cleanSlug) && now >= edgeTokenCooldownUntil) {
+            void fetchFreshEdgeToken(cleanSlug, cached).catch(() => {});
         }
         return cached.token;
     }
 
-    const existingFlight = edgeTokenInFlight.get(slugKey);
+    if (now < edgeTokenCooldownUntil) {
+        return cached?.staleToken || null;
+    }
+
+    const existingFlight = edgeTokenInFlight.get(cleanSlug);
     if (existingFlight) {
         return existingFlight;
     }
 
-    return fetchFreshEdgeToken(slugKey, cleanSlug, cached);
+    return fetchFreshEdgeToken(cleanSlug, cached);
 }
 
 async function fetchFreshEdgeToken(
-    slugKey: string,
     cleanSlug: string,
-    cached?: { token: string; refreshAt: number; expiresAt: number; staleToken: string }
+    cached?: { token: string; k?: string; refreshAt: number; expiresAt: number; staleToken: string }
 ): Promise<string | null> {
     const flight = (async () => {
-        for (let attempt = 0; attempt < 3; attempt++) {
+        for (let attempt = 0; attempt < 2; attempt++) {
             try {
-                const edgeBase = attempt > 1 ? await getActiveEdgeCdnBase(true) : await getActiveEdgeCdnBase(false);
+                const edgeBase = await getActiveEdgeCdnBase(false);
                 const res = await fetch(`${edgeBase}/api/playlist-token?slug=${encodeURIComponent(cleanSlug)}`, {
                     headers: {
                         'User-Agent': DEFAULT_UA,
-                        ...DEMBED_HEADERS,
-                        ...(attempt > 0 || slugKey.includes('::') ? { Connection: 'close' } : {})
+                        ...DEMBED_HEADERS
                     },
                     signal: AbortSignal.timeout(2800)
                 });
+                if (res.status === 403 || res.status === 429) {
+                    // Upstream per-IP token burst limit reached; enter 60s cooldown and fall back to Plus/Cast
+                    edgeTokenCooldownUntil = Date.now() + 60 * 1000;
+                    break;
+                }
                 if (!res.ok) {
                     await new Promise((r) => setTimeout(r, 80 * (attempt + 1)));
                     continue;
                 }
-                const data = (await res.json()) as { token?: string; ttl?: number };
+                const data = (await res.json()) as { token?: string; k?: string; ttl?: number };
                 if (!data?.token) continue;
                 const ttlSec = Math.max(60, Number(data.ttl) || 120);
-                edgeTokenCache.set(slugKey, {
+                edgeTokenCooldownUntil = 0;
+                if (data.k) {
+                    edgePlaylistKeys.set(data.token, data.k);
+                    edgePlaylistKeys.set(cleanSlug, data.k);
+                    if (edgePlaylistKeys.size > 1000) {
+                        const oldest = edgePlaylistKeys.keys().next().value;
+                        if (oldest) edgePlaylistKeys.delete(oldest);
+                    }
+                }
+                edgeTokenCache.set(cleanSlug, {
                     token: data.token,
-                    refreshAt: Date.now() + Math.min(35, Math.floor(ttlSec * 0.35)) * 1000,
-                    expiresAt: Date.now() + Math.min(80, Math.floor(ttlSec * 0.65)) * 1000,
+                    k: data.k,
+                    refreshAt: Date.now() + Math.max(45, ttlSec - 30) * 1000,
+                    expiresAt: Date.now() + Math.max(60, ttlSec - 8) * 1000,
                     staleToken: data.token
                 });
                 return data.token;
             } catch {
-                if (attempt < 2) {
-                    await new Promise((r) => setTimeout(r, 80 * (attempt + 1)));
+                if (attempt < 1) {
+                    await new Promise((r) => setTimeout(r, 80));
                 }
             }
         }
         return cached?.staleToken || null;
     })();
 
-    edgeTokenInFlight.set(slugKey, flight);
+    edgeTokenInFlight.set(cleanSlug, flight);
     try {
         return await flight;
     } finally {
-        edgeTokenInFlight.delete(slugKey);
+        edgeTokenInFlight.delete(cleanSlug);
     }
 }
 
@@ -5157,7 +5245,7 @@ async function withPoliteDlstreamsSlot<T>(fn: () => Promise<T>): Promise<T> {
         release = r;
     });
     await prev;
-    const waitMs = Math.max(0, 1500 - (Date.now() - lastDlstreamsScrapeAt));
+    const waitMs = Math.max(0, 250 - (Date.now() - lastDlstreamsScrapeAt));
     if (waitMs > 0) {
         await new Promise((r) => setTimeout(r, waitMs));
     }
@@ -5432,19 +5520,32 @@ async function resolveDynamicManifestUrl(
         return { url: rawUrl, headers: mergedHeaders };
     }
 
-    const edgeMatch = rawUrl.match(/https?:\/\/edge\.[a-z0-9.-]+\/(premium\d+)\/index\.m3u8/i);
+    const edgeMatch = rawUrl.match(/https?:\/\/edge\.[a-z0-9.-]+\/(premium(\d+))\/index\.m3u8/i);
     if (edgeMatch) {
-        const slug = edgeMatch[1];
-        const isBackupSlot = rawUrl.includes('backup=2');
-        const tokenCacheKey = isBackupSlot ? `${slug}::b2` : slug;
+        const slug = edgeMatch[1].toLowerCase();
+        const streamId = Number(edgeMatch[2]);
         Object.assign(mergedHeaders, DEMBED_HEADERS);
-        const token = await getEdgePlaylistToken(tokenCacheKey, forceRefreshToken);
+        const token = await getEdgePlaylistToken(slug, forceRefreshToken);
+        if (token) {
+            const edgeBase = await getActiveEdgeCdnBase(false);
+            const baseClean = `${edgeBase}/${slug}/index.m3u8`;
+            const finalUrl = `${baseClean}?t=${encodeURIComponent(token)}&_=${Date.now()}`;
+            return { url: finalUrl, headers: mergedHeaders, edgeSlug: slug };
+        }
+        // If Edge /api/playlist-token is temporarily rate-limited (403 cooldown), seamlessly fall back
+        // to Plus (ehgembxe.cfd -> tims-001.sytes.net) or Cast (tossequip.net) for this exact streamId
+        if (streamId > 0) {
+            const resolvedPlus = await getPlusTimsSignedHlsUrl(streamId, forceRefreshToken);
+            if (resolvedPlus?.signedUrl) {
+                return { url: resolvedPlus.signedUrl, headers: { ...mergedHeaders, ...resolvedPlus.headers } };
+            }
+            const resolvedCast = await getCastTossEquipSignedHlsUrl(streamId, forceRefreshToken);
+            if (resolvedCast?.signedUrl) {
+                return { url: resolvedCast.signedUrl, headers: { ...mergedHeaders, ...resolvedCast.headers } };
+            }
+        }
         const edgeBase = await getActiveEdgeCdnBase(false);
-        const baseClean = `${edgeBase}/${slug}/index.m3u8`;
-        const finalUrl = token
-            ? `${baseClean}?t=${encodeURIComponent(token)}&_=${Date.now()}`
-            : `${baseClean}?_=${Date.now()}`;
-        return { url: finalUrl, headers: mergedHeaders, edgeSlug: slug };
+        return { url: `${edgeBase}/${slug}/index.m3u8?_=${Date.now()}`, headers: mergedHeaders, edgeSlug: slug };
     }
 
     const wideMatch =
@@ -6398,6 +6499,40 @@ export function inspectMpegTsSegment(buf: Buffer, sourceUrl?: string): MpegTsIns
     return info;
 }
 
+/**
+ * Normalizes non-standard or legacy H.264 CODECS strings in HLS #EXT-X-STREAM-INF lines
+ * so Chromium/WebKit MediaSource.isTypeSupported() never rejects video tracks:
+ * - Converts `avc1.4d50xx` (constraint_set3_flag=1 on Main Profile, used by Shahid/MBC FAST) -> `avc1.4d40xx`
+ * - Converts pre-RFC-6381 decimal `avc1.77.30` / `avc1.66.30` / `avc1.100.40` -> standard hex RFC-6381
+ */
+export function normalizeHlsCodecsString(rawCodecs: string): string {
+    if (!rawCodecs) return rawCodecs;
+    return rawCodecs
+        .replace(/avc1\.4d50([0-9a-f]{2})/gi, 'avc1.4d40$1')
+        .replace(/avc1\.(66|77|100)\.(\d+)/gi, (_, profStr, lvlStr) => {
+            const prof = Number(profStr);
+            const lvlHex = Math.max(10, Math.min(52, Number(lvlStr))).toString(16).padStart(2, '0');
+            const profHex = prof === 66 ? '42c0' : prof === 77 ? '4d40' : '6400';
+            return `avc1.${profHex}${lvlHex}`;
+        });
+}
+
+export function isAudioOnlyStreamInfLine(line: string): boolean {
+    if (!line.startsWith('#EXT-X-STREAM-INF:')) return false;
+    if (/RESOLUTION=\d+x\d+/i.test(line)) return false;
+    const codecsMatch = line.match(/CODECS="([^"]+)"/i);
+    if (!codecsMatch) return false;
+    const codecs = codecsMatch[1].toLowerCase();
+    const hasAudioCodec = codecs.includes('mp4a') || codecs.includes('ac-3') || codecs.includes('ec-3') || codecs.includes('opus');
+    const hasVideoCodec =
+        codecs.includes('avc1') ||
+        codecs.includes('hvc1') ||
+        codecs.includes('hev1') ||
+        codecs.includes('vp09') ||
+        codecs.includes('av01');
+    return hasAudioCodec && !hasVideoCodec;
+}
+
 // ============================================================================
 // PILLAR 1: MULTI-QUALITY VARIANT & MULTI-AUDIO TRACK PARSER
 // ============================================================================
@@ -6414,9 +6549,18 @@ export function parseHlsMasterVariants(
     variants: HlsQualityVariant[];
     audioTracks: Array<{ language: string; label: string }>;
 } {
-    const lines = manifestText.split(/\r?\n/);
+    const unsealedText = unsealEdgePlaylist(manifestText, manifestBaseUrl || canonicalManifestUrl);
+    const lines = unsealedText.split(/\r?\n/);
     const variants: HlsQualityVariant[] = [];
     const audioTracks: Array<{ language: string; label: string }> = [];
+
+    // Detect if this master manifest uses demuxed #EXT-X-MEDIA:TYPE=AUDIO renditions with separate URI="..."
+    // (e.g., MBC 1/3/4/5/Drama/Masr/Bollywood, Al Arabiya, Al Hadath, Sky News Arabia).
+    // If so, standalone video sub-playlists contain ONLY video (no audio), so quality variants must point to
+    // the proxied master manifest to keep both video and audio tracks muxed in hls.js!
+    const hasDemuxedAudioUri = lines.some(
+        (l) => l.trim().startsWith('#EXT-X-MEDIA:') && /TYPE=AUDIO/i.test(l) && /URI="[^"]+"/i.test(l)
+    );
 
     const resolveRel = (rel: string): string => {
         if (/^https?:\/\//i.test(rel)) return rel;
@@ -6438,6 +6582,9 @@ export function parseHlsMasterVariants(
                 audioTracks.push({ language: langCode, label });
             }
         } else if (line.startsWith('#EXT-X-STREAM-INF:')) {
+            if (isAudioOnlyStreamInfLine(line)) {
+                continue;
+            }
             const bwMatch = line.match(/BANDWIDTH=(\d+)/i);
             const resMatch = line.match(/RESOLUTION=(\d+x\d+)/i);
             const fpsMatch = line.match(/FRAME-RATE=([\d.]+)/i);
@@ -6451,11 +6598,14 @@ export function parseHlsMasterVariants(
             const nextLine = (lines[j] || '').trim();
             if (!nextLine || nextLine.startsWith('#')) continue;
 
-            const variantRawUrl = resolveRel(nextLine);
+            const variantRawUrl = hasDemuxedAudioUri
+                ? (canonicalManifestUrl || manifestBaseUrl)
+                : resolveRel(nextLine);
             const bandwidth = bwMatch ? Number(bwMatch[1]) : 4500000;
             const resolution = resMatch ? resMatch[1] : '1920x1080';
             const height = Number(resolution.split('x')[1] || 1080);
             const fps = fpsMatch ? Math.round(Number(fpsMatch[1])) : undefined;
+            const normalizedCodecs = codecsMatch?.[1] ? normalizeHlsCodecsString(codecsMatch[1]) : undefined;
 
             const label =
                 height >= 2160
@@ -6476,7 +6626,7 @@ export function parseHlsMasterVariants(
                 resolution,
                 bandwidth,
                 fps,
-                codecs: codecsMatch?.[1],
+                codecs: normalizedCodecs,
                 url: proxiedVariantUrl,
                 rawUrl: variantRawUrl
             });
@@ -6486,9 +6636,6 @@ export function parseHlsMasterVariants(
     // Sort variants highest bandwidth/resolution first and deduplicate labels
     variants.sort((a, b) => b.bandwidth - a.bandwidth);
 
-    // If this upstream is a direct single-bitrate media playlist (e.g., Bluetier Flussonic or Edge CDN 1080p 50fps),
-    // always use canonicalManifestUrl (e.g., https://wideiptv.top/player/beINAR/index.m3u8) instead of a temporary
-    // tokenized URL so tokens auto-renew indefinitely on every poll without expiring after 3 minutes.
     if (variants.length === 0) {
         const targetSingleUrl = canonicalManifestUrl || manifestBaseUrl;
         const baseProxied = buildLiveProxyUrl(targetSingleUrl, publicBaseUrl, headers, channelId);
@@ -7817,14 +7964,8 @@ export async function harvestOfficialXmltvEpg(): Promise<void> {
     return xmltvHarvestPromise;
 }
 
-// Pre-warm 6-hour Cast TossEquip (7odxv0l067ka.net:8443), Plus, KSA/SSC Sports & top Bluetier signed HLS tokens on boot
+// Pre-warm KSA/SSC Aloula & top Bluetier signed HLS tokens on boot
 setTimeout(() => {
-    for (const castId of [91, 92, 93, 94, 95, 31, 32, 60, 116]) {
-        getCastTossEquipSignedHlsUrl(castId).catch(() => {});
-    }
-    for (const plusId of [91, 92, 93, 35]) {
-        getPlusTimsSignedHlsUrl(plusId).catch(() => {});
-    }
     for (const id of [9, 10, 16]) {
         getAloulaSignedHlsUrl(id).catch(() => {});
     }
@@ -7856,7 +7997,7 @@ export function buildLiveProxyUrl(
 }
 
 /**
- * Fast liveness check for an M3U8 stream (supports Edge dynamic token injection, variant extraction & health scoring)
+ * Fast liveness check for an M3U8 stream (supports Edge dynamic token injection, AES-CTR playlist unsealing, variant extraction & health scoring)
  */
 async function probeStreamLiveness(
     url: string,
@@ -7864,7 +8005,7 @@ async function probeStreamLiveness(
     timeoutMs = 2400,
     publicBaseUrl?: string,
     channelId?: string,
-    shouldPrefetchSegments = false
+    _shouldPrefetchSegments = false
 ): Promise<{
     ok: boolean;
     latencyMs: number;
@@ -7918,7 +8059,8 @@ async function probeStreamLiveness(
                 circuitState: updated.circuitState
             };
         }
-        const chunk = await res.text();
+        const rawChunk = await res.text();
+        const chunk = unsealEdgePlaylist(rawChunk, resolved.url || url);
         const finalUrlLower = (res.url || resolved.url || '').toLowerCase();
         const isDeadTransponder =
             finalUrlLower.includes('unknown%20channel') ||
@@ -8340,46 +8482,42 @@ export async function resolveChannelStreams(
             multi: 'Multi-Audio'
         };
 
-        // Launch all candidate stream probes in parallel; once the primary stream (index 0) verifies,
-        // give backup servers a 180ms grace window so a slow secondary server never delays tune-in
-        const rawProbePromises = candidateStreams.map((item, index) => {
-            const probeTimeoutMs = index < curatedCount ? 4500 : 1800;
-            return probeStreamLiveness(
-                item.url,
-                item.headers,
-                probeTimeoutMs,
-                publicBaseUrl,
-                channel.id,
-                index === 0
-            );
-        });
+        // Probe candidate streams sequentially until the first working stream verifies.
+        // Once a stream succeeds, immediately populate remaining backup servers without firing
+        // redundant background network probes (preserving upstream /api/playlist-token burst quota).
+        const probeResults: Array<Awaited<ReturnType<typeof probeStreamLiveness>>> = [];
+        let foundWorkingPrimary = false;
 
-        const primaryProbeResult = rawProbePromises.length > 0 ? await rawProbePromises[0] : null;
-        const primarySucceeded = Boolean(primaryProbeResult?.ok);
-
-        const probed = await Promise.all(
-            candidateStreams.map(async (item, index) => {
-                let probe: Awaited<ReturnType<typeof probeStreamLiveness>>;
-                if (index === 0 && primaryProbeResult) {
-                    probe = primaryProbeResult;
-                } else if (primarySucceeded) {
-                    const hState = getOrCreateHealthState(item.url, channel.id);
-                    const optimisticFallback: Awaited<ReturnType<typeof probeStreamLiveness>> = {
-                        ok: hState.circuitState !== 'OPEN',
-                        latencyMs: hState.emaLatencyMs || 260,
-                        healthScore: hState.healthScore,
-                        circuitState: hState.circuitState
-                    };
-                    probe = await Promise.race([
-                        rawProbePromises[index],
-                        new Promise<Awaited<ReturnType<typeof probeStreamLiveness>>>((resolve) =>
-                            setTimeout(() => resolve(optimisticFallback), 180)
-                        )
-                    ]);
-                } else {
-                    probe = await rawProbePromises[index];
+        for (let index = 0; index < candidateStreams.length; index++) {
+            const item = candidateStreams[index];
+            if (!foundWorkingPrimary && index < Math.min(candidateStreams.length, 3)) {
+                const probeTimeoutMs = index < curatedCount ? 4500 : 1800;
+                const res = await probeStreamLiveness(
+                    item.url,
+                    item.headers,
+                    probeTimeoutMs,
+                    publicBaseUrl,
+                    channel.id,
+                    index === 0
+                );
+                probeResults.push(res);
+                if (res.ok) {
+                    foundWorkingPrimary = true;
                 }
-                const proxiedUrl = buildLiveProxyUrl(item.url, publicBaseUrl, item.headers, channel.id);
+            } else {
+                const hState = getOrCreateHealthState(item.url, channel.id);
+                probeResults.push({
+                    ok: hState.circuitState !== 'OPEN',
+                    latencyMs: hState.emaLatencyMs || 260,
+                    healthScore: hState.healthScore,
+                    circuitState: hState.circuitState
+                });
+            }
+        }
+
+        const probed = candidateStreams.map((item, index) => {
+            const probe = probeResults[index];
+            const proxiedUrl = buildLiveProxyUrl(item.url, publicBaseUrl, item.headers, channel.id);
 
             const nowPlayingSuffix = channelEpg?.nowPlaying?.isLive
                 ? ` • LIVE: ${channelEpg.nowPlaying.title}`
@@ -8470,8 +8608,7 @@ export async function resolveChannelStreams(
             }
 
             return { sourceObj, index };
-        })
-    );
+        });
 
     // Prioritize verified working streams: sort by circuit state (CLOSED first), curated priority, and health score
     const verifiedStreams = probed
@@ -10308,7 +10445,8 @@ export function rewriteLiveHlsManifest(
     headers?: Record<string, string>,
     channelId?: string
 ): string {
-    let lines = manifestContent.split(/\r?\n/);
+    const unsealedContent = unsealEdgePlaylist(manifestContent, baseUrl);
+    let lines = unsealedContent.split(/\r?\n/);
 
     const resolveRelative = (rel: string): string => {
         if (/^https?:\/\//i.test(rel)) {
@@ -10386,6 +10524,11 @@ export function rewriteLiveHlsManifest(
         return `${publicBaseUrl}/v1/live/proxy/${endpoint}?data=${encodeURIComponent(payload)}`;
     };
 
+    const hasVideoStreamInf = lines.some(
+        (l) => l.trim().startsWith('#EXT-X-STREAM-INF:') && !isAudioOnlyStreamInfLine(l.trim())
+    );
+    let skipNextUriLine = false;
+
     for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed) {
@@ -10393,7 +10536,23 @@ export function rewriteLiveHlsManifest(
             continue;
         }
 
+        if (skipNextUriLine && !trimmed.startsWith('#')) {
+            skipNextUriLine = false;
+            continue;
+        }
+
         if (trimmed.startsWith('#')) {
+            if (trimmed.startsWith('#EXT-X-STREAM-INF:')) {
+                if (hasVideoStreamInf && isAudioOnlyStreamInfLine(trimmed)) {
+                    skipNextUriLine = true;
+                    continue;
+                }
+                const normalizedStreamInf = trimmed.replace(/CODECS="([^"]+)"/i, (_, cVal) => {
+                    return `CODECS="${normalizeHlsCodecsString(cVal)}"`;
+                });
+                rewritten.push(normalizedStreamInf);
+                continue;
+            }
             if (trimmed.includes('URI="')) {
                 const updatedTag = trimmed.replace(/URI="([^"]+)"/g, (_, uriVal) => {
                     const abs = resolveRelative(uriVal);
@@ -10538,6 +10697,17 @@ export async function handleLiveHlsProxyRequest(
     const t0 = Date.now();
     try {
         if (isM3U8Url) {
+            const manifestCacheKey = `${publicBaseUrl}::${parsed.url}`;
+            const freshCachedManifest = lastGoodManifestCache.get(manifestCacheKey);
+            if (freshCachedManifest && Date.now() - freshCachedManifest.updatedAt < 2200) {
+                return reply
+                    .code(200)
+                    .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
+                    .header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    .header('Access-Control-Allow-Origin', '*')
+                    .send(freshCachedManifest.content);
+            }
+
             const { buffer: buf, ok, status, finalResolvedUrl } = await fetchUpstreamBufferWithRetry(
                 parsed.url,
                 parsed.headers,
@@ -10564,7 +10734,7 @@ export async function handleLiveHlsProxyRequest(
 
             const textPeek = buf.subarray(0, 16).toString('utf8').trim();
             if (textPeek.startsWith('#EXTM3U') || textPeek.startsWith('#EXT')) {
-                const rawM3UText = buf.toString('utf8');
+                const rawM3UText = unsealEdgePlaylist(buf.toString('utf8'), finalResolvedUrl || parsed.url);
                 recordStreamHealthResult(parsed.url, true, Date.now() - t0, parsed.channelId);
 
                 const rewritten = rewriteLiveHlsManifest(
@@ -10574,6 +10744,10 @@ export async function handleLiveHlsProxyRequest(
                     parsed.headers,
                     parsed.channelId
                 );
+                lastGoodManifestCache.set(manifestCacheKey, {
+                    content: rewritten,
+                    updatedAt: Date.now()
+                });
                 return reply
                     .code(200)
                     .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
@@ -10792,21 +10966,14 @@ export function startBackgroundStreamHealthMonitor(publicBaseUrl = 'http://local
 
     const runSweep = async () => {
         try {
-        await Promise.allSettled([
+            await Promise.allSettled([
                 harvestDynamicSportsM3U(),
                 harvestAndAutoCorrectUpstreamFeeds(),
                 harvestOfficialXmltvEpg()
             ]);
             await getLiveSportEvents(publicBaseUrl);
-            const featuredChannels = CORE_SPORTS_CHANNELS.filter((c) => c.featured).slice(0, 18);
-            for (const ch of featuredChannels) {
-                const primary = ch.streams[0];
-                if (primary) {
-                    await probeStreamLiveness(primary.url, primary.headers, 4500, publicBaseUrl, ch.id).catch(() => {});
-                }
-            }
         } catch {
-            // Non-blocking background health sweep
+            // Non-blocking background EPG & directory sweep
         }
     };
 
