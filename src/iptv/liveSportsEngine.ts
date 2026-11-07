@@ -1657,6 +1657,327 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         ]
     },
     {
+        id: 'mbc-2-ar',
+        name: 'MBC 2 Movies HD (إم بي سي 2 — أفلام هوليوود 24/7)',
+        shortName: 'MBC 2 HD',
+        network: 'MBC',
+        category: 'movies',
+        language: 'ar',
+        languageLabel: 'العربية / مترجم (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'MBC 2 Movies HD (Official 1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx010/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'MBC 2 Movies HD (Backup 1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx011/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'mbc-action-ar',
+        name: 'MBC Action HD (إم بي سي أكشن)',
+        shortName: 'MBC Action HD',
+        network: 'MBC',
+        category: 'movies',
+        language: 'ar',
+        languageLabel: 'العربية / مترجم (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'MBC Action HD (Official 1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx011/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'MBC Action HD (Backup 1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx010/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'mbc-max-ar',
+        name: 'MBC Max Movies HD (إم بي سي ماكس)',
+        shortName: 'MBC Max HD',
+        network: 'MBC',
+        category: 'movies',
+        language: 'ar',
+        languageLabel: 'العربية / مترجم (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'MBC Max HD (Official 1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx012/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'MBC Max HD (Backup 1080p)', url: 'https://shd-amg-fast.edgenextcdn.net/tx010/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'mbc-3-ar',
+        name: 'MBC 3 Kids HD (إم بي سي 3 للأطفال)',
+        shortName: 'MBC 3 HD',
+        network: 'MBC',
+        category: 'entertainment',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'MBC 3 HD (Official Edgenext 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-3-usa/5d58265a862a476dc7f97694addb5ded/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'mbc-bollywood-ar',
+        name: 'MBC Bollywood HD (إم بي سي بوليوود)',
+        shortName: 'MBC Bollywood HD',
+        network: 'MBC',
+        category: 'movies',
+        language: 'ar',
+        languageLabel: 'العربية / مدبلج ومترجم (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'MBC Bollywood HD (Official Edgenext 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-bollywood/546eb40d7dcf9a209255dd2496903764/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    // =========================================================================
+    // 5B-NEWS. ARABIC NEWS & DOCUMENTARY — القنوات الإخبارية والوثائقية العربية
+    // =========================================================================
+    {
+        id: 'aljazeera-ar',
+        name: 'Al Jazeera Arabic HD (الجزيرة الإخبارية)',
+        shortName: 'Al Jazeera AR',
+        network: 'Al Jazeera',
+        group: 'Arabic News & Documentary (الأخبار والوثائقيات)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'QA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Al Jazeera Arabic HD (Official Primary 1080p)', url: 'https://live-hls-web-aja.getaj.net/AJA/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Al Jazeera Arabic HD (Official Backup 1080p)', url: 'https://live-hls-apps-aja-fa.getaj.net/AJA/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'aljazeera-mubasher-ar',
+        name: 'Al Jazeera Mubasher HD (الجزيرة مباشر)',
+        shortName: 'Al Jazeera Mubasher',
+        network: 'Al Jazeera',
+        group: 'Arabic News & Documentary (الأخبار والوثائقيات)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'QA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Al Jazeera Mubasher HD (Official Primary 1080p)', url: 'https://live-hls-web-ajm.getaj.net/AJM/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Al Jazeera Mubasher HD (Official Backup 1080p)', url: 'https://live-hls-apps-ajm-fa.getaj.net/AJM/index.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'aljazeera-doc-ar',
+        name: 'Al Jazeera / Asharq Documentary HD (الوثائقية العربية)',
+        shortName: 'Arabic Documentary HD',
+        network: 'Documentary AR',
+        group: 'Arabic News & Documentary (الأخبار والوثائقيات)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'QA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Arabic Documentary HD (Server 1 — 1080p)', url: 'https://svs.itworkscdn.net/asharqdocumentarylive/asharqdocumentary.smil/playlist_dvr.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Discovery & Documentary AR (Server 2 — 1080p)', url: 'https://svs.itworkscdn.net/asharqdiscoverylive/asharqd.smil/playlist_dvr.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'alarabiya-ar',
+        name: 'Al Arabiya News HD (العربية الإخبارية)',
+        shortName: 'Al Arabiya HD',
+        network: 'Al Arabiya',
+        group: 'Arabic News & Documentary (الأخبار والوثائقيات)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Al Arabiya HD (Edgenext Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-alarabiya/7f90de73d777d04f3dada92f90d35c44/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Al Arabiya HD (Direct Live 1080p)', url: 'https://live.alarabiya.net/alarabiapublish/alarabiya.smil/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'alhadath-ar',
+        name: 'Al Hadath News HD (الحدث الإخبارية)',
+        shortName: 'Al Hadath HD',
+        network: 'Al Arabiya',
+        group: 'Arabic News & Documentary (الأخبار والوثائقيات)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Al Hadath HD (Edgenext Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-hadath/2ff87ec4c2f3ede35295a20637d9f8fd/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Al Hadath HD (Direct Live 1080p)', url: 'https://live.alarabiya.net/alarabiapublish/alhadath.smil/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'asharq-news-ar',
+        name: 'Asharq News HD (الشرق للأخبار)',
+        shortName: 'Asharq News HD',
+        network: 'Asharq',
+        group: 'Arabic News & Documentary (الأخبار والوثائقيات)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'SA',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Asharq News HD (Edgenext Official 1080p)', url: 'https://shd-gcp-live.edgenextcdn.net/live/bitmovin-asharq/10ae30c64e21402c8116a7fb1e5aa789/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Asharq News HD (Direct Live 1080p)', url: 'https://live-news.asharq.com/asharq.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'skynews-arabia-ar',
+        name: 'Sky News Arabia HD (سكاي نيوز عربية)',
+        shortName: 'Sky News Arabia',
+        network: 'Sky News Arabia',
+        group: 'Arabic News & Documentary (الأخبار والوثائقيات)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (Arabic)',
+        country: 'AE',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Sky News Arabia HD (Official Primary 1080p)', url: 'https://live-stream.skynewsarabia.com/c-horizontal-channel/horizontal-stream/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Sky News Arabia HD (Official OTT 1080p)', url: 'https://stream.skynewsarabia.com/ott/ott.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    // =========================================================================
+    // 5B-MAGHREB. TUNISIA & MOROCCO TV — قنوات تونس والمغرب
+    // =========================================================================
+    {
+        id: 'wataniya-1-tn',
+        name: 'Al Wataniya 1 Tunisia HD (الوطنية التونسية 1)',
+        shortName: 'Wataniya 1 TN',
+        network: 'Télévision Tunisienne',
+        group: 'Maghreb TV (تونس والمغرب)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (تونس)',
+        country: 'TN',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Wataniya 1 Tunisia HD (Official Live)', url: 'https://sw1.tanitweb.net/TunisiaTV/_definst_/watania1/chunklist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'wataniya-2-tn',
+        name: 'Al Wataniya 2 Tunisia HD (الوطنية التونسية 2)',
+        shortName: 'Wataniya 2 TN',
+        network: 'Télévision Tunisienne',
+        group: 'Maghreb TV (تونس والمغرب)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (تونس)',
+        country: 'TN',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Wataniya 2 Tunisia HD (Official Live)', url: 'https://sw1.tanitweb.net/TunisiaTV/_definst_/watania2/chunklist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'el-hiwar-ettounsi-tn',
+        name: 'El Hiwar Ettounsi / Tunisia Entertainment HD (الحوار التونسي)',
+        shortName: 'El Hiwar TN',
+        network: 'Tunisia TV',
+        group: 'Maghreb TV (تونس والمغرب)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (تونس)',
+        country: 'TN',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Tunisia Entertainment HD (Server 1 — 1080p)', url: 'https://tv.elyssatv.com/live/master.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Tunisia Live Studio HD (Server 2 — 1080p)', url: 'https://webcam.mosaiquefm.net/mosatv/_definst_/studio/playlist.m3u8?DVR', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'nessma-el-jadida-tn',
+        name: 'Nessma El Jadida / Medi1 Maghreb HD (نسمة الجديدة والمغاربية)',
+        shortName: 'Nessma / Medi1',
+        network: 'Maghreb TV',
+        group: 'Maghreb TV (تونس والمغرب)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (المغرب العربي)',
+        country: 'TN',
+        logo: 'https://i.imgur.com/UYSMao3.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Maghreb Live HD (Server 1 — 1080p)', url: 'https://cdn.live.easybroadcast.io/abr_corp/83_medi1tv-maghreb_jnbspmg/playlist.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Tunisia Live HD (Server 2 — 1080p)', url: 'https://tv.elyssatv.com/live/master.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
+        id: '2m-maroc-ma',
+        name: '2M Maroc Monde HD (دوزيم المغربية 2M)',
+        shortName: '2M Maroc HD',
+        network: '2M Maroc',
+        group: 'Maghreb TV (تونس والمغرب)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية / Français (المغرب)',
+        country: 'MA',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: '2M Maroc Monde HD (CloudFront Official 1080p)', url: 'https://d2qh3gh0k5vp3v.cloudfront.net/v1/master/3722c60a815c199d9c0ef36c5b73da68a62b09d1/cc-n6pess5lwbghr/2M_ES.m3u8', quality: '1080p', language: 'ar' },
+            { label: '2M Maroc Direct (Server 2)', url: 'http://185.9.2.18/chid_218/index.m3u8', quality: '720p', language: 'ar' }
+        ]
+    },
+    {
+        id: 'al-aoula-maroc-ma',
+        name: 'Al Aoula / Al Maghribia Maroc HD (الأولى والمغربية)',
+        shortName: 'Al Aoula Maroc',
+        network: 'SNRT Maroc',
+        group: 'Maghreb TV (تونس والمغرب)',
+        category: 'mena',
+        language: 'ar',
+        languageLabel: 'العربية (المغرب)',
+        country: 'MA',
+        logo: 'https://i.imgur.com/vUJZSvs.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'Al Aoula / Al Maghribia HD (Server 1 — 1080p)', url: 'http://185.9.2.18/chid_205/index.m3u8', quality: '1080p', language: 'ar' },
+            { label: 'Medi1 Arabic Maroc HD (Server 2 — 1080p)', url: 'https://cdn.live.easybroadcast.io/abr_corp/83_medi1tv-arabic_g90v4ec/playlist.m3u8', quality: '1080p', language: 'ar' }
+        ]
+    },
+    {
         id: 'bab-al-hara-ar',
         name: 'Bab Al Hara & Shahid Series 24/7 HD (باب الحارة ومسلسلات شاهد)',
         shortName: 'Bab Al Hara HD',
@@ -3969,6 +4290,242 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
             { label: 'Tennis Channel US (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium40/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
             { label: 'Tennis Channel 1 (US Direct 1080p)', url: 'http://23.237.104.106:8080/USA_TENNIS/index.m3u8', quality: '1080p', language: 'en' }
         ]
+    },
+    // =========================================================================
+    // 9. PORTUGAL SPORTS (Sport TV 1-6, DAZN / Eleven Sports 1-6, Benfica TV)
+    // =========================================================================
+    ...[
+        { id: 'sport-tv-1-pt', name: 'Sport TV 1 Portugal HD (Liga Portugal, UEFA Champions League & Premier League)', shortName: 'Sport TV 1 PT', num: 49, featured: true },
+        { id: 'sport-tv-2-pt', name: 'Sport TV 2 Portugal HD (European Football & Liga Portugal)', shortName: 'Sport TV 2 PT', num: 74, featured: true },
+        { id: 'sport-tv-3-pt', name: 'Sport TV 3 Portugal HD (Football, Tennis & Motorsport)', shortName: 'Sport TV 3 PT', num: 454, featured: false },
+        { id: 'sport-tv-4-pt', name: 'Sport TV 4 Portugal HD (International Sports & Football)', shortName: 'Sport TV 4 PT', num: 289, featured: false },
+        { id: 'sport-tv-5-pt', name: 'Sport TV 5 Portugal HD (Live Football & Arenas)', shortName: 'Sport TV 5 PT', num: 290, featured: false },
+        { id: 'sport-tv-6-pt', name: 'Sport TV 6 Portugal HD (Multiplex & Live Events)', shortName: 'Sport TV 6 PT', num: 291, featured: false },
+        { id: 'eleven-sports-1-pt', name: 'DAZN / Eleven Sports 1 Portugal HD (UEFA Champions League, LaLiga & Premier League)', shortName: 'DAZN Eleven 1 PT', num: 455, featured: true },
+        { id: 'eleven-sports-2-pt', name: 'DAZN / Eleven Sports 2 Portugal HD (Premier League, LaLiga & Bundesliga)', shortName: 'DAZN Eleven 2 PT', num: 456, featured: true },
+        { id: 'eleven-sports-3-pt', name: 'DAZN / Eleven Sports 3 Portugal HD (Champions League & Ligue 1)', shortName: 'DAZN Eleven 3 PT', num: 457, featured: false },
+        { id: 'eleven-sports-4-pt', name: 'DAZN / Eleven Sports 4 Portugal HD (European Football)', shortName: 'DAZN Eleven 4 PT', num: 458, featured: false },
+        { id: 'eleven-sports-5-pt', name: 'DAZN / Eleven Sports 5 Portugal HD (European Football)', shortName: 'DAZN Eleven 5 PT', num: 459, featured: false },
+        { id: 'eleven-sports-6-pt', name: 'DAZN / Eleven Sports 6 & Canal 11 Portugal HD', shortName: 'DAZN Eleven 6 PT', num: 540, featured: false },
+        { id: 'benfica-tv-pt', name: 'Benfica TV (BTV HD Portugal — SL Benfica Home Matches)', shortName: 'Benfica TV PT', num: 380, featured: true }
+    ].map((item): LiveChannel => ({
+        id: item.id,
+        name: item.name,
+        shortName: item.shortName,
+        network: 'Portugal Sports',
+        group: 'Portugal Sports (Sport TV / DAZN Eleven / BTV)',
+        category: 'europe',
+        language: 'multi',
+        languageLabel: 'Português (Portuguese)',
+        country: 'PT',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: item.featured,
+        streams: [
+            { label: `${item.shortName} (Edge 1080p 50fps)`, url: `${EDGE_CDN_BASE}/premium${item.num}/index.m3u8`, quality: '1080p', language: 'multi', headers: DEMBED_HEADERS }
+        ]
+    })),
+    // =========================================================================
+    // 10. GERMANY & AUSTRIA SPORTS (DAZN 1-2 DE, Sky Sport Bundesliga, Sport1)
+    // =========================================================================
+    ...[
+        { id: 'dazn-1-de', name: 'DAZN 1 Bar Germany HD (Bundesliga, UEFA Champions League & LaLiga)', shortName: 'DAZN 1 DE', num: 426, featured: true },
+        { id: 'dazn-2-de', name: 'DAZN 2 Bar Germany HD (UEFA Champions League, Bundesliga & NFL)', shortName: 'DAZN 2 DE', num: 427, featured: true },
+        { id: 'sky-bundesliga-1-de', name: 'Sky Sport Bundesliga 1 HD Germany (Deutsche Bundesliga Live)', shortName: 'Sky Bundesliga 1 DE', num: 558, featured: true },
+        { id: 'sky-sport-top-event-de', name: 'Sky Sport Top Event HD Germany (Bundesliga, Premier League & DFB-Pokal)', shortName: 'Sky Top Event DE', num: 556, featured: true },
+        { id: 'sky-sport-mix-de', name: 'Sky Sport Mix HD Germany (Premier League, DFB-Pokal & Handball)', shortName: 'Sky Sport Mix DE', num: 557, featured: false },
+        { id: 'sky-sport-f1-de', name: 'Sky Sport F1 HD Germany (Formula 1 24/7 Live)', shortName: 'Sky Sport F1 DE', num: 274, featured: false },
+        { id: 'sky-sport-tennis-de', name: 'Sky Sport Tennis HD Germany (ATP & WTA Tour)', shortName: 'Sky Tennis DE', num: 884, featured: false },
+        { id: 'sky-sport-austria-1-at', name: 'Sky Sport Austria 1 HD (UEFA Champions League & ADMIRAL Bundesliga)', shortName: 'Sky Austria 1 HD', num: 559, featured: false },
+        { id: 'sport1-de', name: 'Sport1 Germany HD (Doppelpass, DFB-Pokal & Motorsport)', shortName: 'Sport1 DE', num: 641, featured: false },
+        { id: 'sport1-plus-de', name: 'Sport1+ Germany HD (International Football & US Sports)', shortName: 'Sport1+ DE', num: 640, featured: false }
+    ].map((item): LiveChannel => ({
+        id: item.id,
+        name: item.name,
+        shortName: item.shortName,
+        network: 'Germany Sports',
+        group: 'Germany Sports (DAZN DE / Sky Bundesliga / Sport1)',
+        category: 'europe',
+        language: 'multi',
+        languageLabel: 'Deutsch (German)',
+        country: 'DE',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: item.featured,
+        streams: [
+            { label: `${item.shortName} (Edge 1080p 50fps)`, url: `${EDGE_CDN_BASE}/premium${item.num}/index.m3u8`, quality: '1080p', language: 'multi', headers: DEMBED_HEADERS }
+        ]
+    })),
+    // =========================================================================
+    // 11. NETHERLANDS SPORTS (ESPN 1-4 NL & Ziggo Sport 1-6 NL)
+    // =========================================================================
+    ...[
+        { id: 'espn-1-nl', name: 'ESPN 1 Netherlands HD (Eredivisie Live)', shortName: 'ESPN 1 NL', num: 379, featured: true },
+        { id: 'espn-2-nl', name: 'ESPN 2 Netherlands HD (Eredivisie & Keuken Kampioen Divisie)', shortName: 'ESPN 2 NL', num: 386, featured: true },
+        { id: 'espn-3-nl', name: 'ESPN 3 Netherlands HD (Dutch Football & International Sports)', shortName: 'ESPN 3 NL', num: 390, featured: false },
+        { id: 'espn-4-nl', name: 'ESPN 4 Netherlands HD (Eredivisie & US Sports)', shortName: 'ESPN 4 NL', num: 883, featured: false },
+        { id: 'ziggo-sport-1-nl', name: 'Ziggo Sport 1 Select Netherlands HD (UEFA Champions League, Europa & LaLiga)', shortName: 'Ziggo Sport 1 NL', num: 393, featured: true },
+        { id: 'ziggo-sport-2-nl', name: 'Ziggo Sport 2 Voetbal Netherlands HD (UEFA Champions League & Serie A)', shortName: 'Ziggo Sport 2 NL', num: 398, featured: true },
+        { id: 'ziggo-sport-3-nl', name: 'Ziggo Sport 3 Racing Netherlands HD (Motorsport & European Football)', shortName: 'Ziggo Sport 3 NL', num: 397, featured: false },
+        { id: 'ziggo-sport-4-nl', name: 'Ziggo Sport 4 Golf & Tennis Netherlands HD (UEFA Matchday)', shortName: 'Ziggo Sport 4 NL', num: 396, featured: false },
+        { id: 'ziggo-sport-5-nl', name: 'Ziggo Sport 5 Docu & Multiplex Netherlands HD (UEFA Matchday)', shortName: 'Ziggo Sport 5 NL', num: 383, featured: false },
+        { id: 'ziggo-sport-6-nl', name: 'Ziggo Sport 6 Extra Netherlands HD (UEFA Matchday)', shortName: 'Ziggo Sport 6 NL', num: 901, featured: false }
+    ].map((item): LiveChannel => ({
+        id: item.id,
+        name: item.name,
+        shortName: item.shortName,
+        network: 'Netherlands Sports',
+        group: 'Netherlands Sports (ESPN NL / Ziggo Sport)',
+        category: 'europe',
+        language: 'multi',
+        languageLabel: 'Nederlands (Dutch)',
+        country: 'NL',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: item.featured,
+        streams: [
+            { label: `${item.shortName} (Edge 1080p 50fps)`, url: `${EDGE_CDN_BASE}/premium${item.num}/index.m3u8`, quality: '1080p', language: 'multi', headers: DEMBED_HEADERS }
+        ]
+    })),
+    // =========================================================================
+    // 12. GREECE, POLAND & EASTERN EUROPE SPORTS (Cosmote, Nova, Polsat, Eleven, Arena, Sport Klub)
+    // =========================================================================
+    ...[
+        // Greece
+        { id: 'cosmote-sport-1-gr', name: 'Cosmote Sport 1 HD Greece (UEFA Champions League, Super League & Premier League)', shortName: 'Cosmote Sport 1 GR', num: 622, country: 'GR', featured: true },
+        { id: 'cosmote-sport-2-gr', name: 'Cosmote Sport 2 HD Greece (UEFA Champions League & LaLiga)', shortName: 'Cosmote Sport 2 GR', num: 623, country: 'GR', featured: true },
+        { id: 'cosmote-sport-3-gr', name: 'Cosmote Sport 3 HD Greece (Serie A & European Football)', shortName: 'Cosmote Sport 3 GR', num: 624, country: 'GR', featured: false },
+        { id: 'cosmote-sport-4-gr', name: 'Cosmote Sport 4 HD Greece (NBA, EuroLeague & Football)', shortName: 'Cosmote Sport 4 GR', num: 625, country: 'GR', featured: false },
+        { id: 'cosmote-sport-5-gr', name: 'Cosmote Sport 5 HD Greece (MotoGP, WRC & European Football)', shortName: 'Cosmote Sport 5 GR', num: 626, country: 'GR', featured: false },
+        { id: 'cosmote-sport-6-gr', name: 'Cosmote Sport 6 HD Greece (ATP Tennis & Volleyball)', shortName: 'Cosmote Sport 6 GR', num: 627, country: 'GR', featured: false },
+        { id: 'cosmote-sport-7-gr', name: 'Cosmote Sport 7 HD Greece (European Football Multiplex)', shortName: 'Cosmote Sport 7 GR', num: 628, country: 'GR', featured: false },
+        { id: 'cosmote-sport-8-gr', name: 'Cosmote Sport 8 HD Greece (European Football Multiplex)', shortName: 'Cosmote Sport 8 GR', num: 629, country: 'GR', featured: false },
+        { id: 'cosmote-sport-9-gr', name: 'Cosmote Sport 9 HD Greece (European Football Multiplex)', shortName: 'Cosmote Sport 9 GR', num: 630, country: 'GR', featured: false },
+        { id: 'nova-sports-prime-gr', name: 'Nova Sports Prime HD Greece (Super League, Premier League & EuroLeague)', shortName: 'Nova Sports Prime GR', num: 638, country: 'GR', featured: true },
+        { id: 'nova-sports-pl-gr', name: 'Nova Sports Premier League HD Greece (24/7 EPL)', shortName: 'Nova Premier League GR', num: 599, country: 'GR', featured: true },
+        { id: 'nova-sports-1-gr', name: 'Nova Sports 1 HD Greece (LaLiga, Bundesliga & EuroLeague)', shortName: 'Nova Sports 1 GR', num: 631, country: 'GR', featured: false },
+        { id: 'nova-sports-2-gr', name: 'Nova Sports 2 HD Greece (European Football)', shortName: 'Nova Sports 2 GR', num: 632, country: 'GR', featured: false },
+        { id: 'nova-sports-3-gr', name: 'Nova Sports 3 HD Greece (European Football)', shortName: 'Nova Sports 3 GR', num: 633, country: 'GR', featured: false },
+        { id: 'nova-sports-4-gr', name: 'Nova Sports 4 HD Greece (EuroLeague & Tennis)', shortName: 'Nova Sports 4 GR', num: 634, country: 'GR', featured: false },
+        { id: 'nova-sports-5-gr', name: 'Nova Sports 5 HD Greece (Basketball & Football)', shortName: 'Nova Sports 5 GR', num: 635, country: 'GR', featured: false },
+        { id: 'nova-sports-6-gr', name: 'Nova Sports 6 HD Greece (WTA Tennis & Combat)', shortName: 'Nova Sports 6 GR', num: 636, country: 'GR', featured: false },
+        // Poland
+        { id: 'polsat-sport-1-pl', name: 'Polsat Sport 1 HD Poland (UEFA Europa League, PlusLiga & ATP Tennis)', shortName: 'Polsat Sport 1 PL', num: 47, country: 'PL', featured: true },
+        { id: 'polsat-sport-2-pl', name: 'Polsat Sport 2 / Extra HD Poland (Football, UFC & Volleyball)', shortName: 'Polsat Sport 2 PL', num: 50, country: 'PL', featured: true },
+        { id: 'polsat-sport-3-pl', name: 'Polsat Sport 3 / News HD Poland', shortName: 'Polsat Sport 3 PL', num: 129, country: 'PL', featured: false },
+        { id: 'tvp-sport-pl', name: 'TVP Sport / Polsat Premium HD Poland (National Team, Champions League & Ekstraklasa)', shortName: 'TVP Sport PL', num: 128, country: 'PL', featured: true },
+        { id: 'eleven-sports-1-pl', name: 'Eleven Sports 1 HD Poland (LaLiga, Serie A & Ligue 1)', shortName: 'Eleven Sports 1 PL', num: 71, country: 'PL', featured: true },
+        { id: 'eleven-sports-2-pl', name: 'Eleven Sports 2 HD Poland (LaLiga, Serie A & DFB-Pokal)', shortName: 'Eleven Sports 2 PL', num: 72, country: 'PL', featured: true },
+        { id: 'eleven-sports-3-pl', name: 'Eleven Sports 3 HD Poland (Serie A & Ligue 1)', shortName: 'Eleven Sports 3 PL', num: 428, country: 'PL', featured: false },
+        { id: 'eleven-sports-4-pl', name: 'Eleven Sports 4 / Motowizja HD Poland', shortName: 'Eleven Sports 4 PL', num: 563, country: 'PL', featured: false },
+        { id: 'canal-plus-sport-3-pl', name: 'Canal+ Sport 3 HD Poland (PKO BP Ekstraklasa & UEFA Champions League)', shortName: 'Canal+ Sport 3 PL', num: 259, country: 'PL', featured: false },
+        { id: 'canal-plus-sport-5-pl', name: 'Canal+ Sport 5 HD Poland (Ekstraklasa, LaLiga & Speedway)', shortName: 'Canal+ Sport 5 PL', num: 75, country: 'PL', featured: false },
+        // Serbia & Croatia (Arena Sport & Sport Klub)
+        { id: 'arena-sport-1-premium', name: 'Arena Sport 1 Premium HD (UEFA Champions League, Premier League & LaLiga)', shortName: 'Arena 1 Premium', num: 134, country: 'RS', featured: true },
+        { id: 'arena-sport-2-premium', name: 'Arena Sport 2 Premium HD (Premier League, Serie A & UEFA)', shortName: 'Arena 2 Premium', num: 135, country: 'RS', featured: true },
+        { id: 'arena-sport-3-premium', name: 'Arena Sport 3 Premium HD (LaLiga, Ligue 1 & NBA)', shortName: 'Arena 3 Premium', num: 139, country: 'RS', featured: true },
+        { id: 'arena-sport-1-hr', name: 'Arena Sport 1 HD Croatia/Serbia', shortName: 'Arena Sport 1', num: 432, country: 'HR', featured: false },
+        { id: 'arena-sport-2-hr', name: 'Arena Sport 2 HD Croatia/Serbia', shortName: 'Arena Sport 2', num: 433, country: 'HR', featured: false },
+        { id: 'arena-sport-3-hr', name: 'Arena Sport 3 HD Croatia/Serbia', shortName: 'Arena Sport 3', num: 434, country: 'HR', featured: false },
+        { id: 'arena-sport-4-hr', name: 'Arena Sport 4 HD Croatia/Serbia', shortName: 'Arena Sport 4', num: 580, country: 'HR', featured: false },
+        { id: 'sport-klub-1', name: 'Sport Klub 1 HD (EuroLeague, Bundesliga & ATP Tennis)', shortName: 'Sport Klub 1', num: 101, country: 'RS', featured: true },
+        { id: 'sport-klub-2', name: 'Sport Klub 2 HD (EuroLeague, Football & Motorsport)', shortName: 'Sport Klub 2', num: 102, country: 'RS', featured: false },
+        { id: 'sport-klub-3', name: 'Sport Klub 3 HD (Basketball, Football & Tennis)', shortName: 'Sport Klub 3', num: 103, country: 'RS', featured: false },
+        { id: 'sport-klub-4', name: 'Sport Klub 4 HD (International Sports)', shortName: 'Sport Klub 4', num: 104, country: 'RS', featured: false },
+        { id: 'sport-klub-hd', name: 'Sport Klub HD (Main Event & EuroLeague)', shortName: 'Sport Klub HD', num: 453, country: 'RS', featured: false }
+    ].map((item): LiveChannel => ({
+        id: item.id,
+        name: item.name,
+        shortName: item.shortName,
+        network: 'European Sports',
+        group: 'European Sports (Cosmote / Nova / Polsat / Arena / Sport Klub)',
+        category: 'europe',
+        language: 'multi',
+        languageLabel: 'European / Multi-Audio',
+        country: item.country,
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: item.featured,
+        streams: [
+            { label: `${item.shortName} (Edge 1080p 50fps)`, url: `${EDGE_CDN_BASE}/premium${item.num}/index.m3u8`, quality: '1080p', language: 'multi', headers: DEMBED_HEADERS }
+        ]
+    })),
+    // =========================================================================
+    // 13. LATIN AMERICA & BRAZIL SPORTS (ESPN Premium AR, TNT Sports AR, TyC, Win Sports+, Premiere, SporTV)
+    // =========================================================================
+    ...[
+        { id: 'espn-premium-ar', name: 'ESPN Premium Argentina HD (Liga Profesional Argentina & Copa Libertadores)', shortName: 'ESPN Premium AR', num: 149, backupNum: 387, country: 'AR', lang: 'es' as const, featured: true },
+        { id: 'tnt-sports-ar', name: 'TNT Sports Argentina HD (Liga Profesional de Fútbol Argentina)', shortName: 'TNT Sports AR', num: 388, backupNum: 787, country: 'AR', lang: 'es' as const, featured: true },
+        { id: 'tyc-sports-ar', name: 'TyC Sports Argentina HD (Copa Argentina, Selección & Primera Nacional)', shortName: 'TyC Sports AR', num: 746, extraUrl: 'https://amg26268-amg26268c14-freelivesports-emea-10267.playouts.now.amagi.tv/ts-us-e2-n2/playlist/amg26268-sportsstudio-tycsports-freelivesportsemea/playlist.m3u8', country: 'AR', lang: 'es' as const, featured: true },
+        { id: 'win-sports-plus-co', name: 'Win Sports+ Colombia HD (Liga BetPlay Dimayor)', shortName: 'Win Sports+ CO', num: 392, country: 'CO', lang: 'es' as const, featured: true },
+        { id: 'premiere-1-br', name: 'Premiere Clubes 1 Brazil HD (Brasileirão Série A & Copa do Brasil)', shortName: 'Premiere 1 BR', num: 88, country: 'BR', lang: 'multi' as const, featured: true },
+        { id: 'premiere-2-br', name: 'ESPN Brasil / Premiere 2 HD (Libertadores, Premier League & LaLiga)', shortName: 'ESPN / Premiere 2 BR', num: 81, country: 'BR', lang: 'multi' as const, featured: true },
+        { id: 'premiere-3-br', name: 'ESPN 2 Brasil / Premiere 3 HD (European Football & NBA)', shortName: 'ESPN 2 / Premiere 3 BR', num: 82, country: 'BR', lang: 'multi' as const, featured: false },
+        { id: 'premiere-4-br', name: 'ESPN 3 Brasil / Premiere 4 HD (Libertadores & Sudamericana)', shortName: 'ESPN 3 / Premiere 4 BR', num: 83, country: 'BR', lang: 'multi' as const, featured: false },
+        { id: 'sportv-1-br', name: 'SporTV 1 Brazil HD (Brasileirão, Copa do Brasil & Seleção)', shortName: 'SporTV 1 BR', num: 78, country: 'BR', lang: 'multi' as const, featured: true },
+        { id: 'sportv-2-br', name: 'SporTV 2 Brazil HD (Brasileirão, Vôlei & Basquete)', shortName: 'SporTV 2 BR', num: 79, country: 'BR', lang: 'multi' as const, featured: false },
+        { id: 'sportv-3-br', name: 'SporTV 3 Brazil HD (Futebol, Tênis & Combate)', shortName: 'SporTV 3 BR', num: 80, country: 'BR', lang: 'multi' as const, featured: false }
+    ].map((item): LiveChannel => ({
+        id: item.id,
+        name: item.name,
+        shortName: item.shortName,
+        network: 'LatAm & Brazil Sports',
+        group: 'Latin America & Brazil Sports (ESPN / TNT / Premiere / SporTV)',
+        category: 'usa',
+        language: item.lang,
+        languageLabel: item.country === 'BR' ? 'Português (Brasil)' : 'Español (Latinoamérica)',
+        country: item.country,
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: item.featured,
+        streams: [
+            ...(item.extraUrl
+                ? [{ label: `${item.shortName} (Official Amagi 1080p)`, url: item.extraUrl, quality: '1080p', language: item.lang }]
+                : []),
+            { label: `${item.shortName} (Edge 1080p 50fps)`, url: `${EDGE_CDN_BASE}/premium${item.num}/index.m3u8`, quality: '1080p', language: item.lang, headers: DEMBED_HEADERS },
+            ...(item.backupNum
+                ? [{ label: `${item.shortName} (Backup Server 1080p)`, url: `${EDGE_CDN_BASE}/premium${item.backupNum}/index.m3u8`, quality: '1080p', language: item.lang, headers: DEMBED_HEADERS }]
+                : [])
+        ]
+    })),
+    // =========================================================================
+    // 14. COMBAT & WRESTLING (UFC Fight Pass 24/7 & WWE Network 24/7)
+    // =========================================================================
+    {
+        id: 'ufc-fight-pass',
+        name: 'UFC Fight Pass & MMA 24/7 HD',
+        shortName: 'UFC Fight Pass',
+        network: 'UFC',
+        group: 'Combat & Wrestling (UFC / WWE / DAZN)',
+        category: 'combat',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'US',
+        logo: 'https://i.postimg.cc/VsW3Jsrz/logo-DAZN-Combat.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'UFC Fight Pass 24/7 HD (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium395/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'MMA & Combat HD (Backup 1080p)', url: 'https://jmp2.uk/plu-64d626ac9b414d000820e2fc.m3u8', quality: '1080p', language: 'en' }
+        ]
+    },
+    {
+        id: 'wwe-network-hd',
+        name: 'WWE Network 24/7 HD (Raw, SmackDown & Premium Live Events)',
+        shortName: 'WWE Network HD',
+        network: 'WWE',
+        group: 'Combat & Wrestling (UFC / WWE / DAZN)',
+        category: 'combat',
+        language: 'en',
+        languageLabel: 'English',
+        country: 'US',
+        logo: 'https://i.imgur.com/Vtk2cGI.png',
+        quality: '1080p',
+        featured: true,
+        streams: [
+            { label: 'WWE Network 24/7 HD (Edge 1080p)', url: `${EDGE_CDN_BASE}/premium376/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'WWE & Combat 24/7 HD (Official Backup 1080p)', url: 'https://jmp2.uk/plu-64d626ac9b414d000820e2fc.m3u8', quality: '1080p', language: 'en' }
+        ]
     }
 ];
 
@@ -4151,7 +4708,7 @@ for (const ch of CORE_SPORTS_CHANNELS) {
         });
     }
 
-    // 4. Dynamic Cast fallback for non-pre-mapped channels
+    // 4. Dynamic Cast & Plus servers for non-pre-mapped channels
     if (streamIdNum > 0 && !isQuarantined && !hasStaticCast) {
         promotedStreams.push({
             label: `${ch.shortName} (Server ${promotedStreams.length + 1} — Cast 1080p 50fps 4s Broadcast)`,
@@ -4159,6 +4716,15 @@ for (const ch of CORE_SPORTS_CHANNELS) {
             quality: ch.quality || '1080p',
             language: ch.language,
             headers: TOSSEQUIP_HEADERS
+        });
+    }
+    if (streamIdNum > 0 && !isQuarantined && !hasStaticPlus) {
+        promotedStreams.push({
+            label: `${ch.shortName} (Server ${promotedStreams.length + 1} — Plus Global Low-Latency 1080p)`,
+            url: `https://dlstreams.st/plus/stream-${streamIdNum}.m3u8`,
+            quality: ch.quality || '1080p',
+            language: ch.language,
+            headers: EHGEMBXE_HEADERS
         });
     }
 
@@ -7777,7 +8343,7 @@ export async function resolveChannelStreams(
         // Launch all candidate stream probes in parallel; once the primary stream (index 0) verifies,
         // give backup servers a 180ms grace window so a slow secondary server never delays tune-in
         const rawProbePromises = candidateStreams.map((item, index) => {
-            const probeTimeoutMs = index < curatedCount ? 3400 : 1600;
+            const probeTimeoutMs = index < curatedCount ? 4500 : 1800;
             return probeStreamLiveness(
                 item.url,
                 item.headers,
