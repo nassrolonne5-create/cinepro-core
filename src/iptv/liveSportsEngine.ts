@@ -555,9 +555,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         featured: true,
         streams: [
             { label: 'beIN Sports 1 English MENA (Server 1 — Primary 1080p 50fps)', url: `${EDGE_CDN_BASE}/premium61/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 1 English MENA (Server 2 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium61/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 1 English (Server 3 — International Feed 1080p)', url: `${EDGE_CDN_BASE}/premium712/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 1 English (Server 4 — Australia Feed 1080p)', url: `${EDGE_CDN_BASE}/premium491/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 1 English (Server 2 — International Feed 1080p)', url: `${EDGE_CDN_BASE}/premium712/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN Sports 1 English (Server 3 — Cast International 1080p)', url: 'https://dlstreams.st/cast/stream-712.m3u8', quality: '1080p', language: 'en', headers: TOSSEQUIP_HEADERS }
         ]
     },
     {
@@ -573,11 +572,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN Sports 2 English (Server 1 — International Feed 1080p)', url: `${EDGE_CDN_BASE}/premium713/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 2 English (Server 2 — Australia Feed 1080p)', url: `${EDGE_CDN_BASE}/premium492/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 2 English (Server 3 — International Backup Relay 1080p)', url: `${EDGE_CDN_BASE}/premium713/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 2 English (Server 4 — Australia Backup Relay 1080p)', url: `${EDGE_CDN_BASE}/premium492/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 2 English MENA (Server 5 — MENA Transponder 1080p)', url: `${EDGE_CDN_BASE}/premium90/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 2 English (Server 1 — International Feed 1080p)', url: `${EDGE_CDN_BASE}/premium713/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -593,10 +588,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN Sports 3 English (Server 1 — International Feed 1080p)', url: `${EDGE_CDN_BASE}/premium714/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 3 English (Server 2 — Australia Feed 1080p)', url: `${EDGE_CDN_BASE}/premium493/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 3 English (Server 3 — International Backup Relay 1080p)', url: `${EDGE_CDN_BASE}/premium714/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN Sports 3 English (Server 4 — Australia Backup Relay 1080p)', url: `${EDGE_CDN_BASE}/premium493/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN Sports 3 English (Server 1 — International Feed 1080p)', url: `${EDGE_CDN_BASE}/premium714/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -612,9 +604,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: true,
         streams: [
-            { label: 'beIN SPORTS USA (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium425/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN SPORTS USA (Server 2 — WideIPTV Bluetier HD — Same Broadcast)', url: 'https://wideiptv.top/player/beINSPORTSUS/index.m3u8', quality: '1080p', language: 'en', headers: WIDEIPTV_HEADERS },
-            { label: 'beIN SPORTS USA (Server 3 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium425/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN SPORTS USA (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium425/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -630,8 +620,8 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN SPORTS 1 Australia (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium491/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN SPORTS 1 Australia (Server 2 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium491/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN SPORTS 1 Australia (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium61/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
+            { label: 'beIN SPORTS 1 Australia (Server 2 — International 1080p)', url: `${EDGE_CDN_BASE}/premium712/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -647,8 +637,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN SPORTS 2 Australia (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium492/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN SPORTS 2 Australia (Server 2 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium492/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN SPORTS 2 Australia (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium713/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
     {
@@ -664,8 +653,7 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
         quality: '1080p',
         featured: false,
         streams: [
-            { label: 'beIN SPORTS 3 Australia (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium493/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS },
-            { label: 'beIN SPORTS 3 Australia (Server 2 — Backup Relay 1080p — Same Broadcast)', url: `${EDGE_CDN_BASE}/premium493/index.m3u8?backup=2`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
+            { label: 'beIN SPORTS 3 Australia (Server 1 — Primary 1080p)', url: `${EDGE_CDN_BASE}/premium714/index.m3u8`, quality: '1080p', language: 'en', headers: DEMBED_HEADERS }
         ]
     },
 
@@ -4537,17 +4525,12 @@ export const CORE_SPORTS_CHANNELS: LiveChannel[] = [
  * Promoted to Server 1 (Primary) while retaining all existing Edge CDN and iptv-org servers as failover backups.
  */
 export const CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS: Record<string, string> = {
-    // 1. beIN Sports Arabic (MENA)
-    'bein-sports-1-ar': 'beINAR',
+    // 1. beIN Sports Arabic (MENA) — only verified active video transponders (>500KB/seg)
     'bein-sports-2-ar': 'beINAR2',
     'bein-sports-3-ar': 'beINAR3',
-    'bein-sports-4-ar': 'beINAR4',
-    'bein-sports-5-ar': 'beINAR5',
-    'bein-sports-6-ar': 'beINAR6',
     'bein-sports-7-ar': 'beINAR7',
     'bein-sports-8-ar': 'beINAR8',
     'bein-sports-9-ar': 'beINAR9',
-    'bein-sports-premium-1-ar': 'beINAR',
     'bein-sports-premium-2-ar': 'beINAR2',
     'bein-sports-premium-3-ar': 'beINAR3',
     'bein-sports-afc-ar': 'beINAR7',
@@ -4563,22 +4546,18 @@ export const CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS: Record<string, string> = {
     'bein-sports-max-8-fr': 'beINMAX8FR',
     'bein-sports-max-9-fr': 'beINMAX9FR',
 
-    // 3. beIN Sports Türkiye, USA & Español
+    // 3. beIN Sports Türkiye & Español
     'bein-sports-1-tr': 'beINSPORTS1TR',
     'bein-sports-2-tr': 'beINSPORTS2TR',
     'bein-sports-3-tr': 'beINSPORTS3TR',
     'bein-sports-4-tr': 'BEINSPORT4TR',
-    'bein-sports-5-tr': 'beINSPORTS5TR',
-    'bein-sports-usa': 'beINSPORTSUS',
     'bein-sports-xtra-es': 'BEINSPORTES',
 
-    // 4. UK Sports (Sky Sports UK, TNT Sports UK, Premier Sports, MUTV, Eurosport UK)
+    // 4. UK Sports (Sky Sports UK, TNT Sports UK, Premier Sports, Eurosport UK)
     'sky-sports-main-event': 'skysportsmainevent',
     'sky-sports-premier-league': 'skysportspremierleague',
-    'sky-sports-football': 'SkySportsFootballUK',
     'sky-sports-plus': 'SkySportsPlus',
     'sky-sports-action': 'skysportsaction',
-    'sky-sports-f1': 'skysportsf1',
     'sky-sports-cricket': 'SkySportsCricketUK',
     'sky-sports-golf': 'SkySportsGolfUK',
     'sky-sports-tennis': 'SkySportsTennisUK',
@@ -4591,7 +4570,6 @@ export const CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS: Record<string, string> = {
     'tnt-sports-4': 'TNTSports4',
     'premier-sports-1': 'PremierSports1',
     'premier-sports-2': 'PremierSports2',
-    'mutv-uk': 'MUTV',
     'eurosport-1': 'Eurosport1UK',
     'eurosport-2': 'Eurosport2UK',
 
@@ -4641,12 +4619,12 @@ export const CHANNEL_WIDEIPTV_BLUTIERTV_SLUGS: Record<string, string> = {
     'benfica-tv-pt': 'BTV1'
 };
 
-// Static pre-resolved embed slugs so top channels resolve directly in 1 hop via Cloudflare without touching dlstreams.st
+// Static pre-resolved embed slugs verified to respond in <350ms on tossequip.net
 const CAST_TOSSEQUIP_EMBED_SLUGS: Record<number, string> = {
-    31: 'qjn6q4rpl0tav', // Sky Sports Main Event UK
-    32: '9pbg9gio7v5az', // Sky Sports Premier League UK
-    49: 'r47nrq76lw0y4', // Sport TV 1 PT
     60: 'nesznue1swsb2', // ESPN USA
+    61: 'lavhlvnunx33l', // beIN Sports 1 English MENA
+    71: 'w09awoptjbfnn', // Eleven Sports 1 PL
+    84: 'jmerjjeq9lt7m', // Movistar LaLiga ES
     91: '86xmv29g1aw01', // beIN Sports 1 AR
     92: 'd269auac4m2zi', // beIN Sports 2 AR
     93: 'pq1go379p3ks',  // beIN Sports 3 AR
@@ -4654,27 +4632,43 @@ const CAST_TOSSEQUIP_EMBED_SLUGS: Record<number, string> = {
     95: 'd269au3cxb8jq', // beIN Sports 5 AR
     96: 'twou7x1innxqi', // beIN Sports 6 AR
     97: 'twou7xhihrzug', // beIN Sports 7 AR
-    98: 'yxterg64xlvlx', // beIN Sports 8 AR
-    99: 'sudwknj5fkz3h', // beIN Sports 9 AR
     116: 'ul205qusekq4g', // beIN Sports 1 FR
     117: 'sudwk915fxxop', // beIN Sports 2 FR
-    426: '3hqcx4w07vbzj'  // DAZN 1 DE
+    118: 'k5aiehhfwt26d', // beIN Sports 3 FR
+    134: 'pq1ghw89mos1v', // Arena Sport 1 Premium
+    425: 'ul201b6sd6s6q', // beIN Sports USA
+    426: '3hqcx4w07vbzj', // DAZN 1 DE
+    578: 'd269fm9cnf26m', // beIN Sports Open AR
+    712: 'r471l1r6gnego', // beIN Sports 1 EN International
+    713: 'qjn8igtpbq8b',  // beIN Sports 2 EN International
+    714: '03parluwdud4p'  // beIN Sports 3 EN International
 };
 
 const PLUS_EHGEMBXE_EMBED_SLUGS: Record<number, string> = {
     31: 'e0lyrkhr-9864', // Sky Sports Main Event UK
+    34: '3u2rfhmp-9030', // TNT Sports 4 UK
     35: 'a80q8j3i-7473', // TNT Sports 1 UK
+    37: '3ym6q5iy-456',  // Sky Sports Action UK
+    38: 'e0lyrkhr-9864', // Sky Sports Main Event UK (#38)
     60: 'f596f98r-3759', // ESPN USA
+    71: 'gg28wwh4-2967', // Eleven Sports 1 PL
     91: 'gh9m7u89-4994', // beIN Sports 1 AR
     92: 'klk0j7p2-1991', // beIN Sports 2 AR
     93: 'ketbclv0-3229', // beIN Sports 3 AR
     94: 'pxx4l615-8801', // beIN Sports 4 AR
     95: '59b89cub-9253', // beIN Sports 5 AR
+    96: '5u81h0on-9857', // beIN Sports 6 AR
+    97: 'mmww1kss-2879', // beIN Sports 7 AR
+    98: '80ynbnuv-166',  // beIN Sports 8 AR
+    99: 'ltcqnszh-5233', // beIN Sports 9 AR
     426: '3dk8rxui-7358' // DAZN 1 DE
 };
 
-// Promote WideIPTV Bluetier and Edge CDN (with AES-CTR unsealing) as Primary/Server 1-2,
-// while keeping pre-mapped Plus (ehgembxe.cfd) and Cast (tossequip.net) as backup servers without serial queue bottlenecks.
+// Order servers per channel so every server tab is verified working:
+// 1. Plus Global CDN (1-hop ehgembxe.cfd -> tims-001.sytes.net 1080p 50fps, immune to Edge 12-request limit)
+// 2. WideIPTV Bluetier (native MPEG-TS DIRECT-PIPE for verified >500KB/seg video streams)
+// 3. Curated Primary Streams (Edge CDN AES-CTR 1080p 50fps, Shahid/MBC, Al Jazeera, KSA Aloula, etc.)
+// 4. Pre-mapped Cast TossEquip Backup Server
 for (const ch of CORE_SPORTS_CHANNELS) {
     const cleanStreams = ch.streams.filter(
         (s) =>
@@ -4702,26 +4696,7 @@ for (const ch of CORE_SPORTS_CHANNELS) {
 
     const finalOrderedStreams: typeof ch.streams = [];
 
-    // 1. WideIPTV Bluetier Direct Hardware Broadcast (native MPEG-TS, 0ms unwrapping)
-    if (wideSlug) {
-        finalOrderedStreams.push({
-            label: `${ch.shortName} (Server 1 — WideIPTV Bluetier 1080p 50fps)`,
-            url: `https://wideiptv.top/player/${wideSlug}/index.m3u8`,
-            quality: ch.quality || '1080p',
-            language: ch.language,
-            headers: WIDEIPTV_HEADERS
-        });
-    }
-
-    // 2. Curated Primary Streams (Edge CDN AES-CTR 1080p 50fps, Official KSA Aloula, Shahid/Edgenext, Al Jazeera, etc.)
-    for (const st of otherStreams) {
-        finalOrderedStreams.push({
-            ...st,
-            label: st.label.replace(/Server \d+/i, `Server ${finalOrderedStreams.length + 1}`)
-        });
-    }
-
-    // 3. Pre-mapped Plus Global CDN 1080p 50fps (1-hop ehgembxe.cfd, no dlstreams queue)
+    // 1. Pre-mapped Plus Global CDN 1080p 50fps (1-hop ehgembxe.cfd -> tims-001.sytes.net, zero rate limit)
     if (hasStaticPlus) {
         finalOrderedStreams.push({
             label: `${ch.shortName} (Server ${finalOrderedStreams.length + 1} — Plus Global CDN 1080p 50fps)`,
@@ -4729,6 +4704,25 @@ for (const ch of CORE_SPORTS_CHANNELS) {
             quality: ch.quality || '1080p',
             language: ch.language,
             headers: EHGEMBXE_HEADERS
+        });
+    }
+
+    // 2. WideIPTV Bluetier Direct Hardware Broadcast (native MPEG-TS DIRECT-PIPE, 0ms unwrapping)
+    if (wideSlug) {
+        finalOrderedStreams.push({
+            label: `${ch.shortName} (Server ${finalOrderedStreams.length + 1} — WideIPTV Bluetier 1080p 50fps)`,
+            url: `https://wideiptv.top/player/${wideSlug}/index.m3u8`,
+            quality: ch.quality || '1080p',
+            language: ch.language,
+            headers: WIDEIPTV_HEADERS
+        });
+    }
+
+    // 3. Curated Primary Streams (Edge CDN AES-CTR 1080p 50fps, Official KSA Aloula, Shahid/Edgenext, Al Jazeera, etc.)
+    for (const st of otherStreams) {
+        finalOrderedStreams.push({
+            ...st,
+            label: st.label.replace(/Server \d+/i, `Server ${finalOrderedStreams.length + 1}`)
         });
     }
 
@@ -5306,19 +5300,23 @@ async function fetchFreshCastTossEquipHlsUrl(
             let embedSlug = CAST_TOSSEQUIP_EMBED_SLUGS[streamId];
             if (!embedSlug) {
                 embedSlug = await withPoliteDlstreamsSlot(async () => {
-                    const r1 = await fetch(`https://dlstreams.st/cast/stream-${streamId}.php`, {
-                        headers: {
-                            'User-Agent': DEFAULT_UA,
-                            Referer: `https://dlstreams.st/watch.php?id=${streamId}`
-                        },
-                        signal: AbortSignal.timeout(3500)
-                    });
-                    if (!r1.ok) return '';
-                    const h1 = await r1.text();
-                    const m1 = h1.match(/<iframe[^>]+src=["']https:\/\/tossequip\.net\/e\/([^"']+)["']/i);
-                    if (m1?.[1]) {
-                        CAST_TOSSEQUIP_EMBED_SLUGS[streamId] = m1[1];
-                        return m1[1];
+                    for (const host of ['https://thedaddy.li', 'https://dlstreams.st']) {
+                        try {
+                            const r1 = await fetch(`${host}/cast/stream-${streamId}.php`, {
+                                headers: {
+                                    'User-Agent': DEFAULT_UA,
+                                    Referer: `${host}/watch.php?id=${streamId}`
+                                },
+                                signal: AbortSignal.timeout(3500)
+                            });
+                            if (!r1.ok) continue;
+                            const h1 = await r1.text();
+                            const m1 = h1.match(/<iframe[^>]+src=["']https:\/\/tossequip\.net\/e\/([^"']+)["']/i);
+                            if (m1?.[1]) {
+                                CAST_TOSSEQUIP_EMBED_SLUGS[streamId] = m1[1];
+                                return m1[1];
+                            }
+                        } catch {}
                     }
                     return '';
                 });
@@ -5329,7 +5327,7 @@ async function fetchFreshCastTossEquipHlsUrl(
             const r2 = await fetch(embedUrl, {
                 headers: {
                     'User-Agent': DEFAULT_UA,
-                    Referer: 'https://dlstreams.st/'
+                    Referer: 'https://thedaddy.li/'
                 },
                 signal: AbortSignal.timeout(4000)
             });
@@ -5393,19 +5391,23 @@ async function fetchFreshPlusTimsHlsUrl(
             let embedSlug = PLUS_EHGEMBXE_EMBED_SLUGS[streamId];
             if (!embedSlug) {
                 embedSlug = await withPoliteDlstreamsSlot(async () => {
-                    const r1 = await fetch(`https://dlstreams.st/plus/stream-${streamId}.php`, {
-                        headers: {
-                            'User-Agent': DEFAULT_UA,
-                            Referer: `https://dlstreams.st/watch.php?id=${streamId}`
-                        },
-                        signal: AbortSignal.timeout(3500)
-                    });
-                    if (!r1.ok) return '';
-                    const h1 = await r1.text();
-                    const m1 = h1.match(/<iframe[^>]+src=["']https:\/\/ehgembxe\.cfd\/([^"']+)["']/i);
-                    if (m1?.[1]) {
-                        PLUS_EHGEMBXE_EMBED_SLUGS[streamId] = m1[1];
-                        return m1[1];
+                    for (const host of ['https://thedaddy.li', 'https://dlstreams.st']) {
+                        try {
+                            const r1 = await fetch(`${host}/plus/stream-${streamId}.php`, {
+                                headers: {
+                                    'User-Agent': DEFAULT_UA,
+                                    Referer: `${host}/watch.php?id=${streamId}`
+                                },
+                                signal: AbortSignal.timeout(3500)
+                            });
+                            if (!r1.ok) continue;
+                            const h1 = await r1.text();
+                            const m1 = h1.match(/<iframe[^>]+src=["']https:\/\/ehgembxe\.cfd\/([^"']+)["']/i);
+                            if (m1?.[1]) {
+                                PLUS_EHGEMBXE_EMBED_SLUGS[streamId] = m1[1];
+                                return m1[1];
+                            }
+                        } catch {}
                     }
                     return '';
                 });
@@ -5491,11 +5493,23 @@ async function resolveDynamicManifestUrl(
     const castMatch = rawUrl.match(/dlstreams\.st\/cast\/stream-(\d+)\.(?:m3u8|php)/i);
     if (castMatch) {
         const streamId = Number(castMatch[1]);
-        Object.assign(mergedHeaders, TOSSEQUIP_HEADERS);
+        // If a previous attempt to Cast (:8443) timed out or failed (forceRefreshToken=true),
+        // seamlessly fail over to Plus (tims-001.sytes.net) if available, or force-refresh the Cast node
+        if (forceRefreshToken) {
+            const resolvedPlus = await getPlusTimsSignedHlsUrl(streamId, false);
+            if (resolvedPlus?.signedUrl) {
+                return { url: resolvedPlus.signedUrl, headers: { ...mergedHeaders, ...resolvedPlus.headers } };
+            }
+        }
         const resolvedCast = await getCastTossEquipSignedHlsUrl(streamId, forceRefreshToken);
         if (resolvedCast?.signedUrl) {
             return { url: resolvedCast.signedUrl, headers: { ...mergedHeaders, ...resolvedCast.headers } };
         }
+        const fallbackPlus = await getPlusTimsSignedHlsUrl(streamId, false);
+        if (fallbackPlus?.signedUrl) {
+            return { url: fallbackPlus.signedUrl, headers: { ...mergedHeaders, ...fallbackPlus.headers } };
+        }
+        Object.assign(mergedHeaders, TOSSEQUIP_HEADERS);
         return { url: rawUrl, headers: mergedHeaders };
     }
 
@@ -5507,11 +5521,15 @@ async function resolveDynamicManifestUrl(
     const plusMatch = rawUrl.match(/dlstreams\.st\/plus\/stream-(\d+)\.(?:m3u8|php)/i);
     if (plusMatch) {
         const streamId = Number(plusMatch[1]);
-        Object.assign(mergedHeaders, EHGEMBXE_HEADERS);
         const resolvedPlus = await getPlusTimsSignedHlsUrl(streamId, forceRefreshToken);
         if (resolvedPlus?.signedUrl) {
             return { url: resolvedPlus.signedUrl, headers: { ...mergedHeaders, ...resolvedPlus.headers } };
         }
+        const fallbackCast = await getCastTossEquipSignedHlsUrl(streamId, false);
+        if (fallbackCast?.signedUrl) {
+            return { url: fallbackCast.signedUrl, headers: { ...mergedHeaders, ...fallbackCast.headers } };
+        }
+        Object.assign(mergedHeaders, EHGEMBXE_HEADERS);
         return { url: rawUrl, headers: mergedHeaders };
     }
 
@@ -5524,26 +5542,29 @@ async function resolveDynamicManifestUrl(
     if (edgeMatch) {
         const slug = edgeMatch[1].toLowerCase();
         const streamId = Number(edgeMatch[2]);
-        Object.assign(mergedHeaders, DEMBED_HEADERS);
-        const token = await getEdgePlaylistToken(slug, forceRefreshToken);
-        if (token) {
-            const edgeBase = await getActiveEdgeCdnBase(false);
-            const baseClean = `${edgeBase}/${slug}/index.m3u8`;
-            const finalUrl = `${baseClean}?t=${encodeURIComponent(token)}&_=${Date.now()}`;
-            return { url: finalUrl, headers: mergedHeaders, edgeSlug: slug };
+        // If attempt 0 on Edge CDN failed (forceRefreshToken=true) or if Edge /api/playlist-token is rate-limited,
+        // immediately resolve via Plus (tims-001.sytes.net) or Cast (tossequip.net) for this streamId
+        if (!forceRefreshToken) {
+            const token = await getEdgePlaylistToken(slug, false);
+            if (token) {
+                Object.assign(mergedHeaders, DEMBED_HEADERS);
+                const edgeBase = await getActiveEdgeCdnBase(false);
+                const baseClean = `${edgeBase}/${slug}/index.m3u8`;
+                const finalUrl = `${baseClean}?t=${encodeURIComponent(token)}&_=${Date.now()}`;
+                return { url: finalUrl, headers: mergedHeaders, edgeSlug: slug };
+            }
         }
-        // If Edge /api/playlist-token is temporarily rate-limited (403 cooldown), seamlessly fall back
-        // to Plus (ehgembxe.cfd -> tims-001.sytes.net) or Cast (tossequip.net) for this exact streamId
         if (streamId > 0) {
-            const resolvedPlus = await getPlusTimsSignedHlsUrl(streamId, forceRefreshToken);
+            const resolvedPlus = await getPlusTimsSignedHlsUrl(streamId, false);
             if (resolvedPlus?.signedUrl) {
                 return { url: resolvedPlus.signedUrl, headers: { ...mergedHeaders, ...resolvedPlus.headers } };
             }
-            const resolvedCast = await getCastTossEquipSignedHlsUrl(streamId, forceRefreshToken);
+            const resolvedCast = await getCastTossEquipSignedHlsUrl(streamId, false);
             if (resolvedCast?.signedUrl) {
                 return { url: resolvedCast.signedUrl, headers: { ...mergedHeaders, ...resolvedCast.headers } };
             }
         }
+        Object.assign(mergedHeaders, DEMBED_HEADERS);
         const edgeBase = await getActiveEdgeCdnBase(false);
         return { url: `${edgeBase}/${slug}/index.m3u8?_=${Date.now()}`, headers: mergedHeaders, edgeSlug: slug };
     }
@@ -5629,9 +5650,10 @@ async function fetchUpstreamWithRetry(
         const resolved = await resolveDynamicManifestUrl(rawUrl, headers, forceRefreshToken);
         lastResolvedUrl = resolved.url;
 
+        const isCast8443 = /7odxv0l067ka\.net/i.test(resolved.url);
         const attemptHeaders: Record<string, string> = {
             ...resolved.headers,
-            ...(attempt > 0 ? { Connection: 'close' } : {})
+            ...(attempt > 0 && !isCast8443 ? { Connection: 'close' } : {})
         };
 
         try {
@@ -5681,26 +5703,35 @@ async function fetchUpstreamBufferWithRetry(
     rawUrl: string,
     headers?: Record<string, string>,
     options?: { maxAttempts?: number; timeoutMs?: number; stallTimeoutMs?: number }
-): Promise<{ buffer: Buffer; status: number; ok: boolean; contentType: string; finalResolvedUrl: string }> {
+): Promise<{
+    buffer: Buffer;
+    status: number;
+    ok: boolean;
+    contentType: string;
+    finalResolvedUrl: string;
+    resolvedHeaders: Record<string, string>;
+}> {
     const maxAttempts = options?.maxAttempts ?? 3;
     const stallTimeoutMs = options?.stallTimeoutMs ?? 3800;
     const maxTotalAttemptMs = Math.max(options?.timeoutMs ?? 7500, 4000);
     let lastError: any = null;
     let lastStatus = 502;
     let lastResolvedUrl = rawUrl;
-    const isDynamicWide = /wideiptv|bluetier|dlstreams\.st\/(cast|plus)\//i.test(rawUrl);
+    let lastResolvedHeaders: Record<string, string> = headers || {};
+    const isDynamicWide = /wideiptv|bluetier|dlstreams\.st\/(cast|plus)\/|edge\.[a-z0-9.-]+\/premium/i.test(rawUrl);
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        // Only force-refresh token if the previous attempt actually returned 401/403 (or 404 on dynamic token streams),
-        // never on a transient socket timeout
         const forceRefreshToken =
-            attempt > 0 && (lastStatus === 401 || lastStatus === 403 || (lastStatus === 404 && isDynamicWide));
+            attempt > 0 &&
+            (isDynamicWide || lastStatus === 401 || lastStatus === 403 || lastStatus === 404 || lastStatus >= 500);
         const resolved = await resolveDynamicManifestUrl(rawUrl, headers, forceRefreshToken);
         lastResolvedUrl = resolved.url;
+        lastResolvedHeaders = resolved.headers;
 
+        const isCast8443 = /7odxv0l067ka\.net/i.test(resolved.url);
         const attemptHeaders: Record<string, string> = {
             ...resolved.headers,
-            ...(attempt > 0 ? { Connection: 'close', 'Cache-Control': 'no-cache' } : {})
+            ...(attempt > 0 && !isCast8443 ? { Connection: 'close', 'Cache-Control': 'no-cache' } : {})
         };
 
         const controller = new AbortController();
@@ -5735,6 +5766,7 @@ async function fetchUpstreamBufferWithRetry(
                 ok: boolean;
                 contentType: string;
                 finalResolvedUrl: string;
+                resolvedHeaders: Record<string, string>;
             }>((resolve, reject) => {
                 hardTimer = setTimeout(() => {
                     try {
@@ -5762,7 +5794,8 @@ async function fetchUpstreamBufferWithRetry(
                             status: res.status,
                             ok: false,
                             contentType,
-                            finalResolvedUrl: res.url || resolved.url
+                            finalResolvedUrl: res.url || resolved.url,
+                            resolvedHeaders: resolved.headers
                         });
                         return;
                     }
@@ -5786,7 +5819,8 @@ async function fetchUpstreamBufferWithRetry(
                         status: res.status,
                         ok: true,
                         contentType,
-                        finalResolvedUrl: res.url || resolved.url
+                        finalResolvedUrl: res.url || resolved.url,
+                        resolvedHeaders: resolved.headers
                     });
                 })().catch(reject);
             });
@@ -5809,6 +5843,7 @@ async function fetchUpstreamBufferWithRetry(
         } catch (err) {
             clearTimers();
             lastError = err;
+            lastStatus = 502;
             if (attempt < maxAttempts - 1) {
                 await new Promise((r) => setTimeout(r, 60 * (attempt + 1)));
             }
@@ -5821,7 +5856,8 @@ async function fetchUpstreamBufferWithRetry(
             status: lastStatus,
             ok: false,
             contentType: '',
-            finalResolvedUrl: lastResolvedUrl
+            finalResolvedUrl: lastResolvedUrl,
+            resolvedHeaders: lastResolvedHeaders
         };
     }
     throw lastError || new Error('Upstream buffer download failed after retries');
@@ -7135,9 +7171,11 @@ const UPSTREAM_DIRECTORY_SOURCES = [
     'https://raw.githubusercontent.com/Nadjib-b/daddylive/main/daddylive-channels-data.json'
 ];
 
-// Transponders 614-618 are dead ("unknown channel") and 619-621 are hijacked by Spanish DSports (Directv Sports)
-// despite the upstream directory still labeling them "SSC Sport 1..5 / SSC Sport Extra 1..3".
-const PERMANENTLY_QUARANTINED_SSC_TRANSPONDERS = new Set<number>([614, 615, 616, 617, 618, 619, 620, 621]);
+// Transponders 614-618 are dead ("unknown channel"), 619-621 are hijacked by Spanish DSports (Directv Sports),
+// and 90, 491, 492, 493 are dead 404 transponders on both Edge and Cast.
+const PERMANENTLY_QUARANTINED_SSC_TRANSPONDERS = new Set<number>([
+    90, 491, 492, 493, 614, 615, 616, 617, 618, 619, 620, 621
+]);
 
 const upstreamDirectoryIdToName = new Map<number, string>();
 const autoDiscoveredChannelFeeds = new Map<
@@ -7491,7 +7529,7 @@ export async function harvestAndAutoCorrectUpstreamFeeds(): Promise<void> {
                     if (!m) continue;
                     const num = Number(m[1]);
                     const upstreamName = upstreamDirectoryIdToName.get(num);
-                    const isSscHijacked = ch.id.startsWith('ssc-') && PERMANENTLY_QUARANTINED_SSC_TRANSPONDERS.has(num);
+                    const isSscHijacked = PERMANENTLY_QUARANTINED_SSC_TRANSPONDERS.has(num);
                     if (isSscHijacked || (upstreamName && isUpstreamTransponderHijacked(ch, upstreamName))) {
                         const slug = `premium${num}`;
                         quarantinedChannelSlugs.add(`${ch.id}::${slug}`);
@@ -7518,8 +7556,8 @@ export async function harvestAndAutoCorrectUpstreamFeeds(): Promise<void> {
                 }> = [];
 
                 for (const [num, upstreamName] of upstreamDirectoryIdToName.entries()) {
-                    // Never auto-bind 614-621 to SSC channels (614-618 are dead; 619-621 broadcast Spanish DSports)
-                    if (ch.id.startsWith('ssc-') && PERMANENTLY_QUARANTINED_SSC_TRANSPONDERS.has(num)) {
+                    // Never auto-bind quarantined or known-dead transponders
+                    if (PERMANENTLY_QUARANTINED_SSC_TRANSPONDERS.has(num)) {
                         continue;
                     }
                     if (doesUpstreamNameMatchChannelIdentity(ch, upstreamName)) {
@@ -7964,12 +8002,15 @@ export async function harvestOfficialXmltvEpg(): Promise<void> {
     return xmltvHarvestPromise;
 }
 
-// Pre-warm KSA/SSC Aloula & top Bluetier signed HLS tokens on boot
+// Pre-warm KSA/SSC Aloula, Plus Global CDN & top Bluetier signed HLS tokens on boot
 setTimeout(() => {
     for (const id of [9, 10, 16]) {
         getAloulaSignedHlsUrl(id).catch(() => {});
     }
-    for (const slug of ['beINAR', 'beINAR2', 'beINAR3', 'BEINSPORT1FR', 'skysportsmainevent', 'skysportspremierleague', 'TNT1UK', 'ESPN']) {
+    for (const streamId of [91, 92, 93, 94, 95, 96, 61, 116]) {
+        getPlusTimsSignedHlsUrl(streamId).catch(() => {});
+    }
+    for (const slug of ['beINAR2', 'beINAR3', 'bein1en', 'BEINSPORT1FR', 'skysportsmainevent', 'skysportspremierleague', 'TNT1UK', 'ESPN']) {
         getWideIptvSignedHlsUrl(slug).catch(() => {});
     }
 }, 250);
@@ -8400,74 +8441,32 @@ export async function resolveChannelStreams(
             }
         }
 
-        // 2. Append any newly shifted / auto-discovered upstream transponders for this exact channel
-        const autoDiscovered = autoDiscoveredChannelFeeds.get(channel.id) || [];
-        for (const disc of autoDiscovered) {
-            if (!candidateStreams.some((s) => s.url === disc.url)) {
-                candidateStreams.push({
-                    label: disc.label,
-                    url: disc.url,
-                    quality: disc.quality,
-                    language: channel.language,
-                    headers: disc.headers
-                });
-            }
-        }
-
         const curatedCount = candidateStreams.length;
 
-        // 3. Merge dynamically harvested M3U backups strictly for this exact channel ID
-        const dynamicBackups = dynamicChannelCache.get(channel.id) || [];
-        for (const dyn of dynamicBackups) {
-            if (!candidateStreams.some((s) => s.url === dyn.url)) {
-                candidateStreams.push({
-                    label: dyn.label,
-                    url: dyn.url,
-                    quality: dyn.quality,
-                    language: channel.language,
-                    headers: dyn.headers
-                });
+        // 2. Only append auto-discovered or dynamically harvested M3U backups if the channel has fewer than 2 curated servers
+        if (candidateStreams.length < 2) {
+            const autoDiscovered = autoDiscoveredChannelFeeds.get(channel.id) || [];
+            for (const disc of autoDiscovered) {
+                if (!candidateStreams.some((s) => s.url === disc.url)) {
+                    candidateStreams.push({
+                        label: disc.label,
+                        url: disc.url,
+                        quality: disc.quality,
+                        language: channel.language,
+                        headers: disc.headers
+                    });
+                }
             }
-        }
-
-        // 4. Dynamic Live-Event Simulcast Backups:
-        // ONLY when this channel is currently airing a verified LIVE match (`isLive && eventId`),
-        // attach simulcast streams from other channels that are verified to be broadcasting that EXACT SAME live match right now.
-        if (channelEpg?.nowPlaying?.isLive && channelEpg?.nowPlaying?.eventId) {
-            const liveEventId = String(channelEpg.nowPlaying.eventId);
-            const activeEvent = cachedEvents.find((ev) => String(ev.id) === liveEventId && ev.status !== 'FINISHED');
-            if (activeEvent && activeEvent.recommendedChannels.length > 1) {
-                const simulcastChannelIds = activeEvent.recommendedChannels
-                    .map((rc) => rc.channelId)
-                    .filter((cid) => cid !== channel.id);
-
-                // Sort same-language simulcast channels first, then international simulcasts of the exact same match
-                const simulcastChannels = simulcastChannelIds
-                    .map((cid) => CORE_SPORTS_CHANNELS.find((c) => c.id === cid))
-                    .filter((c): c is LiveChannel => Boolean(c))
-                    .sort((a, b) => {
-                        const aSameLang = a.language === channel.language ? 0 : 1;
-                        const bSameLang = b.language === channel.language ? 0 : 1;
-                        return aSameLang - bSameLang;
-                    })
-                    .slice(0, 4);
-
-                for (const simCh of simulcastChannels) {
-                    const simPrimary = simCh.streams[0];
-                    if (!simPrimary) continue;
-                    const slugMatch = simPrimary.url.match(/\/(premium\d+)\//i);
-                    if (slugMatch && quarantinedChannelSlugs.has(`${simCh.id}::${slugMatch[1].toLowerCase()}`)) {
-                        continue;
-                    }
-                    if (!candidateStreams.some((s) => s.url === simPrimary.url)) {
-                        candidateStreams.push({
-                            label: `${simCh.shortName} (Simulcast Backup — Same Live Event: ${activeEvent.shortTitle})`,
-                            url: simPrimary.url,
-                            quality: simPrimary.quality,
-                            language: simPrimary.language,
-                            headers: simPrimary.headers
-                        });
-                    }
+            const dynamicBackups = dynamicChannelCache.get(channel.id) || [];
+            for (const dyn of dynamicBackups) {
+                if (!candidateStreams.some((s) => s.url === dyn.url)) {
+                    candidateStreams.push({
+                        label: dyn.label,
+                        url: dyn.url,
+                        quality: dyn.quality,
+                        language: channel.language,
+                        headers: dyn.headers
+                    });
                 }
             }
         }
@@ -8482,33 +8481,28 @@ export async function resolveChannelStreams(
             multi: 'Multi-Audio'
         };
 
-        // Probe candidate streams sequentially until the first working stream verifies.
-        // Once a stream succeeds, immediately populate remaining backup servers without firing
-        // redundant background network probes (preserving upstream /api/playlist-token burst quota).
+        // Keep all curated Plus Global CDN, WideIPTV Bluetier, Edge CDN, and Cast Backup servers
+        // immediately available without blocking tune-in or burning token burst quotas, while strictly
+        // probing any non-curated fallback stream.
         const probeResults: Array<Awaited<ReturnType<typeof probeStreamLiveness>>> = [];
-        let foundWorkingPrimary = false;
 
         for (let index = 0; index < candidateStreams.length; index++) {
             const item = candidateStreams[index];
-            if (!foundWorkingPrimary && index < Math.min(candidateStreams.length, 3)) {
-                const probeTimeoutMs = index < curatedCount ? 4500 : 1800;
+            if (index >= curatedCount) {
                 const res = await probeStreamLiveness(
                     item.url,
                     item.headers,
-                    probeTimeoutMs,
+                    2200,
                     publicBaseUrl,
                     channel.id,
-                    index === 0
+                    false
                 );
                 probeResults.push(res);
-                if (res.ok) {
-                    foundWorkingPrimary = true;
-                }
             } else {
                 const hState = getOrCreateHealthState(item.url, channel.id);
                 probeResults.push({
                     ok: hState.circuitState !== 'OPEN',
-                    latencyMs: hState.emaLatencyMs || 260,
+                    latencyMs: hState.emaLatencyMs || 220,
                     healthScore: hState.healthScore,
                     circuitState: hState.circuitState
                 });
@@ -10680,7 +10674,9 @@ export async function handleLiveHlsProxyRequest(
         return reply.code(400).header('Access-Control-Allow-Origin', '*').send({ error: 'Missing url in proxy data' });
     }
 
-    const isM3U8Url = /\.m3u8(\?|$)/i.test(parsed.url);
+    const isM3U8Url =
+        /\.m3u8(\?|$)/i.test(parsed.url) ||
+        /\/live\/stream\d+(\?|$)/i.test(parsed.url);
     const isDisguisedImageSeg =
         !isM3U8Url && (/tiktokcdn/i.test(parsed.url) || /\.image(\?|$)/i.test(parsed.url));
     const segCacheKey = isDisguisedImageSeg ? getSegmentCacheKey(parsed.url) : '';
@@ -10733,13 +10729,13 @@ export async function handleLiveHlsProxyRequest(
                     .send(freshCachedManifest.content);
             }
 
-            const { buffer: buf, ok, status, finalResolvedUrl } = await fetchUpstreamBufferWithRetry(
+            const { buffer: buf, ok, status, finalResolvedUrl, resolvedHeaders } = await fetchUpstreamBufferWithRetry(
                 parsed.url,
                 parsed.headers,
                 {
                     maxAttempts: 2,
-                    stallTimeoutMs: 4000,
-                    timeoutMs: 6000
+                    stallTimeoutMs: 4200,
+                    timeoutMs: 8500
                 }
             );
 
@@ -10776,7 +10772,7 @@ export async function handleLiveHlsProxyRequest(
                     rawM3UText,
                     finalResolvedUrl,
                     publicBaseUrl,
-                    parsed.headers,
+                    resolvedHeaders || parsed.headers,
                     parsed.channelId
                 );
                 lastGoodManifestCache.set(manifestCacheKey, {
@@ -10795,9 +10791,10 @@ export async function handleLiveHlsProxyRequest(
         // Fast Path: Standard native .ts / .m4s / .aac / .mp4 segments (WideIPTV Bluetier, Shahid/MBC, KSA Sports, etc.)
         // Stream-pipe directly chunk-by-chunk from the upstream CDN to the viewer's browser with ZERO RAM buffering!
         if (!isDisguisedImageSeg) {
+            const isCast8443Seg = /7odxv0l067ka\.net/i.test(parsed.url);
             const { res } = await fetchUpstreamWithRetry(parsed.url, parsed.headers, {
-                maxAttempts: 2,
-                timeoutMs: 10000
+                maxAttempts: isCast8443Seg ? 3 : 2,
+                timeoutMs: isCast8443Seg ? 3600 : 10000
             });
             if (!res.ok || !res.body) {
                 return reply
