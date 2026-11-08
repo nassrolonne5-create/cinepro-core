@@ -10508,7 +10508,30 @@ export function rewriteLiveHlsManifest(
 
     const rewritten: string[] = [];
 
+    const isDirectCorsOpenCdn = (u: string): boolean => {
+        if (!u.startsWith('https://')) return false;
+        if (headers?.Referer || headers?.Origin) return false;
+        return (
+            u.includes('getaj.net') ||
+            u.includes('itworkscdn.net') ||
+            u.includes('skynewsarabia.com') ||
+            u.includes('alarabiya.net') ||
+            u.includes('rbmn-live.akamaized.net') ||
+            u.includes('wurl.com') ||
+            u.includes('amagi.tv') ||
+            u.includes('jmp2.uk') ||
+            u.includes('easybroadcast.io') ||
+            u.includes('france24.com') ||
+            u.includes('dw.com')
+        );
+    };
+
     const wrapProxy = (targetUrl: string, isSubManifest: boolean): string => {
+        // If this is a media segment (.ts / .m4s / .aac) on a public HTTPS CDN with open CORS (ACAO: *)
+        // and no Referer/Origin lock, let the browser download the segment 100% directly from the CDN!
+        if (!isSubManifest && isDirectCorsOpenCdn(targetUrl)) {
+            return targetUrl;
+        }
         const isTiktokSegment = /tiktokcdn/i.test(targetUrl) || targetUrl.includes('.image');
         const effectiveHeaders = isTiktokSegment ? undefined : headers;
         const payloadObj: Record<string, any> = {
@@ -10631,10 +10654,10 @@ function setCachedSegment(url: string, buffer: Buffer, contentType: string): voi
 }
 
 /**
- * Clean, transparent pass-through proxy for Live HLS manifests (.m3u8) and segments (.ts, .m4s, .image).
- * All custom anti-disconnect interventions (rolling window mutation, background stream pumps,
- * zombie manifest detectors, mid-stream server switching, and stale manifest shields) have been removed
- * so the player receives the native upstream HLS stream directly.
+ * Clean, zero-buffer pass-through proxy for Live HLS manifests (.m3u8) and segments (.ts, .m4s, .image).
+ * - Standard .ts/.m4s/.aac segments (WideIPTV Bluetier, Shahid/MBC, KSA Sports, etc.) are piped directly
+ *   via `Readable.fromWeb(res.body)` with zero store-and-forward RAM buffering (~35ms TTFB).
+ * - Disguised .image segments (TikTok CDN / Edge / Plus) are unwrapped asynchronously in C++ libuv.
  */
 export async function handleLiveHlsProxyRequest(
     encodedData: string,
@@ -10658,9 +10681,11 @@ export async function handleLiveHlsProxyRequest(
     }
 
     const isM3U8Url = /\.m3u8(\?|$)/i.test(parsed.url);
-    const segCacheKey = !isM3U8Url ? getSegmentCacheKey(parsed.url) : '';
+    const isDisguisedImageSeg =
+        !isM3U8Url && (/tiktokcdn/i.test(parsed.url) || /\.image(\?|$)/i.test(parsed.url));
+    const segCacheKey = isDisguisedImageSeg ? getSegmentCacheKey(parsed.url) : '';
 
-    if (!isM3U8Url) {
+    if (isDisguisedImageSeg) {
         const cachedSeg = unwrappedSegmentCache.get(segCacheKey);
         if (cachedSeg && Date.now() < cachedSeg.expiresAt) {
             totalCacheHits += 1;
@@ -10699,7 +10724,7 @@ export async function handleLiveHlsProxyRequest(
         if (isM3U8Url) {
             const manifestCacheKey = `${publicBaseUrl}::${parsed.url}`;
             const freshCachedManifest = lastGoodManifestCache.get(manifestCacheKey);
-            if (freshCachedManifest && Date.now() - freshCachedManifest.updatedAt < 2200) {
+            if (freshCachedManifest && Date.now() - freshCachedManifest.updatedAt < 1800) {
                 return reply
                     .code(200)
                     .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
@@ -10719,6 +10744,16 @@ export async function handleLiveHlsProxyRequest(
             );
 
             if (!ok || buf.length === 0) {
+                // If upstream manifest had a momentary 1-second blip during live playback,
+                // serve the last known good manifest (<14s old) so hls.js never experiences a micro-disconnect
+                if (freshCachedManifest && Date.now() - freshCachedManifest.updatedAt < 14000) {
+                    return reply
+                        .code(200)
+                        .header('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8')
+                        .header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                        .header('Access-Control-Allow-Origin', '*')
+                        .send(freshCachedManifest.content);
+                }
                 recordStreamHealthResult(
                     parsed.url,
                     false,
@@ -10757,13 +10792,49 @@ export async function handleLiveHlsProxyRequest(
             }
         }
 
+        // Fast Path: Standard native .ts / .m4s / .aac / .mp4 segments (WideIPTV Bluetier, Shahid/MBC, KSA Sports, etc.)
+        // Stream-pipe directly chunk-by-chunk from the upstream CDN to the viewer's browser with ZERO RAM buffering!
+        if (!isDisguisedImageSeg) {
+            const { res } = await fetchUpstreamWithRetry(parsed.url, parsed.headers, {
+                maxAttempts: 2,
+                timeoutMs: 10000
+            });
+            if (!res.ok || !res.body) {
+                return reply
+                    .code(res.status || 502)
+                    .header('Access-Control-Allow-Origin', '*')
+                    .send({ error: `Upstream segment returned ${res.status}` });
+            }
+            const rawCt = (res.headers.get('content-type') || '').toLowerCase();
+            const outType =
+                parsed.url.includes('.m4s') || parsed.url.includes('.mp4')
+                    ? 'video/iso.segment'
+                    : parsed.url.includes('.aac')
+                    ? 'audio/aac'
+                    : rawCt && !rawCt.includes('octet-stream')
+                    ? rawCt
+                    : 'video/mp2t';
+            const contentLen = res.headers.get('content-length');
+            reply
+                .code(200)
+                .header('Content-Type', outType)
+                .header('Cache-Control', 'public, max-age=60')
+                .header('X-Stream-Mode', 'DIRECT-PIPE')
+                .header('Access-Control-Allow-Origin', '*');
+            if (contentLen) {
+                reply.header('Content-Length', contentLen);
+            }
+            return reply.send(Readable.fromWeb(res.body as any));
+        }
+
+        // Unwrap Path: Disguised .image segments (TikTok CDN / Edge / Plus)
         const segPromise = (async () => {
             const { buffer: rawBuf, ok, status, contentType } = await fetchUpstreamBufferWithRetry(
                 parsed.url,
                 parsed.headers,
                 {
                     maxAttempts: 2,
-                    stallTimeoutMs: 6000,
+                    stallTimeoutMs: 7000,
                     timeoutMs: 12000
                 }
             );
@@ -10771,21 +10842,11 @@ export async function handleLiveHlsProxyRequest(
                 throw new Error(`segment_http_${status}`);
             }
 
-            const needsUnwrap =
-                parsed.url.includes('tiktokcdn') ||
-                parsed.url.endsWith('.image') ||
-                contentType.includes('image/') ||
-                contentType.includes('octet-stream') ||
-                (rawBuf.length >= 188 && rawBuf[0] !== 0x47);
-
-            const finalBuf = needsUnwrap ? await unwrapLiveTsSegmentAsync(rawBuf) : rawBuf;
+            const finalBuf = await unwrapLiveTsSegmentAsync(rawBuf);
             const outType =
                 finalBuf.length >= 188 && finalBuf[0] === 0x47
                     ? 'video/mp2t'
                     : contentType || 'video/mp2t';
-            if (finalBuf.length >= 188 && finalBuf[0] === 0x47) {
-                inspectMpegTsSegment(finalBuf, parsed.url);
-            }
             setCachedSegment(parsed.url, finalBuf, outType);
             return { buffer: finalBuf, contentType: outType };
         })();
